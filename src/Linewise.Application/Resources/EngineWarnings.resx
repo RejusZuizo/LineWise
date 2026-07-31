@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--
+    Warning text shown to the manager. Keyed by WarningCode name.
+
+    English is the only language that ships today. The file exists from the outset
+    because the factory floor is multilingual and retrofitting localisation is far more
+    expensive than starting with it.
+
+    No employee names appear here. Warnings carry an identifier and the user interface
+    resolves the name, so a warning that reaches a log file carries no personal data.
+  -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <data name="LineUnderHeadcount" xml:space="preserve">
+    <value>{0} has {1} of the {2} people it needs.</value>
+    <comment>0 = line name, 1 = actual headcount, 2 = required headcount.</comment>
+  </data>
+  <data name="LineHasNoLeader" xml:space="preserve">
+    <value>{0} has no line leader.</value>
+    <comment>0 = line name.</comment>
+  </data>
+  <data name="EmployeeUnassigned" xml:space="preserve">
+    <value>Available but not placed on any line.</value>
+  </data>
+  <data name="MandatoryPreferenceNotHonoured" xml:space="preserve">
+    <value>A required placement on {0} could not be honoured.</value>
+    <comment>0 = line name.</comment>
+  </data>
+  <data name="MandatoryPreferenceBrokenForOvertime" xml:space="preserve">
+    <value>A required placement on {0} was set aside, which overtime permits.</value>
+    <comment>0 = line name.</comment>
+  </data>
+  <data name="LockedAssignmentConflictsWithAvailability" xml:space="preserve">
+    <value>Locked onto {0} while marked as not available that day.</value>
+    <comment>0 = line name.</comment>
+  </data>
+  <data name="LockedAssignmentViolatesEligibility" xml:space="preserve">
+    <value>Locked onto {0} despite being blocked from it or lacking a skill it requires.</value>
+    <comment>0 = line name.</comment>
+  </data>
+
+  <data name="TooManyMandatoryPreferencesForLine" xml:space="preserve">
+    <value>{0} has {1} people required on it but only {2} places.</value>
+    <comment>0 = line name, 1 = mandatory count, 2 = required headcount.</comment>
+  </data>
+  <data name="EmployeeBlockedFromEveryLine" xml:space="preserve">
+    <value>Blocked from every line, so can never be rostered.</value>
+  </data>
+  <data name="LineRequiresSkillNobodyHolds" xml:space="preserve">
+    <value>{0} requires {1}, which no active employee holds.</value>
+    <comment>0 = line name, 1 = skill name.</comment>
+  </data>
+  <data name="LineHasNoEligibleLeader" xml:space="preserve">
+    <value>{0} has nobody eligible to lead it.</value>
+    <comment>0 = line name.</comment>
+  </data>
+  <data name="ContradictoryPreference" xml:space="preserve">
+    <value>Both required on and blocked from {0}.</value>
+    <comment>0 = line name.</comment>
+  </data>
+  <data name="MandatoryPreferenceWithoutRequiredSkills" xml:space="preserve">
+    <value>Required on {0} but does not hold {1}.</value>
+    <comment>0 = line name, 1 = skill name.</comment>
+  </data>
+  <data name="DuplicatePreferenceRank" xml:space="preserve">
+    <value>Has more than one line at choice {0}.</value>
+    <comment>0 = preference rank.</comment>
+  </data>
+  <data name="LineHasNoPlaces" xml:space="preserve">
+    <value>{0} needs nobody on it, so it will always be empty.</value>
+    <comment>0 = line name.</comment>
+  </data>
+  <data name="EmployeeMandatoryOnMultipleLines" xml:space="preserve">
+    <value>Required on more than one line. The highest choice, {0}, will be used.</value>
+    <comment>0 = line name.</comment>
+  </data>
+</root>

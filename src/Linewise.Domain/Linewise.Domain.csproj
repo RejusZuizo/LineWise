@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Linewise.Domain</RootNamespace>
+  </PropertyGroup>
+
+  <!--
+    This project has no ItemGroup of PackageReference and must never gain one.
+    The domain describes the factory, not the technology used to run it.
+  -->
+
+</Project>

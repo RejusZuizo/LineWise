@@ -1,0 +1,27 @@
+<Project>
+
+  <!-- Applies to every project in the solution. Set language and quality rules once. -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>12.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <NeutralLanguage>en-GB</NeutralLanguage>
+  </PropertyGroup>
+
+  <!-- Reproducible restore. CI restores in locked mode, so an unexpected package
+       version fails the build rather than silently entering a release. -->
+  <PropertyGroup>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Product>Linewise</Product>
+    <Company>Linewise</Company>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+</Project>
