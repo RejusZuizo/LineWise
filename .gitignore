@@ -1,0 +1,60 @@
+# Build output
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+publish/
+*.dll
+*.exe
+*.pdb
+
+# Visual Studio / Rider / VS Code
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.DotSettings.user
+
+# Test and coverage output
+[Tt]est[Rr]esult*/
+coverage*.json
+coverage*.xml
+coverage*.info
+*.trx
+*.coverage
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+!packages.lock.json
+
+# SQLite databases. Never committed: these hold personal data.
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Spreadsheets. Never committed outside test fixtures: these hold personal data.
+*.xlsx
+*.xlsm
+*.xls
+!tests/**/Fixtures/**/*.xlsx
+
+# Generated output
+*.pdf
+!docs/**/*.pdf
+
+# Logs
+*.log
+logs/
+
+# OS
+Thumbs.db
+.DS_Store
