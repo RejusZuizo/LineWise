@@ -255,28 +255,31 @@ Rules apply in this exact order:
    employee's status is Overtime. If impossible, record a warning rather than throwing.
 4. Assign one line leader per line from LeaderEligibility, preferring whoever has led
    least recently.
-5. Fill remaining slots by preference rank across all employees at once: every rank 1
+5. Place anyone whose status is Overtime onto a line running above its standard headcount.
+   Overtime is worked because a line has more product to get out, so that is where the
+   extra pair of hands belongs, and it has to happen before ranked preferences are filled
+   rather than after. An overtime worker with a first choice elsewhere would otherwise be
+   placed on it at step 6 and never be available to cover the busy line at all.
+6. Fill remaining slots by preference rank across all employees at once: every rank 1
    preference, then every rank 2, and so on. Iterating employee by employee starves
    whoever sorts last.
-6. Ties at the same rank go to whoever has received their preferred line least often
+7. Ties at the same rank go to whoever has received their preferred line least often
    across the rolling history window. This sits behind an injectable interface so it can
    be swapped for seniority.
-7. Never place an employee on a line they are blocked from, or whose required skills they
+8. Never place an employee on a line they are blocked from, or whose required skills they
    lack. Absolute, overriding everything above except locked assignments.
-8. Fill remaining empty slots with unassigned eligible employees, placing anyone whose
-   status is Overtime onto lines running above their standard headcount before anywhere
-   else. Overtime is worked because a line has more product to get out, so that is where
-   the extra pair of hands belongs.
-9. Warn for every line under RequiredHeadcount, every line with no leader, every available
-   employee left unassigned, every line whose raised demand went uncovered, and every
-   employee on overtime who ended up on a line that did not need one.
+9. Fill remaining empty slots with unassigned eligible employees.
+10. Warn for every line under RequiredHeadcount, every line with no leader, every available
+    employee left unassigned, every line whose raised demand went uncovered, and every
+    employee on overtime who ended up on a line that did not need one.
 
 Headcount for a line on a given day is its LineDemand for that date when one exists, and
 its standard RequiredHeadcount otherwise. Raising demand for a day is how the manager says
 a line has more product to get out, and it is the same signal that tells the engine where
-overtime should go. Overtime routing is a preference and not a restriction: a line short of
-people still gets filled rather than left empty to honour it, and the mismatch is warned
-about instead.
+overtime should go. Overtime routing is a preference and not a restriction: somebody on
+overtime who cannot go on a busy line, because they are blocked from it or lack a skill it
+requires, falls through to the ordinary rules rather than being left standing, and the
+mismatch is warned about instead.
 
 The engine is pure: no I/O, no logging, no static state, deterministic given identical
 inputs.
@@ -323,7 +326,7 @@ can be seen working before any UI, and is deleted in phase 5. Crude by design; n
 lives in it.
 
 **Done when:** tests green, `Linewise.Domain.csproj` contains no `PackageReference`, CI
-passing on `main`, and the ordering of the nine rules can be recited unaided.
+passing on `main`, and the ordering of the rules can be recited unaided.
 
 ### Phase 2: Persistence
 
@@ -644,3 +647,4 @@ tracked outside this repository.
 |---|---|---|
 | 1.0 | 29 Jul 2026 | Initial design. Single machine scope confirmed, networked deployment explicitly deferred. |
 | 1.1 | 3 Aug 2026 | The site's sheet changed from coloured cells to written marks. Templates now read either. Holiday added as a status, distinct from a blank cell. LineDemand added, letting a line's headcount be raised for a day; overtime is routed to those lines first, and mismatches are warned about rather than enforced. |
+| 1.2 | 3 Aug 2026 | Overtime routing moved ahead of ranked preferences, making ten rules rather than nine. Placing it at the backfill step, as 1.1 had it, meant an overtime worker with a first choice elsewhere was already on that line before the busy one was ever considered, so the rule would rarely have fired. |

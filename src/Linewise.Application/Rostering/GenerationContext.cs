@@ -17,6 +17,7 @@ internal sealed class GenerationContext
     private readonly HashSet<(Guid EmployeeId, Guid LineId)> _leaderEligibility = new();
     private readonly Dictionary<(DateOnly Date, Guid ShiftId), List<Assignment>> _lockedAssignments = new();
     private readonly Dictionary<DateOnly, HashSet<Guid>> _assignedByDate = new();
+    private readonly Dictionary<(Guid LineId, DateOnly Date), int> _demand = new();
 
     public GenerationContext(AssignmentRequest request)
     {
@@ -53,6 +54,11 @@ internal sealed class GenerationContext
         foreach (var eligibility in configuration.LeaderEligibilities)
         {
             _leaderEligibility.Add((eligibility.EmployeeId, eligibility.LineId));
+        }
+
+        foreach (var demand in request.Demands)
+        {
+            _demand[(demand.LineId, demand.Date)] = demand.RequiredHeadcount;
         }
 
         foreach (var assignment in request.LockedAssignments.Where(assignment => assignment.IsLocked))
@@ -112,6 +118,20 @@ internal sealed class GenerationContext
     public AssignmentLedger Ledger { get; }
 
     public ProductionLine? LineById(Guid lineId) => _linesById.GetValueOrDefault(lineId);
+
+    /// <summary>
+    /// How many people this line needs on this date: the demand set for the day when there
+    /// is one, and the line's standard headcount otherwise.
+    /// </summary>
+    public int HeadcountFor(ProductionLine line, DateOnly date) =>
+        _demand.TryGetValue((line.Id, date), out var demand) ? demand : line.RequiredHeadcount;
+
+    /// <summary>
+    /// Whether this line is running above its usual complement, which is the manager saying
+    /// it has more product to get out. This is what overtime is routed toward.
+    /// </summary>
+    public bool IsRunningHot(ProductionLine line, DateOnly date) =>
+        HeadcountFor(line, date) > line.RequiredHeadcount;
 
     public AvailabilityStatus StatusOn(Guid employeeId, DateOnly date) =>
         _availability.GetValueOrDefault((employeeId, date), AvailabilityStatus.Off);

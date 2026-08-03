@@ -16,12 +16,15 @@ about any generated result will be why it did what it did.
 
 ## Decision
 
-The engine applies nine rules in a fixed order: locked assignments, availability,
-mandatory preferences, leader selection, ranked preferences across the whole workforce at
-once, the tie break, the absolute blocked and skill filter, backfill, then warnings. Each
-placement records which rule made it and at what preference rank. The one part likely to
-be argued about, who wins a tie, sits behind `ITieBreakStrategy` and can be swapped
-without touching the engine.
+The engine applies a fixed ordered list of rules: locked assignments, availability,
+mandatory preferences, leader selection, overtime routed to the busy lines, ranked
+preferences across the whole workforce at once, the tie break, the absolute blocked and
+skill filter, backfill, then warnings. Each placement records which rule made it and at
+what preference rank. The one part likely to be argued about, who wins a tie, sits behind
+`ITieBreakStrategy` and can be swapped without touching the engine.
+
+The list is ordered rather than fixed in length. Overtime routing was added to it later,
+and the ordering is the design; the count is not.
 
 ## Consequences
 

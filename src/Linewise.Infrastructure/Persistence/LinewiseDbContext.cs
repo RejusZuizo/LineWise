@@ -26,6 +26,8 @@ public sealed class LinewiseDbContext : DbContext
 
     public DbSet<Availability> Availabilities => Set<Availability>();
 
+    public DbSet<LineDemand> LineDemands => Set<LineDemand>();
+
     public DbSet<LinePreference> Preferences => Set<LinePreference>();
 
     public DbSet<LeaderEligibility> LeaderEligibilities => Set<LeaderEligibility>();

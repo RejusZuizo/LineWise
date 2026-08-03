@@ -73,6 +73,26 @@ internal sealed class AvailabilityConfiguration : IEntityTypeConfiguration<Avail
     }
 }
 
+internal sealed class LineDemandConfiguration : IEntityTypeConfiguration<LineDemand>
+{
+    public void Configure(EntityTypeBuilder<LineDemand> builder)
+    {
+        builder.ToTable("LineDemands");
+
+        // One number per line per day. The key makes a contradictory second entry impossible
+        // rather than merely unlikely.
+        builder.HasKey(demand => new { demand.LineId, demand.Date });
+
+        builder.Property(demand => demand.RequiredHeadcount);
+        builder.HasIndex(demand => demand.Date);
+
+        builder.HasOne<ProductionLine>()
+            .WithMany()
+            .HasForeignKey(demand => demand.LineId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
 internal sealed class LinePreferenceConfiguration : IEntityTypeConfiguration<LinePreference>
 {
     public void Configure(EntityTypeBuilder<LinePreference> builder)

@@ -23,6 +23,8 @@ public sealed record AssignmentExplanation(PlacementRule Rule, int? PreferenceRa
 
     public static AssignmentExplanation Backfill => new(PlacementRule.Backfill);
 
+    public static AssignmentExplanation OvertimeCover => new(PlacementRule.OvertimeCover);
+
     public static AssignmentExplanation Mandatory(int rank) =>
         new(PlacementRule.MandatoryPreference, rank);
 

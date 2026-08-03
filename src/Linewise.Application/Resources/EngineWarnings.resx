@@ -96,6 +96,14 @@
     <value>Locked onto {0} despite being blocked from it or lacking a skill it requires.</value>
     <comment>0 = line name.</comment>
   </data>
+  <data name="LineDemandNotCovered" xml:space="preserve">
+    <value>{0} was raised to {1} for the day and has {2}.</value>
+    <comment>0 = line name, 1 = raised headcount, 2 = actual headcount.</comment>
+  </data>
+  <data name="OvertimeNotOnABusyLine" xml:space="preserve">
+    <value>Working overtime on {0}, which is not running above its usual headcount.</value>
+    <comment>0 = line name.</comment>
+  </data>
 
   <data name="TooManyMandatoryPreferencesForLine" xml:space="preserve">
     <value>{0} has {1} people required on it but only {2} places.</value>

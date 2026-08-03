@@ -29,6 +29,18 @@ public enum WarningCode
     /// <summary>A locked assignment kept an employee who is blocked from the line or lacks a required skill.</summary>
     LockedAssignmentViolatesEligibility = 7,
 
+    /// <summary>
+    /// A line had its headcount raised for the day and did not get the extra people. It has
+    /// its usual complement, so it will run, but not the cover that was planned for it.
+    /// </summary>
+    LineDemandNotCovered = 8,
+
+    /// <summary>
+    /// Somebody is working overtime on a line that is not running above its usual headcount.
+    /// Not wrong, but worth a look: overtime is usually paid to cover a busy line.
+    /// </summary>
+    OvertimeNotOnABusyLine = 9,
+
     // Raised by the rule validator, before generation is attempted.
 
     /// <summary>More employees are mandatory on a line than the line has places.</summary>

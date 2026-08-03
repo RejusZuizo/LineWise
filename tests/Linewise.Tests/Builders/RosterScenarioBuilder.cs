@@ -25,6 +25,7 @@ internal sealed class RosterScenarioBuilder
     private readonly HashSet<string> _withoutAvailabilityRecord = new(StringComparer.Ordinal);
     private readonly List<LinePreference> _preferences = [];
     private readonly List<LeaderEligibility> _leaderEligibilities = [];
+    private readonly List<LineDemand> _demands = [];
     private readonly List<Assignment> _lockedAssignments = [];
     private readonly List<HistoricAssignment> _history = [];
 
@@ -52,6 +53,22 @@ internal sealed class RosterScenarioBuilder
             DisplayOrder = _lines.Count,
             RequiredHeadcount = headcount,
         };
+
+        return this;
+    }
+
+    /// <summary>
+    /// Raises or lowers a line's headcount for one day. Above its standard headcount is the
+    /// manager saying the line has more product to get out.
+    /// </summary>
+    public RosterScenarioBuilder Demand(string line, int day, int headcount)
+    {
+        _demands.Add(new LineDemand
+        {
+            LineId = _lines[line].Id,
+            Date = DateFor(day),
+            RequiredHeadcount = headcount,
+        });
 
         return this;
     }
@@ -203,6 +220,7 @@ internal sealed class RosterScenarioBuilder
         Configuration = BuildConfiguration(),
         Shifts = BuildShifts(),
         Availabilities = BuildAvailabilities(),
+        Demands = _demands.ToList(),
         LockedAssignments = _lockedAssignments.ToList(),
         History = _history.ToList(),
     };

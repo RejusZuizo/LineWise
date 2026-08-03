@@ -27,6 +27,12 @@ public sealed record AssignmentRequest
     public IReadOnlyList<Availability> Availabilities { get; init; } = [];
 
     /// <summary>
+    /// Lines whose headcount is raised or lowered for a particular date. Absent means the
+    /// line runs at its standard headcount.
+    /// </summary>
+    public IReadOnlyList<LineDemand> Demands { get; init; } = [];
+
+    /// <summary>
     /// Assignments the manager has already placed by hand. Carried through untouched and
     /// never moved.
     /// </summary>
