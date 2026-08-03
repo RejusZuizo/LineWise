@@ -1,7 +1,9 @@
 using Linewise.Application.Abstractions;
+using Linewise.Application.Import;
 using Linewise.Application.Persistence;
 using Linewise.Infrastructure.Auditing;
 using Linewise.Infrastructure.Backup;
+using Linewise.Infrastructure.Import;
 using Linewise.Infrastructure.Persistence;
 using Linewise.Infrastructure.Persistence.Repositories;
 using Linewise.Infrastructure.Security;
@@ -56,7 +58,10 @@ public static class ServiceCollectionExtensions
                 provider.GetRequiredService<IDatabaseKeyProvider>().GetKey()));
         });
 
+        services.TryAddSingleton<IAvailabilitySheetReader, ClosedXmlSheetReader>();
+
         services.TryAddScoped<IAuditLog, SqliteAuditLog>();
+        services.TryAddScoped<IImportRepository, SqliteImportRepository>();
         services.TryAddScoped<IRosterRepository, SqliteRosterRepository>();
         services.TryAddScoped<IConfigurationRepository, SqliteConfigurationRepository>();
         services.TryAddScoped<IAvailabilityRepository, SqliteAvailabilityRepository>();

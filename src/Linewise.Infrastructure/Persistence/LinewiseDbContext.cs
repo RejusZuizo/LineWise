@@ -38,6 +38,10 @@ public sealed class LinewiseDbContext : DbContext
 
     public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
 
+    public DbSet<ImportTemplate> ImportTemplates => Set<ImportTemplate>();
+
+    public DbSet<CommittedImport> CommittedImports => Set<CommittedImport>();
+
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
         GuardAuditLog();

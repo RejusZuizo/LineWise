@@ -1,3 +1,4 @@
+using Linewise.Application.Import;
 using Linewise.Application.Rostering;
 using Linewise.Application.Validation;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,9 +19,14 @@ public static class ServiceCollectionExtensions
         // TryAdd, so a host that has already chosen seniority over fairness keeps its choice.
         services.TryAddSingleton<ITieBreakStrategy, FairnessTieBreakStrategy>();
 
-        // Both are stateless and hold nothing between calls, so a singleton is safe.
+        // All stateless and holding nothing between calls, so a singleton is safe.
         services.TryAddSingleton<IAssignmentEngine, AssignmentEngine>();
         services.TryAddSingleton<IRosterRuleValidator, RosterRuleValidator>();
+        services.TryAddSingleton<IAvailabilityImportBuilder, AvailabilityImportBuilder>();
+
+        // Scoped, because these reach repositories that share a database context.
+        services.TryAddScoped<IAvailabilityImportService, AvailabilityImportService>();
+        services.TryAddScoped<IEmployeeSheetImporter, EmployeeSheetImporter>();
 
         return services;
     }

@@ -118,13 +118,5 @@ internal static class RosterWarnings
         Guid? lineId = null,
         Guid? employeeId = null,
         DateOnly? date = null) =>
-        new()
-        {
-            Severity = severity,
-            Code = code,
-            Message = WarningMessages.Format(code, messageArguments),
-            LineId = lineId,
-            EmployeeId = employeeId,
-            Date = date,
-        };
+        WarningFactory.Create(code, severity, messageArguments, lineId, employeeId, date);
 }

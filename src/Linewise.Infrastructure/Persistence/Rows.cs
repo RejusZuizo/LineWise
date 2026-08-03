@@ -27,6 +27,36 @@ internal sealed class LineSkillRow
 }
 
 /// <summary>
+/// One mark-to-status rule belonging to an import template, kept in order.
+/// </summary>
+internal sealed class ImportTemplateRuleRow
+{
+    public Guid ImportTemplateId { get; set; }
+
+    public int Ordinal { get; set; }
+
+    public int Kind { get; set; }
+
+    public string Value { get; set; } = string.Empty;
+
+    public int Status { get; set; }
+}
+
+/// <summary>
+/// The bytes of an imported file.
+/// </summary>
+/// <remarks>
+/// Its own table so that listing what has been imported does not drag a spreadsheet out of
+/// the database with every row.
+/// </remarks>
+internal sealed class ImportFileRow
+{
+    public Guid CommittedImportId { get; set; }
+
+    public byte[] Content { get; set; } = [];
+}
+
+/// <summary>
 /// One date and shift within a saved roster.
 /// </summary>
 /// <remarks>

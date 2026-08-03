@@ -230,7 +230,8 @@ Scope: `Linewise.Domain`, `Linewise.Application` and `Linewise.Tests` only.
 | ProductionLine | Id, Name, DisplayOrder, RequiredHeadcount, RequiredSkills, AccentColour |
 | Skill | Id, Name. A hard eligibility filter |
 | Shift | Id, Date, Name (Day, Night) |
-| Availability | EmployeeId, Date, Status (Working, Off, Overtime) |
+| Availability | EmployeeId, Date, Status (Working, Off, Overtime, Holiday) |
+| LineDemand | LineId, Date, RequiredHeadcount. Overrides the line's standard headcount for one day |
 | LinePreference | EmployeeId, LineId, Rank (1 = first choice), Type (Mandatory, Preferred, Blocked) |
 | LeaderEligibility | EmployeeId, LineId |
 | Assignment | Date, ShiftId, LineId, EmployeeId, Role (Worker, LineLeader), IsLocked, Source (Auto, Manual) |
@@ -262,9 +263,20 @@ Rules apply in this exact order:
    be swapped for seniority.
 7. Never place an employee on a line they are blocked from, or whose required skills they
    lack. Absolute, overriding everything above except locked assignments.
-8. Fill remaining empty slots with unassigned eligible employees.
-9. Warn for every line under RequiredHeadcount, every line with no leader, and every
-   available employee left unassigned.
+8. Fill remaining empty slots with unassigned eligible employees, placing anyone whose
+   status is Overtime onto lines running above their standard headcount before anywhere
+   else. Overtime is worked because a line has more product to get out, so that is where
+   the extra pair of hands belongs.
+9. Warn for every line under RequiredHeadcount, every line with no leader, every available
+   employee left unassigned, every line whose raised demand went uncovered, and every
+   employee on overtime who ended up on a line that did not need one.
+
+Headcount for a line on a given day is its LineDemand for that date when one exists, and
+its standard RequiredHeadcount otherwise. Raising demand for a day is how the manager says
+a line has more product to get out, and it is the same signal that tells the engine where
+overtime should go. Overtime routing is a preference and not a restriction: a line short of
+people still gets filled rather than left empty to honour it, and the mismatch is warned
+about instead.
 
 The engine is pure: no I/O, no logging, no static state, deterministic given identical
 inputs.
@@ -631,3 +643,4 @@ tracked outside this repository.
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 29 Jul 2026 | Initial design. Single machine scope confirmed, networked deployment explicitly deferred. |
+| 1.1 | 3 Aug 2026 | The site's sheet changed from coloured cells to written marks. Templates now read either. Holiday added as a status, distinct from a blank cell. LineDemand added, letting a line's headcount be raised for a day; overtime is routed to those lines first, and mismatches are warned about rather than enforced. |
