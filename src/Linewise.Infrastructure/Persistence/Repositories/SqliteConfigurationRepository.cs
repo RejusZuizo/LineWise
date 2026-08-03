@@ -180,6 +180,32 @@ public sealed class SqliteConfigurationRepository : IConfigurationRepository
     }
 
     /// <summary>
+    /// There is one set of print settings, and the first row is it. A table rather than a
+    /// configuration file so the settings travel with a backup.
+    /// </summary>
+    public async Task<PrintSettings> GetPrintSettingsAsync(CancellationToken cancellationToken = default) =>
+        await _context.PrintSettings
+            .AsNoTracking()
+            .OrderBy(settings => settings.Id)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false)
+        ?? new PrintSettings { Id = Guid.Empty };
+
+    public async Task SavePrintSettingsAsync(
+        PrintSettings settings,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+
+        var stored = settings.Id == Guid.Empty
+            ? settings with { Id = Guid.NewGuid() }
+            : settings;
+
+        await UpsertAsync(_context.PrintSettings, stored, stored.Id, cancellationToken).ConfigureAwait(false);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
     /// Inserts or overwrites by key. The domain records are immutable, so an update is a
     /// matter of pushing the new values onto the tracked entry rather than assigning to
     /// properties that have no setters.

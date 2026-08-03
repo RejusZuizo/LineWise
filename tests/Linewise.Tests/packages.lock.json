@@ -294,6 +294,7 @@
           "Microsoft.EntityFrameworkCore.Sqlite.Core": "[8.0.11, )",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "[8.0.2, )",
           "Microsoft.Extensions.Options": "[8.0.2, )",
+          "QuestPDF": "[2024.12.3, )",
           "SQLitePCLRaw.bundle_e_sqlcipher": "[2.1.10, )",
           "System.Security.Cryptography.ProtectedData": "[8.0.0, )"
         }
@@ -333,6 +334,12 @@
           "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.0",
           "Microsoft.Extensions.Primitives": "8.0.0"
         }
+      },
+      "QuestPDF": {
+        "type": "CentralTransitive",
+        "requested": "[2024.12.3, )",
+        "resolved": "2024.12.3",
+        "contentHash": "gdIoEC9cTnySnDdbwcguUfSS2+444rGEeecQH5n0IKUA9Tm4473eRrFjPk5HoD5I2BxjuyDW+WCGnwKa+OIXsw=="
       },
       "SQLitePCLRaw.bundle_e_sqlcipher": {
         "type": "CentralTransitive",

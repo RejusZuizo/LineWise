@@ -28,6 +28,8 @@ public sealed class LinewiseDbContext : DbContext
 
     public DbSet<LineDemand> LineDemands => Set<LineDemand>();
 
+    public DbSet<PrintSettings> PrintSettings => Set<PrintSettings>();
+
     public DbSet<LinePreference> Preferences => Set<LinePreference>();
 
     public DbSet<LeaderEligibility> LeaderEligibilities => Set<LeaderEligibility>();

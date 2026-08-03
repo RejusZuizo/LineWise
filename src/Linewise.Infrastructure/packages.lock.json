@@ -55,6 +55,12 @@
           "Microsoft.Extensions.Primitives": "8.0.0"
         }
       },
+      "QuestPDF": {
+        "type": "Direct",
+        "requested": "[2024.12.3, )",
+        "resolved": "2024.12.3",
+        "contentHash": "gdIoEC9cTnySnDdbwcguUfSS2+444rGEeecQH5n0IKUA9Tm4473eRrFjPk5HoD5I2BxjuyDW+WCGnwKa+OIXsw=="
+      },
       "SQLitePCLRaw.bundle_e_sqlcipher": {
         "type": "Direct",
         "requested": "[2.1.10, )",
