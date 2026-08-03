@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Follows Infrastructure, which is Windows specific because of DPAPI. -->
+    <TargetFramework>net8.0-windows</TargetFramework>
     <RootNamespace>Linewise.Tests</RootNamespace>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
@@ -9,6 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Linewise.Domain\Linewise.Domain.csproj" />
     <ProjectReference Include="..\..\src\Linewise.Application\Linewise.Application.csproj" />
+    <ProjectReference Include="..\..\src\Linewise.Infrastructure\Linewise.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

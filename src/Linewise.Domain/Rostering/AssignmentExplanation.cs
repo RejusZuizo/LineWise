@@ -13,11 +13,15 @@ namespace Linewise.Domain.Rostering;
 /// </param>
 public sealed record AssignmentExplanation(PlacementRule Rule, int? PreferenceRank = null)
 {
-    public static AssignmentExplanation ManualOverride { get; } = new(PlacementRule.ManualOverride);
+    // A new instance each time rather than a cached one. These read like constants and were
+    // written as constants, but an explanation belongs to exactly one assignment: sharing a
+    // single instance across every backfilled placement in a week leaves the store able to
+    // attach it to only the first of them. Value equality means nothing else notices.
+    public static AssignmentExplanation ManualOverride => new(PlacementRule.ManualOverride);
 
-    public static AssignmentExplanation LeaderSelection { get; } = new(PlacementRule.LeaderSelection);
+    public static AssignmentExplanation LeaderSelection => new(PlacementRule.LeaderSelection);
 
-    public static AssignmentExplanation Backfill { get; } = new(PlacementRule.Backfill);
+    public static AssignmentExplanation Backfill => new(PlacementRule.Backfill);
 
     public static AssignmentExplanation Mandatory(int rank) =>
         new(PlacementRule.MandatoryPreference, rank);
