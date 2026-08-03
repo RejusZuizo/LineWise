@@ -5,7 +5,7 @@ using Linewise.Domain.Rostering;
 namespace Linewise.Application.Rostering;
 
 /// <summary>
-/// Places people on lines by applying nine rules in a fixed order. Greedy, not optimal:
+/// Places people on lines by applying ten rules in a fixed order. Greedy, not optimal:
 /// it produces a good roster in well under a second and can explain every placement,
 /// which is worth more to the manager than mathematical optimality nobody can audit.
 /// </summary>
@@ -137,7 +137,7 @@ public sealed class AssignmentEngine : IAssignmentEngine
                 continue;
             }
 
-            if (placements[line.Id].Count >= line.RequiredHeadcount)
+            if (placements[line.Id].Count >= context.HeadcountFor(line, shift.Date))
             {
                 // No room left, so the preference has to break. Overtime is the one status
                 // under which breaking it is allowed rather than wrong.
@@ -160,7 +160,7 @@ public sealed class AssignmentEngine : IAssignmentEngine
             }
 
             var alreadyOnLine = placements[line.Id].Select(assignment => assignment.EmployeeId).ToHashSet();
-            var hasRoom = placements[line.Id].Count < line.RequiredHeadcount;
+            var hasRoom = placements[line.Id].Count < context.HeadcountFor(line, shift.Date);
 
             var candidates = availableToday
                 .Where(employeeId => context.CanLead(employeeId, line.Id))
@@ -195,13 +195,44 @@ public sealed class AssignmentEngine : IAssignmentEngine
             context.Ledger.RecordLead(leader, shift.Date);
         }
 
-        // Rules 5 and 6. Every first choice across the whole workforce, then every second
+        // Rule 5. Overtime goes to the lines running above their usual headcount, because
+        // that is what overtime is being paid for. This has to happen before ranked
+        // preferences rather than at the backfill: an overtime worker with a first choice
+        // elsewhere would already be standing on it by then, and would never have been
+        // available to cover the busy line at all.
+        foreach (var line in context.Lines.Where(line => context.IsRunningHot(line, shift.Date)))
+        {
+            var room = context.HeadcountFor(line, shift.Date) - placements[line.Id].Count;
+
+            if (room <= 0)
+            {
+                continue;
+            }
+
+            var candidates = availableToday
+                .Where(employeeId => !assignedToday.Contains(employeeId))
+                .Where(employeeId => context.StatusOn(employeeId, shift.Date) == AvailabilityStatus.Overtime)
+                .Where(employeeId => context.IsEligibleFor(employeeId, line))
+                .ToList();
+
+            if (candidates.Count == 0)
+            {
+                continue;
+            }
+
+            foreach (var employeeId in _tieBreak.Prioritise(candidates, TieBreakFor(line)).Take(room))
+            {
+                Place(line, employeeId, AssignmentRole.Worker, AssignmentExplanation.OvertimeCover);
+            }
+        }
+
+        // Rules 6 and 7. Every first choice across the whole workforce, then every second
         // choice, and so on. Never employee by employee, which starves whoever sorts last.
         for (var rank = 1; rank <= context.HighestPreferenceRank; rank++)
         {
             foreach (var line in context.Lines)
             {
-                var room = line.RequiredHeadcount - placements[line.Id].Count;
+                var room = context.HeadcountFor(line, shift.Date) - placements[line.Id].Count;
 
                 if (room <= 0)
                 {
@@ -227,10 +258,10 @@ public sealed class AssignmentEngine : IAssignmentEngine
             }
         }
 
-        // Rule 8. Whatever is still empty gets filled from whoever is still free.
+        // Rule 9. Whatever is still empty gets filled from whoever is still free.
         foreach (var line in context.Lines)
         {
-            var room = line.RequiredHeadcount - placements[line.Id].Count;
+            var room = context.HeadcountFor(line, shift.Date) - placements[line.Id].Count;
 
             if (room <= 0)
             {
@@ -253,19 +284,41 @@ public sealed class AssignmentEngine : IAssignmentEngine
             }
         }
 
-        // Rule 9. Say what is wrong with the result rather than refusing to produce one.
+        // Rule 10. Say what is wrong with the result rather than refusing to produce one.
         foreach (var line in context.Lines)
         {
             var onLine = placements[line.Id];
+            var wanted = context.HeadcountFor(line, shift.Date);
 
-            if (onLine.Count < line.RequiredHeadcount)
+            // Short handed means below the smaller of the two: a line the manager has quietened
+            // for the day is not short handed for being at the number they asked for.
+            var mustHave = Math.Min(line.RequiredHeadcount, wanted);
+
+            if (onLine.Count < mustHave)
             {
-                warnings.Add(RosterWarnings.LineUnderHeadcount(line, onLine.Count, shift.Date));
+                warnings.Add(RosterWarnings.LineUnderHeadcount(line, onLine.Count, mustHave, shift.Date));
+            }
+            else if (onLine.Count < wanted)
+            {
+                // It will run, but without the extra cover that was asked for. A different
+                // problem from being short handed, and worth saying differently.
+                warnings.Add(RosterWarnings.LineDemandNotCovered(line, wanted, onLine.Count, shift.Date));
             }
 
             if (!onLine.Exists(assignment => assignment.Role == AssignmentRole.LineLeader))
             {
                 warnings.Add(RosterWarnings.LineHasNoLeader(line, shift.Date));
+            }
+
+            // Somebody on overtime standing on a quiet line. Not wrong, and not worth
+            // undoing, but the manager is paying a premium for it.
+            if (!context.IsRunningHot(line, shift.Date))
+            {
+                foreach (var assignment in onLine.Where(assignment =>
+                    context.StatusOn(assignment.EmployeeId, shift.Date) == AvailabilityStatus.Overtime))
+                {
+                    warnings.Add(RosterWarnings.OvertimeNotOnABusyLine(line, assignment.EmployeeId, shift.Date));
+                }
             }
         }
 

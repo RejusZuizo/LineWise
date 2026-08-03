@@ -15,6 +15,12 @@ public enum PlacementRule
     /// <summary>Placed by leader selection, having led least recently.</summary>
     LeaderSelection = 2,
 
+    /// <summary>
+    /// Placed on a line running above its usual headcount because they are on overtime,
+    /// which is what the overtime is covering.
+    /// </summary>
+    OvertimeCover = 5,
+
     /// <summary>Placed by a ranked line preference. The rank is recorded alongside.</summary>
     PreferenceRank = 3,
 

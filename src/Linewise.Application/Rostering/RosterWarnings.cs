@@ -13,11 +13,16 @@ internal static class RosterWarnings
 {
     // Raised while generating.
 
-    public static RosterWarning LineUnderHeadcount(ProductionLine line, int actual, DateOnly date) =>
+    /// <param name="required">
+    /// What the line needed on the day, which is its demand where one was set rather than
+    /// its standard headcount. A line running quiet is not short handed for being at the
+    /// smaller number.
+    /// </param>
+    public static RosterWarning LineUnderHeadcount(ProductionLine line, int actual, int required, DateOnly date) =>
         Build(
             WarningCode.LineUnderHeadcount,
             WarningSeverity.Error,
-            [line.Name, actual, line.RequiredHeadcount],
+            [line.Name, actual, required],
             lineId: line.Id,
             date: date);
 
@@ -57,6 +62,23 @@ internal static class RosterWarnings
     public static RosterWarning LockedAssignmentViolatesEligibility(ProductionLine line, Guid employeeId, DateOnly date) =>
         Build(
             WarningCode.LockedAssignmentViolatesEligibility,
+            WarningSeverity.Notice,
+            [line.Name],
+            lineId: line.Id,
+            employeeId: employeeId,
+            date: date);
+
+    public static RosterWarning LineDemandNotCovered(ProductionLine line, int required, int actual, DateOnly date) =>
+        Build(
+            WarningCode.LineDemandNotCovered,
+            WarningSeverity.Error,
+            [line.Name, required, actual],
+            lineId: line.Id,
+            date: date);
+
+    public static RosterWarning OvertimeNotOnABusyLine(ProductionLine line, Guid employeeId, DateOnly date) =>
+        Build(
+            WarningCode.OvertimeNotOnABusyLine,
             WarningSeverity.Notice,
             [line.Name],
             lineId: line.Id,

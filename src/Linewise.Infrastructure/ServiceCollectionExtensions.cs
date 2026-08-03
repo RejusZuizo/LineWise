@@ -65,6 +65,7 @@ public static class ServiceCollectionExtensions
         services.TryAddScoped<IRosterRepository, SqliteRosterRepository>();
         services.TryAddScoped<IConfigurationRepository, SqliteConfigurationRepository>();
         services.TryAddScoped<IAvailabilityRepository, SqliteAvailabilityRepository>();
+        services.TryAddScoped<ILineDemandRepository, SqliteLineDemandRepository>();
         services.TryAddScoped<IShiftRepository, SqliteShiftRepository>();
         services.TryAddScoped<DatabaseInitialiser>();
 
