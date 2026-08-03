@@ -132,4 +132,54 @@
     <value>Required on more than one line. The highest choice, {0}, will be used.</value>
     <comment>0 = line name.</comment>
   </data>
+
+  <data name="ImportWorksheetMissing" xml:space="preserve">
+    <value>The file has no sheet called {0}.</value>
+    <comment>0 = worksheet name.</comment>
+  </data>
+  <data name="ImportNoDateColumns" xml:space="preserve">
+    <value>No dates could be read from row {0}, so there is nothing to import.</value>
+    <comment>0 = header row number.</comment>
+  </data>
+  <data name="ImportDateHeaderUnreadable" xml:space="preserve">
+    <value>Column {0} does not read as a date.</value>
+    <comment>0 = column letter or number.</comment>
+  </data>
+  <data name="ImportNameUnmatched" xml:space="preserve">
+    <value>Row {0} does not match anybody on file.</value>
+    <comment>0 = row number.</comment>
+  </data>
+  <data name="ImportNameAmbiguous" xml:space="preserve">
+    <value>Row {0} fits {1} people equally well.</value>
+    <comment>0 = row number, 1 = number of candidates.</comment>
+  </data>
+  <data name="ImportNameMatchedLoosely" xml:space="preserve">
+    <value>Row {0} matched, but not exactly. Worth checking.</value>
+    <comment>0 = row number.</comment>
+  </data>
+  <data name="ImportCellUnrecognised" xml:space="preserve">
+    <value>Row {0}, column {1} holds a mark that no rule recognises.</value>
+    <comment>0 = row number, 1 = column number.</comment>
+  </data>
+  <data name="ImportCellColourUnreadable" xml:space="preserve">
+    <value>Row {0}, column {1} is coloured, but the colour could not be read.</value>
+    <comment>0 = row number, 1 = column number.</comment>
+  </data>
+  <data name="ImportFileTooLarge" xml:space="preserve">
+    <value>The file is too large to be an availability sheet and was not opened.</value>
+  </data>
+  <data name="ImportFileNotAWorkbook" xml:space="preserve">
+    <value>The file could not be opened as a spreadsheet.</value>
+  </data>
+  <data name="ImportNoRows" xml:space="preserve">
+    <value>The sheet has no rows below row {0}.</value>
+    <comment>0 = header row number.</comment>
+  </data>
+  <data name="ImportRowsLeftUnresolved" xml:space="preserve">
+    <value>{0} rows were left unresolved and have no availability recorded.</value>
+    <comment>0 = number of rows.</comment>
+  </data>
+  <data name="ImportEmployeeOnMoreThanOneRow" xml:space="preserve">
+    <value>Appears on more than one row. The first was used.</value>
+  </data>
 </root>

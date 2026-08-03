@@ -11,6 +11,11 @@
     <PackageVersion Include="Microsoft.Extensions.Options" Version="8.0.2" />
   </ItemGroup>
 
+  <ItemGroup Label="Import">
+    <!-- MIT licensed. EPPlus is not, and is unusable in a product that will be sold. -->
+    <PackageVersion Include="ClosedXML" Version="0.104.2" />
+  </ItemGroup>
+
   <ItemGroup Label="Persistence">
     <!-- Sqlite.Core rather than Sqlite, so the unencrypted SQLite bundle is not dragged in
          alongside the SQLCipher one. Exactly one bundle may be loaded. -->
