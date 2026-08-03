@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <PackageReference Include="ClosedXML" />
+    <PackageReference Include="QuestPDF" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite.Core" />
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlcipher" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" />

@@ -34,4 +34,12 @@ public interface IConfigurationRepository
         Guid employeeId,
         IReadOnlyList<LeaderEligibility> eligibilities,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// How the printed roster should look. Returns sensible defaults when nothing has been
+    /// configured, so a first run can print before anybody has been near a settings screen.
+    /// </summary>
+    Task<PrintSettings> GetPrintSettingsAsync(CancellationToken cancellationToken = default);
+
+    Task SavePrintSettingsAsync(PrintSettings settings, CancellationToken cancellationToken = default);
 }

@@ -1,11 +1,13 @@
 using Linewise.Application.Abstractions;
 using Linewise.Application.Import;
 using Linewise.Application.Persistence;
+using Linewise.Application.Printing;
 using Linewise.Infrastructure.Auditing;
 using Linewise.Infrastructure.Backup;
 using Linewise.Infrastructure.Import;
 using Linewise.Infrastructure.Persistence;
 using Linewise.Infrastructure.Persistence.Repositories;
+using Linewise.Infrastructure.Printing;
 using Linewise.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,6 +31,12 @@ public static class ServiceCollectionExtensions
         // Loads the SQLCipher build of SQLite. Exactly one provider may be registered, which
         // is why the project references Sqlite.Core rather than Sqlite.
         SQLitePCL.Batteries_V2.Init();
+
+        // QuestPDF requires the licence to be declared before it will render anything, and
+        // it is declared here rather than left to a host to remember. Community is free, and
+        // choosing it is an assertion about the licensee's revenue rather than a technical
+        // setting: whoever ships this has to have checked that the threshold is met.
+        QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
         services.AddOptions<LinewiseDatabaseOptions>();
 
@@ -59,6 +67,7 @@ public static class ServiceCollectionExtensions
         });
 
         services.TryAddSingleton<IAvailabilitySheetReader, ClosedXmlSheetReader>();
+        services.TryAddSingleton<IRosterPrinter, QuestPdfRosterPrinter>();
 
         services.TryAddScoped<IAuditLog, SqliteAuditLog>();
         services.TryAddScoped<IImportRepository, SqliteImportRepository>();

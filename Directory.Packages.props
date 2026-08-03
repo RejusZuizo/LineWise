@@ -11,6 +11,10 @@
     <PackageVersion Include="Microsoft.Extensions.Options" Version="8.0.2" />
   </ItemGroup>
 
+  <ItemGroup Label="Printing">
+    <PackageVersion Include="QuestPDF" Version="2024.12.3" />
+  </ItemGroup>
+
   <ItemGroup Label="Import">
     <!-- MIT licensed. EPPlus is not, and is unusable in a product that will be sold. -->
     <PackageVersion Include="ClosedXML" Version="0.104.2" />

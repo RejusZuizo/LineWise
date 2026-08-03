@@ -37,6 +37,22 @@ internal sealed class ProductionLineConfiguration : IEntityTypeConfiguration<Pro
     }
 }
 
+internal sealed class PrintSettingsConfiguration : IEntityTypeConfiguration<PrintSettings>
+{
+    public void Configure(EntityTypeBuilder<PrintSettings> builder)
+    {
+        builder.ToTable("PrintSettings");
+        builder.HasKey(settings => settings.Id);
+
+        builder.Property(settings => settings.CompanyName).IsRequired().HasMaxLength(200);
+        builder.Property(settings => settings.LogoPng);
+        builder.Property(settings => settings.PaperSize);
+        builder.Property(settings => settings.Orientation);
+        builder.Property(settings => settings.BaseFontPoints);
+        builder.Property(settings => settings.UseAccentColours);
+    }
+}
+
 internal sealed class SkillConfiguration : IEntityTypeConfiguration<Skill>
 {
     public void Configure(EntityTypeBuilder<Skill> builder)
