@@ -1,4 +1,4 @@
-﻿using Linewise.Application.Import;
+using Linewise.Application.Import;
 using Linewise.Domain.Entities;
 using Linewise.Domain.Enums;
 using Linewise.Infrastructure.Import;
