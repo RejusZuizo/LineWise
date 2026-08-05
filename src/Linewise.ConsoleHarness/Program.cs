@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using Linewise.Application;
 using Linewise.Application.Rostering;
 using Linewise.Application.Validation;
