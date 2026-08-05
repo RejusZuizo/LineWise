@@ -8,6 +8,7 @@ using Xunit;
 
 namespace Linewise.Tests.Printing;
 
+[Trait(TestCategories.Key, TestCategories.Integration)]
 public sealed class RosterPrinterTests
 {
     private readonly IRosterPrinter _printer = new QuestPdfRosterPrinter();

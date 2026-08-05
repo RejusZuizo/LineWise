@@ -5,6 +5,7 @@ using Xunit;
 
 namespace Linewise.Tests.Persistence;
 
+[Trait(TestCategories.Key, TestCategories.Integration)]
 public sealed class DatabaseLifecycleTests
 {
     [Fact]

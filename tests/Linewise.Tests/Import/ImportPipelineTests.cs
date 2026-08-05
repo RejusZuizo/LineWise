@@ -13,6 +13,7 @@ namespace Linewise.Tests.Import;
 /// <summary>
 /// The three step pipeline over a real encrypted database and a real .xlsx.
 /// </summary>
+[Trait(TestCategories.Key, TestCategories.Integration)]
 public sealed class ImportPipelineTests
 {
     [Fact]

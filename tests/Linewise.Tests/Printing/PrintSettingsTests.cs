@@ -6,6 +6,7 @@ using Xunit;
 
 namespace Linewise.Tests.Printing;
 
+[Trait(TestCategories.Key, TestCategories.Integration)]
 public sealed class PrintSettingsTests
 {
     [Fact]
