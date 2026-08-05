@@ -89,75 +89,29 @@ provider specific SQL keeps that door open at low cost.
 The threat model is shaped by the deployment: a single unattended office PC in a
 factory, holding the personal data of every employee on site.
 
-### 4.1 Threats
+### 4.1 Shape of the problem
 
-| ID | Threat | Control |
-|---|---|---|
-| T1 | Physical access to an unattended machine | Optional application lock, idle timeout |
-| T2 | Database file copied to removable media | Encryption at rest via SQLCipher |
-| T3 | Backup files as an unprotected full copy of the dataset | Encrypted backups, key never stored beside them |
-| T4 | Malicious or malformed import file | Archive size limits, structural validation, no macro execution |
-| T5 | Formula injection reaching a spreadsheet or CSV export | Sanitise leading `=`, `+`, `-`, `@` on all exported cell values |
-| T6 | Personal data leaking into log files | Serilog destructuring policy redacting names and identifiers |
-| T7 | Compromised or spoofed update package | Signed packages, signature verified before apply, HTTPS only |
-| T8 | Malicious transitive dependency | Lock file with locked mode restore, vulnerability scan in CI |
-| T9 | Audit history altered to hide a change | Hash chained append only audit log |
-| T10 | Exported PDFs left in shared folders | Default export path outside shared locations, documented in the manual |
+The interesting surface is local. There is no login to bypass and no API to abuse.
+What matters is the machine, the files the application writes, and the files it
+reads from elsewhere.
 
-### 4.2 Controls in detail
+Eleven threats are tracked, from physical access to an unattended machine through
+to a development key provider reaching a release build. Four controls carry most
+of the weight: encryption at rest keyed from DPAPI, a hash chained audit log,
+treating the imported spreadsheet as a trust boundary, and a locked dependency
+graph scanned on every build.
 
-**Encryption at rest.** SQLCipher via `Microsoft.Data.Sqlite` with a bundled
-SQLCipher provider. The key is derived from a machine and user scoped secret held in
-Windows DPAPI, never written to configuration. Losing the Windows profile means
-losing the database, so the restore procedure must be documented and tested.
+### 4.2 Where this is written down
 
-**Tamper evident audit log.** Every audit entry stores the SHA-256 hash of the
-previous entry, forming a chain. A verification routine walks the chain and reports
-the first broken link. Deleting or editing a historic entry becomes detectable rather
-than silent. Entries are append only at the application layer, with no update or
-delete path exposed.
+The threat table, the controls in detail, and the state of each now live in
+[threat-model.md](threat-model.md), which is a living document rather than a
+section of a plan. The data protection position — what is held, what is
+deliberately not held, retention, erasure, and the rule against real employee data
+anywhere in the repository — lives in [data-protection.md](data-protection.md).
 
-**Import as a trust boundary.** The .xlsx format is a zip archive, so the parser caps
-total uncompressed size and entry count to defeat decompression bombs, rejects
-archives whose structure does not match the expected package layout, and never
-evaluates formulas. Parse failures produce warnings, never exceptions that reach the
-user as a stack trace.
-
-**Formula injection.** Any exported cell value beginning with `=`, `+`, `-` or `@` is
-prefixed with an apostrophe. Without this, a crafted employee name becomes code
-execution on whichever machine opens the export.
-
-**Log hygiene.** A Serilog destructuring policy redacts employee names, aliases and
-any file path containing user data. Log files are written to the per user application
-data folder, never beside the executable.
-
-**Update integrity.** Update packages are signed and the signature verified before
-application. The feed is HTTPS only with certificate validation. An updater that
-fetches and executes without verification is a remote code execution path.
-
-**Supply chain.** `packages.lock.json` committed, CI restores with `--locked-mode`,
-and `dotnet list package --vulnerable --include-transitive` fails the build on a
-known advisory.
-
-**Application lock.** Optional PIN or Windows account check on launch and after an
-idle timeout. This is a lock, not an authorisation system. There are no roles.
-
-### 4.3 Data protection position
-
-Employee names, working patterns and absence status are personal data under GDPR.
-
-- **Minimisation.** Store only what assignment requires. No addresses, no contact
-  details, no employment terms, no reason for absence beyond a status enum.
-- **Retention.** Configurable retention on rosters and audit entries, defaulting to
-  the statutory employment record period. Document the chosen default and its basis.
-- **Erasure.** Employees are deactivated, never hard deleted, so historic rosters
-  remain intact. A separate anonymisation routine replaces name fields on records
-  past the retention window. Document the position that employment record retention
-  obligations constrain the right to erasure here.
-- **Test data.** No real employee data in the repository, in fixtures, in
-  screenshots, or in git history.
-
-Record all of the above in `docs/threat-model.md` and `docs/data-protection.md`.
+Both were extracted from this document on 5 August 2026. Keeping them here meant
+security decisions ageing at the speed of a design document, which is to say not
+at all.
 
 ## 5. Non-functional targets
 
@@ -571,9 +525,13 @@ different sheet layout and different terminology, without recompiling.
 
 #### Repository files
 
-README.md, LICENSE, THIRD-PARTY-NOTICES.txt, SECURITY.md with a disclosure contact,
-CHANGELOG.md, docs/architecture.md, docs/adr/, docs/threat-model.md,
-docs/data-protection.md, .github/workflows/ci.yml, .github/pull_request_template.md.
+Already in place: LICENSE, SECURITY.md, CHANGELOG.md, docs/adr/,
+docs/threat-model.md, docs/data-protection.md, .github/workflows/ci.yml,
+.github/pull_request_template.md. Written early rather than at release, because a
+licence file that appears in the last week of a project is one nobody thought
+about.
+
+Still to write: README.md, THIRD-PARTY-NOTICES.txt, docs/architecture.md.
 
 No CONTRIBUTING.md. This project does not accept contributions and an empty ritual file is
 worse than no file.
