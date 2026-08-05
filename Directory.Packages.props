@@ -17,7 +17,7 @@
 
   <ItemGroup Label="Import">
     <!-- MIT licensed. EPPlus is not, and is unusable in a product that will be sold. -->
-    <PackageVersion Include="ClosedXML" Version="0.104.2" />
+    <PackageVersion Include="ClosedXML" Version="0.105.1" />
   </ItemGroup>
 
   <ItemGroup Label="Persistence">
