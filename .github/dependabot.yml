@@ -1,0 +1,36 @@
+version: 2
+
+updates:
+  # NuGet. Versions are centrally managed in Directory.Packages.props and pinned by
+  # packages.lock.json, so an update has to touch both. If Dependabot raises a pull
+  # request that leaves the lock files behind, the locked mode restore in CI fails
+  # loudly rather than the mismatch reaching a build; the fix is `dotnet restore`
+  # on the branch and a commit.
+  - package-ecosystem: nuget
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore"
+      include: scope
+    groups:
+      # One pull request for the test tooling rather than four. These move together
+      # and none of them ship.
+      test-tooling:
+        patterns:
+          - "xunit*"
+          - "Microsoft.NET.Test.Sdk"
+          - "coverlet.*"
+
+  # Workflow actions are pinned to commit SHAs, which is the point of watching them:
+  # a pin stops a tag being moved underneath us, and this stops the pin going stale
+  # and unnoticed. Dependabot updates the SHA and the version comment together.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: "ci"
