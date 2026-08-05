@@ -11,6 +11,7 @@ namespace Linewise.Tests.Import;
 /// End to end over a real .xlsx: the reader turns a file into a sheet, and the builder turns
 /// that into an import. Everything here is generated in memory.
 /// </summary>
+[Trait(TestCategories.Key, TestCategories.Integration)]
 public sealed class SheetReaderTests
 {
     private static readonly Guid AdaId = new("10000000-0000-0000-0000-000000000001");

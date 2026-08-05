@@ -16,10 +16,41 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Fast signal, and a standing check that the core has not become Windows bound.
+  # Development happens on Linux and the product ships to Windows, so the two agreeing
+  # is a property worth proving continuously rather than discovering at a reboot.
+  #
+  # Not a release gate. The Windows job below is the one that decides whether this
+  # builds, because that is the platform it ships to.
+  unit:
+    name: Unit tests on Linux
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 8.0.x
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Restore
+        run: dotnet restore --locked-mode
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      # Everything that does not reach a database, the file system, or a third party
+      # engine. 117 of the 176, and they run in well under a second.
+      - name: Test
+        run: dotnet test --no-build --configuration Release --filter "Category!=Integration"
+
   build:
     name: Build and test
     # Windows to match the deployment target, so CI never passes on a platform
-    # the product does not ship to.
+    # the product does not ship to. This job runs the whole suite, integration
+    # included, and is the one that gates a merge.
     runs-on: windows-latest
 
     steps:

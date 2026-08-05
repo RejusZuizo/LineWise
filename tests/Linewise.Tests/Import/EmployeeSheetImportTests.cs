@@ -8,6 +8,7 @@ using Xunit;
 
 namespace Linewise.Tests.Import;
 
+[Trait(TestCategories.Key, TestCategories.Integration)]
 public sealed class EmployeeSheetImportTests
 {
     private static readonly EmployeeSheetTemplate Template =
