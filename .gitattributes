@@ -1,2 +1,11 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# Auto detect text files and perform LF normalization.
+#
+# eol=lf makes the working tree LF on every platform, not just the stored blob.
+# Without it a Windows checkout converts to CRLF, which then disagrees with the
+# end_of_line setting in .editorconfig and fails the formatting check on CI while
+# passing on Linux. Development happens on both, so the working tree has to agree
+# with itself across them.
+#
+# No file content changes: text=auto already normalised everything to LF in the
+# repository. This only settles what lands on disk at checkout.
+* text=auto eol=lf
