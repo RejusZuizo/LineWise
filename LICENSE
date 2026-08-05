@@ -1,0 +1,39 @@
+Copyright (c) 2026 Rejus Zuzevicius. All rights reserved.
+
+This software and its source code are published for evaluation and portfolio
+review. They are not open source, and no licence to use them is granted by their
+being publicly readable.
+
+PERMITTED
+
+  Reading the source code.
+  Cloning the repository, building it, and running its test suite, for the sole
+  purpose of evaluating the author's work.
+
+NOT PERMITTED WITHOUT PRIOR WRITTEN PERMISSION FROM THE COPYRIGHT HOLDER
+
+  Use of this software, in whole or in part, in any production, commercial,
+  internal business or operational setting.
+  Copying, modifying, merging, publishing, distributing, sublicensing, or
+  selling copies of the software or any derivative of it.
+  Training machine learning models on this source code.
+
+Deployment to any customer is governed by a separate written licence agreement
+between that customer and the copyright holder. This file governs the contents of
+this repository and nothing else.
+
+THIRD PARTY COMPONENTS
+
+This software depends on third party packages distributed under their own terms,
+principally MIT and Apache 2.0. Those licences apply to those components and are
+unaffected by this notice. See THIRD-PARTY-NOTICES.txt, distributed with the
+application.
+
+NO WARRANTY
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR OR
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
