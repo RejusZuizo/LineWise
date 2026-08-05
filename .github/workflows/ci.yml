@@ -9,6 +9,12 @@ on:
 permissions:
   contents: read
 
+# A newer push to the same branch makes an in-flight run's answer irrelevant, so stop
+# paying for it. Runs on main are keyed separately and are not cancelled by branch work.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: Build and test
@@ -22,6 +28,9 @@ jobs:
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 8.0.x
+          # Keyed on the lock files, which is exactly what decides the restore.
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
 
       - name: Restore
         run: dotnet restore --locked-mode
@@ -31,8 +40,76 @@ jobs:
       - name: Format
         run: dotnet format --verify-no-changes --no-restore
 
+      # Threat T8. Fails on a known advisory in any package, including transitive ones.
+      # `dotnet list package` reports advisories on standard output and still exits zero,
+      # so the text has to be inspected rather than the exit code trusted.
+      - name: Vulnerable packages
+        shell: pwsh
+        run: |
+          $output = dotnet list package --vulnerable --include-transitive 2>&1 | Out-String
+          Write-Host $output
+          if ($output -match 'has the following vulnerable packages') {
+            Write-Error 'Vulnerable packages found. See the output above.'
+            exit 1
+          }
+
       - name: Build
         run: dotnet build --no-restore --configuration Release
 
       - name: Test
-        run: dotnet test --no-build --configuration Release --verbosity normal
+        run: >
+          dotnet test --no-build --configuration Release --verbosity normal
+          --collect:"XPlat Code Coverage" --results-directory artifacts/coverage
+
+      # Reported, never gated. A coverage threshold on a project this size produces tests
+      # written to satisfy the threshold. The number is here to be looked at, and to make
+      # it obvious when it falls off a cliff.
+      - name: Coverage summary
+        if: always()
+        shell: pwsh
+        run: |
+          $report = Get-ChildItem -Path artifacts/coverage -Recurse -Filter coverage.cobertura.xml |
+            Select-Object -First 1
+
+          if (-not $report) {
+            'No coverage report produced.' | Out-File -Append $env:GITHUB_STEP_SUMMARY
+            exit 0
+          }
+
+          [xml]$coverage = Get-Content $report.FullName
+          $line = [math]::Round([double]$coverage.coverage.'line-rate' * 100, 1)
+          $branch = [math]::Round([double]$coverage.coverage.'branch-rate' * 100, 1)
+
+          $summary = @()
+          $summary += '## Coverage'
+          $summary += ''
+          $summary += "Line **$line%**, branch **$branch%**."
+          $summary += ''
+          $summary += '| Assembly | Line |'
+          $summary += '|---|---|'
+
+          foreach ($package in $coverage.coverage.packages.package) {
+            $rate = [math]::Round([double]$package.'line-rate' * 100, 1)
+            $summary += "| $($package.name) | $rate% |"
+          }
+
+          $summary -join "`n" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+
+      # Whether a wall sheet can be read from four feet is not a thing a test can assert,
+      # so the tests write every layout out and this publishes them. Without it the only
+      # copy lives on whichever machine ran the tests.
+      - name: Publish print previews
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: print-previews
+          path: artifacts/print-preview/
+          if-no-files-found: warn
+
+      - name: Publish coverage report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage
+          path: artifacts/coverage/
+          if-no-files-found: warn
