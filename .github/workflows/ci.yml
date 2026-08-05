@@ -26,6 +26,11 @@ jobs:
       - name: Restore
         run: dotnet restore --locked-mode
 
+      # Runs before the build, because a formatting failure is cheap to report and
+      # there is no reason to spend a build on a diff that is going to be rejected.
+      - name: Format
+        run: dotnet format --verify-no-changes --no-restore
+
       - name: Build
         run: dotnet build --no-restore --configuration Release
 
