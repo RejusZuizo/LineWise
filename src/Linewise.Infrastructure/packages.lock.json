@@ -61,6 +61,21 @@
         "resolved": "2024.12.3",
         "contentHash": "gdIoEC9cTnySnDdbwcguUfSS2+444rGEeecQH5n0IKUA9Tm4473eRrFjPk5HoD5I2BxjuyDW+WCGnwKa+OIXsw=="
       },
+      "Serilog": {
+        "type": "Direct",
+        "requested": "[4.4.0, )",
+        "resolved": "4.4.0",
+        "contentHash": "ZC6Le3rr4TVJJjS4KsQAesxeF1EhW9qcZmmG7eP5Y2G3+gTGkJEUXkq4+tZNPtyp05I0wWOxnIjwtxFweJsObw=="
+      },
+      "Serilog.Sinks.File": {
+        "type": "Direct",
+        "requested": "[7.0.0, )",
+        "resolved": "7.0.0",
+        "contentHash": "fKL7mXv7qaiNBUC71ssvn/dU0k9t0o45+qm2XgKAlSt19xF+ijjxyA3R6HmCgfKEKwfcfkwWjayuQtRueZFkYw==",
+        "dependencies": {
+          "Serilog": "4.2.0"
+        }
+      },
       "SQLitePCLRaw.bundle_e_sqlcipher": {
         "type": "Direct",
         "requested": "[2.1.10, )",
@@ -400,7 +415,7 @@
       "linewise.application": {
         "type": "Project",
         "dependencies": {
-          "Linewise.Domain": "[1.0.0, )",
+          "Linewise.Domain": "[0.5.0-alpha, )",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "[8.0.2, )"
         }
       },
