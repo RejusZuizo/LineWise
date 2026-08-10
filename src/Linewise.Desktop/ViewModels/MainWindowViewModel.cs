@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 using Linewise.Application.Persistence;
 using Linewise.Application.Printing;
 using Linewise.Application.Rostering;
+using Linewise.Desktop.Resources;
 using Linewise.Domain.Enums;
 using Serilog;
 
@@ -33,7 +34,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private RosterSummaryViewModel? _summary;
 
     [ObservableProperty]
-    private string _status = "Starting.";
+    private string _status = Strings.Starting;
 
     [ObservableProperty]
     private bool _isLoading;
@@ -81,8 +82,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
     /// posted.
     /// </summary>
     public string Title => Summary is null
-        ? "Linewise"
-        : $"Linewise — {Grid?.WeekLabel ?? string.Empty} — {Summary.StatusLabel}";
+        ? Strings.ProductName
+        : Strings.WindowTitle(Grid?.WeekLabel ?? string.Empty, Summary.StatusLabel);
 
     public string Version =>
         typeof(MainWindowViewModel).Assembly
@@ -126,7 +127,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         catch (Exception exception)
         {
             Log.Error(exception, "Could not generate the roster.");
-            Status = "Could not generate the roster. See the log for details.";
+            Status = Strings.CouldNotGenerate;
         }
         finally
         {
@@ -158,7 +159,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
             if (stored is null)
             {
-                Status = "There is nothing to print.";
+                Status = Strings.NothingToPrint;
                 return;
             }
 
@@ -187,12 +188,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 $"linewise-{_weekStart:yyyy-MM-dd}.pdf",
                 cancellationToken).ConfigureAwait(true);
 
-            Status = "Sent to the printer.";
+            Status = Strings.SentToPrinter;
         }
         catch (Exception exception)
         {
             Log.Error(exception, "Could not print the roster.");
-            Status = "Could not print the roster. See the log for details.";
+            Status = Strings.CouldNotPrint;
         }
         finally
         {
@@ -223,7 +224,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             if (stored is null)
             {
                 Clear();
-                Status = $"No roster stored for the week beginning {weekStart:d MMMM yyyy}.";
+                Status = Strings.NoRosterStored(weekStart);
                 Log.Information("No roster found for {WeekStart}.", weekStart);
                 return;
             }
@@ -269,7 +270,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             // A failure to read is shown as a sentence, not a dialog full of stack trace.
             Log.Error(exception, "Could not load the roster.");
             Clear();
-            Status = "Could not load the roster. See the log for details.";
+            Status = Strings.CouldNotLoad;
         }
         finally
         {

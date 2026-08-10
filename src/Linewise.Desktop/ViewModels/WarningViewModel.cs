@@ -1,3 +1,4 @@
+using Linewise.Desktop.Resources;
 using Linewise.Domain.Enums;
 using Linewise.Domain.Rostering;
 
@@ -44,7 +45,7 @@ public sealed class WarningViewModel
     /// colour vision deficiency, and a warnings strip that distinguishes severity by red
     /// and grey tells some readers nothing at all.
     /// </summary>
-    public string SeverityLabel => IsError ? "Error" : "Notice";
+    public string SeverityLabel => IsError ? Strings.SeverityError : Strings.SeverityNotice;
 
     /// <summary>
     /// Where it applies, when that is known. A configuration warning concerns no
@@ -66,7 +67,7 @@ public sealed class WarningViewModel
                 parts.Add(LineName);
             }
 
-            return string.Join(" · ", parts);
+            return string.Join(Strings.ContextSeparator, parts);
         }
     }
 }

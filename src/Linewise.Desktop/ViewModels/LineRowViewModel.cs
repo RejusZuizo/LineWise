@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Linewise.Desktop.Resources;
 using Linewise.Domain.Entities;
 
 namespace Linewise.Desktop.ViewModels;
@@ -33,4 +34,9 @@ public sealed class LineRowViewModel
     public int ShortDays => Cells.Count(cell => cell.IsShort);
 
     public bool IsShortAnyDay => ShortDays > 0;
+
+    /// <summary>Singular and plural are separate resources, not an "s" added in code.</summary>
+    public string ShortLabel => Strings.LineShort(ShortDays);
+
+    public string NeedsLabel => Strings.LineNeeds(RequiredHeadcount);
 }

@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Linewise.Desktop.Resources;
 using Linewise.Domain.Entities;
 using Linewise.Domain.Rostering;
 
@@ -58,7 +59,7 @@ public sealed class RosterGridViewModel
     /// Shown when an identifier has no employee behind it. Should never appear, and saying
     /// so is better than drawing a blank chip that looks like a rendering fault.
     /// </summary>
-    public const string UnknownEmployee = "[unknown]";
+    public static string UnknownEmployee => Strings.UnknownEmployee;
 
     public DateOnly WeekStart { get; }
 
@@ -68,7 +69,7 @@ public sealed class RosterGridViewModel
 
     public int DayCount => Dates.Count;
 
-    public string WeekLabel => $"Week beginning {WeekStart:dddd d MMMM yyyy}";
+    public string WeekLabel => Strings.WeekBeginning(WeekStart);
 
     /// <summary>Nothing to draw. The window shows guidance instead of an empty grid.</summary>
     public bool IsEmpty => Rows.Count == 0 || Dates.Count == 0;
