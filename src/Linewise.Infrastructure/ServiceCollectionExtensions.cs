@@ -46,9 +46,27 @@ public static class ServiceCollectionExtensions
         }
 
         services.TryAddSingleton<IClock, SystemClock>();
-        services.TryAddSingleton<ICurrentUser, WindowsCurrentUser>();
-        services.TryAddSingleton<IDatabaseKeyProvider, DpapiDatabaseKeyProvider>();
+        services.TryAddSingleton<ICurrentUser, EnvironmentCurrentUser>();
         services.TryAddSingleton<IBackupService, SqliteBackupService>();
+
+        // The one genuinely platform specific service. DPAPI is how the key is kept on the
+        // machine this ships to; everything else in this assembly runs anywhere.
+        //
+        // The alternative on a development machine is weaker by construction, so a release
+        // build does not carry one: the enforcement is that the registration below is
+        // compiled out, not that somebody remembers. See ADR 0011.
+        if (OperatingSystem.IsWindows())
+        {
+            services.TryAddSingleton<IDatabaseKeyProvider, DpapiDatabaseKeyProvider>();
+        }
+        else
+        {
+#if DEBUG
+            services.TryAddSingleton<IDatabaseKeyProvider, DevelopmentKeyFileProvider>();
+#else
+            services.TryAddSingleton<IDatabaseKeyProvider, UnsupportedPlatformKeyProvider>();
+#endif
+        }
 
         services.AddDbContext<LinewiseDbContext>((provider, builder) =>
         {
