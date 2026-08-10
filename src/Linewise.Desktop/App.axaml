@@ -1,0 +1,16 @@
+﻿<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sty="using:FluentAvalonia.Styling"
+             x:Class="Linewise.Desktop.App"
+             RequestedThemeVariant="Light">
+
+  <!--
+    Light, and not following the system. A roster is compared against a sheet of white
+    paper on a wall, and the screen should not be arguing with the printer.
+  -->
+
+  <Application.Styles>
+    <sty:FluentAvaloniaTheme PreferSystemTheme="False" />
+  </Application.Styles>
+
+</Application>
