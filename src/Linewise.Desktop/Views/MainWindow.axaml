@@ -13,17 +13,88 @@
         MinWidth="900" MinHeight="600"
         WindowStartupLocation="CenterScreen">
 
+  <Window.Styles>
+    <!-- Severity is carried by the word in the badge, not by the styling. The border and
+         weight only make it findable at a glance. -->
+    <Style Selector="Border.severity">
+      <Setter Property="BorderBrush" Value="#9AA0A6" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="2" />
+      <Setter Property="Padding" Value="4,1" />
+      <Setter Property="VerticalAlignment" Value="Top" />
+    </Style>
+
+    <Style Selector="Border.severity.error">
+      <Setter Property="BorderThickness" Value="2" />
+      <Setter Property="BorderBrush" Value="#2E3438" />
+    </Style>
+
+    <Style Selector="Border.severity.error > TextBlock">
+      <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+  </Window.Styles>
+
   <DockPanel LastChildFill="True">
 
-    <!-- Status bar. Draft or published state, and the build, which is what to ask for
-         first when somebody reports a fault. -->
+    <!-- Status bar. State, counts, and the build, which is what to ask for first when
+         somebody reports a fault. -->
     <Border DockPanel.Dock="Bottom"
             BorderBrush="#D6D9DC"
             BorderThickness="0,1,0,0"
             Padding="12,6">
       <DockPanel LastChildFill="False">
-        <TextBlock DockPanel.Dock="Left" Text="{Binding Status}" FontSize="12" />
+        <TextBlock DockPanel.Dock="Left"
+                   Text="{Binding Summary.CountsLabel}"
+                   IsVisible="{Binding HasRoster}"
+                   FontSize="12" />
+        <TextBlock DockPanel.Dock="Left"
+                   Text="{Binding Status}"
+                   IsVisible="{Binding !HasRoster}"
+                   FontSize="12" />
         <TextBlock DockPanel.Dock="Right" Text="{Binding Version}" FontSize="11" Opacity="0.6" />
+        <TextBlock DockPanel.Dock="Right"
+                   Text="{Binding Summary.StatusLabel}"
+                   IsVisible="{Binding HasRoster}"
+                   FontSize="12"
+                   FontWeight="SemiBold"
+                   Margin="0,0,16,0" />
+      </DockPanel>
+    </Border>
+
+    <!-- Warnings strip. Always visible when there are any, never behind a tab: a line that
+         cannot run is not something to go looking for. -->
+    <Border DockPanel.Dock="Right"
+            Width="320"
+            IsVisible="{Binding HasWarnings}"
+            BorderBrush="#D6D9DC"
+            BorderThickness="1,0,0,0">
+      <DockPanel LastChildFill="True">
+        <TextBlock DockPanel.Dock="Top"
+                   Text="{Binding Summary.WarningsLabel}"
+                   FontWeight="SemiBold"
+                   Margin="12,10,12,6" />
+        <ScrollViewer>
+          <ItemsControl ItemsSource="{Binding Warnings}" Margin="8,0,8,8">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:WarningViewModel">
+                <Border BorderBrush="#E4E6E8" BorderThickness="0,0,0,1" Padding="4,8">
+                  <StackPanel Spacing="3">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <Border Classes="severity" Classes.error="{Binding IsError}">
+                        <TextBlock Text="{Binding SeverityLabel}" FontSize="10" />
+                      </Border>
+                      <TextBlock Text="{Binding Context}"
+                                 FontSize="11"
+                                 Opacity="0.75"
+                                 VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding Message}" FontSize="12" TextWrapping="Wrap" />
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
       </DockPanel>
     </Border>
 
@@ -46,7 +117,8 @@
       </StackPanel>
     </Border>
 
-    <views:RosterGridView DataContext="{Binding Grid}" IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).HasRoster}" />
+    <views:RosterGridView DataContext="{Binding Grid}"
+                          IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).HasRoster}" />
 
   </DockPanel>
 
