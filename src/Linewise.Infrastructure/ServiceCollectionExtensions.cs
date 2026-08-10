@@ -86,6 +86,7 @@ public static class ServiceCollectionExtensions
 
         services.TryAddSingleton<IAvailabilitySheetReader, ClosedXmlSheetReader>();
         services.TryAddSingleton<IRosterPrinter, QuestPdfRosterPrinter>();
+        services.TryAddSingleton<IDocumentLauncher, DocumentLauncher>();
 
         services.TryAddScoped<IAuditLog, SqliteAuditLog>();
         services.TryAddScoped<IImportRepository, SqliteImportRepository>();

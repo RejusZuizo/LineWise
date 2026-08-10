@@ -27,6 +27,7 @@ public static class ServiceCollectionExtensions
         // Scoped, because these reach repositories that share a database context.
         services.TryAddScoped<IAvailabilityImportService, AvailabilityImportService>();
         services.TryAddScoped<IEmployeeSheetImporter, EmployeeSheetImporter>();
+        services.TryAddScoped<IRosterGenerationService, RosterGenerationService>();
 
         return services;
     }

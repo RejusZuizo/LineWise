@@ -1,7 +1,10 @@
 using System.Collections.ObjectModel;
 using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Linewise.Application.Persistence;
+using Linewise.Application.Printing;
+using Linewise.Application.Rostering;
 using Linewise.Domain.Enums;
 using Serilog;
 
@@ -16,6 +19,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly IRosterRepository? _rosters;
     private readonly IConfigurationRepository? _configuration;
     private readonly IAvailabilityRepository? _availability;
+    private readonly IRosterGenerationService? _generation;
+    private readonly IRosterPrinter? _printer;
+    private readonly IDocumentLauncher? _launcher;
+    private readonly IShiftRepository? _shifts;
+
+    private DateOnly _weekStart = MondayOf(DateOnly.FromDateTime(DateTime.Today));
 
     [ObservableProperty]
     private RosterGridViewModel? _grid;
@@ -29,14 +38,30 @@ public sealed partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private bool _isLoading;
 
+    /// <summary>
+    /// A long running action is in progress. Disables the toolbar rather than showing a
+    /// spinner over the grid: the roster on screen is still the truth while a new one is
+    /// being built, and hiding it would be a step backwards.
+    /// </summary>
+    [ObservableProperty]
+    private bool _isBusy;
+
     public MainWindowViewModel(
         IRosterRepository rosters,
         IConfigurationRepository configuration,
-        IAvailabilityRepository availability)
+        IAvailabilityRepository availability,
+        IRosterGenerationService generation,
+        IRosterPrinter printer,
+        IDocumentLauncher launcher,
+        IShiftRepository shifts)
     {
         _rosters = rosters;
         _configuration = configuration;
         _availability = availability;
+        _generation = generation;
+        _printer = printer;
+        _launcher = launcher;
+        _shifts = shifts;
     }
 
     /// <summary>For the Avalonia designer, which cannot resolve from the container.</summary>
@@ -69,6 +94,113 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public bool HasWarnings => Warnings.Count > 0;
 
     /// <summary>
+    /// Builds a roster for the week on screen and stores it as the draft, then redraws.
+    /// </summary>
+    /// <remarks>
+    /// Anything placed by hand survives, because the generation service reads the locked
+    /// assignments back out of the existing draft and hands them to the engine. Pressing
+    /// this twice is safe, which is the property that makes it usable at all.
+    /// </remarks>
+    [RelayCommand]
+    private async Task GenerateAsync(CancellationToken cancellationToken)
+    {
+        if (_generation is null)
+        {
+            return;
+        }
+
+        IsBusy = true;
+
+        try
+        {
+            var stored = await _generation.GenerateAsync(_weekStart, cancellationToken).ConfigureAwait(true);
+
+            Log.Information(
+                "Generated {WeekStart}: {Assignments} assignments, {Warnings} warnings.",
+                _weekStart,
+                stored.Roster.AllAssignments.Count(),
+                stored.Roster.AllWarnings.Count());
+
+            await LoadAsync(_weekStart, cancellationToken).ConfigureAwait(true);
+        }
+        catch (Exception exception)
+        {
+            Log.Error(exception, "Could not generate the roster.");
+            Status = "Could not generate the roster. See the log for details.";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    /// <summary>
+    /// Produces the wall sheet and hands it to whatever prints a PDF on this machine.
+    /// </summary>
+    /// <remarks>
+    /// Not Avalonia's printing. A PDF handed to the platform prints identically from every
+    /// application on that machine, which is what the operator already knows how to drive.
+    /// </remarks>
+    [RelayCommand(CanExecute = nameof(HasRoster))]
+    private async Task PrintAsync(CancellationToken cancellationToken)
+    {
+        if (_printer is null || _launcher is null || _rosters is null
+            || _configuration is null || _shifts is null)
+        {
+            return;
+        }
+
+        IsBusy = true;
+
+        try
+        {
+            var stored = await _rosters.GetLatestAsync(_weekStart, cancellationToken).ConfigureAwait(true);
+
+            if (stored is null)
+            {
+                Status = "There is nothing to print.";
+                return;
+            }
+
+            var configuration = await _configuration.GetAsync(cancellationToken).ConfigureAwait(true);
+            var shifts = await _shifts
+                .GetAsync(_weekStart, _weekStart.AddDays(7), cancellationToken)
+                .ConfigureAwait(true);
+            var settings = await _configuration
+                .GetPrintSettingsAsync(cancellationToken)
+                .ConfigureAwait(true);
+
+            var document = await _printer.PrintFullSheetAsync(
+                new PrintRequest
+                {
+                    Roster = stored.Roster,
+                    Version = stored.Version,
+                    Lines = configuration.Lines,
+                    Employees = configuration.Employees,
+                    Shifts = shifts,
+                    Settings = settings,
+                },
+                cancellationToken).ConfigureAwait(true);
+
+            await _launcher.PrintAsync(
+                document,
+                $"linewise-{_weekStart:yyyy-MM-dd}.pdf",
+                cancellationToken).ConfigureAwait(true);
+
+            Status = "Sent to the printer.";
+        }
+        catch (Exception exception)
+        {
+            Log.Error(exception, "Could not print the roster.");
+            Status = "Could not print the roster. See the log for details.";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    /// <summary>
     /// Loads the week containing <paramref name="anyDateInWeek"/>. Nothing is generated
     /// here: this reads what is stored, and an empty database is a normal first run rather
     /// than a fault.
@@ -85,6 +217,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         try
         {
             var weekStart = MondayOf(anyDateInWeek);
+            _weekStart = weekStart;
             var stored = await _rosters.GetLatestAsync(weekStart, cancellationToken).ConfigureAwait(true);
 
             if (stored is null)
@@ -157,6 +290,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         OnPropertyChanged(nameof(HasRoster));
         OnPropertyChanged(nameof(HasWarnings));
         OnPropertyChanged(nameof(Title));
+        PrintCommand.NotifyCanExecuteChanged();
     }
 
     /// <summary>
