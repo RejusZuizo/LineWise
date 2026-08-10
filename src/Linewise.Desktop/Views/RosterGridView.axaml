@@ -1,0 +1,175 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Linewise.Desktop.ViewModels"
+             mc:Ignorable="d"
+             d:DesignWidth="1280" d:DesignHeight="720"
+             x:Class="Linewise.Desktop.Views.RosterGridView"
+             x:DataType="vm:RosterGridViewModel">
+
+  <UserControl.Resources>
+    <!-- The line name column. One value, used by the header and every row, so they line up
+         without a shared size group. -->
+    <x:Double x:Key="LineColumnWidth">168</x:Double>
+  </UserControl.Resources>
+
+  <UserControl.Styles>
+    <Style Selector="TextBlock.dayHeader">
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Margin" Value="6,4" />
+    </Style>
+
+    <!-- A short cell is marked by weight and a border, never by colour alone. The numbers
+         are always present and always say both halves, so "3 of 4" is readable whether or
+         not the styling comes through. -->
+    <Style Selector="Border.cell">
+      <Setter Property="BorderBrush" Value="#D6D9DC" />
+      <Setter Property="BorderThickness" Value="0,0,1,1" />
+      <Setter Property="Padding" Value="6" />
+      <Setter Property="MinHeight" Value="72" />
+    </Style>
+
+    <Style Selector="Border.cell.short">
+      <Setter Property="BorderBrush" Value="#8A8F94" />
+      <Setter Property="BorderThickness" Value="2" />
+    </Style>
+
+    <Style Selector="TextBlock.headcount">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="Opacity" Value="0.75" />
+    </Style>
+
+    <Style Selector="TextBlock.headcount.short">
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="Opacity" Value="1" />
+    </Style>
+
+    <!-- A leader is marked three ways at once: this filled block, bold weight, and the
+         word. ADR 0010 argues the case for the printed sheet; on screen the reason is
+         colour vision deficiency rather than photocopiers. -->
+    <Style Selector="Border.leaderMark">
+      <Setter Property="Width" Value="3" />
+      <Setter Property="Background" Value="#2E3438" />
+      <Setter Property="CornerRadius" Value="1.5" />
+    </Style>
+  </UserControl.Styles>
+
+  <DockPanel LastChildFill="True">
+
+    <TextBlock DockPanel.Dock="Top"
+               Text="{Binding WeekLabel}"
+               FontSize="16"
+               FontWeight="SemiBold"
+               Margin="12,10" />
+
+    <!-- Column headers -->
+    <DockPanel DockPanel.Dock="Top" LastChildFill="True">
+      <Border DockPanel.Dock="Left"
+              Width="{StaticResource LineColumnWidth}"
+              BorderBrush="#D6D9DC"
+              BorderThickness="0,1,1,1" />
+      <ItemsControl ItemsSource="{Binding Dates}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <UniformGrid Rows="1" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border BorderBrush="#D6D9DC" BorderThickness="0,1,1,1">
+              <StackPanel Margin="6,4">
+                <TextBlock Classes="dayHeader" Text="{Binding StringFormat='{}{0:ddd}'}" Margin="0" />
+                <TextBlock Text="{Binding StringFormat='{}{0:d MMM}'}" FontSize="11" Opacity="0.75" />
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </DockPanel>
+
+    <!-- Rows, one per production line -->
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+      <ItemsControl ItemsSource="{Binding Rows}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:LineRowViewModel">
+            <DockPanel LastChildFill="True">
+
+              <Border DockPanel.Dock="Left"
+                      Width="{StaticResource LineColumnWidth}"
+                      BorderBrush="#D6D9DC"
+                      BorderThickness="0,0,1,1"
+                      Padding="8,6">
+                <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
+                  <!-- The line's one saturated colour. Beside the name, never instead of it. -->
+                  <Border Width="4"
+                          CornerRadius="2"
+                          Background="{Binding AccentColour}" />
+                  <StackPanel>
+                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                    <TextBlock FontSize="11" Opacity="0.75"
+                               Text="{Binding RequiredHeadcount, StringFormat='needs {0}'}" />
+                    <TextBlock FontSize="11"
+                               FontWeight="Bold"
+                               IsVisible="{Binding IsShortAnyDay}"
+                               Text="{Binding ShortDays, StringFormat='short {0} day(s)'}" />
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+
+              <ItemsControl ItemsSource="{Binding Cells}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <UniformGrid Rows="1" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:RosterCellViewModel">
+                    <Border Classes="cell" Classes.short="{Binding IsShort}">
+                      <StackPanel Spacing="3">
+
+                        <ItemsControl ItemsSource="{Binding People}">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:PersonChipViewModel">
+                              <StackPanel Orientation="Horizontal"
+                                          Spacing="5"
+                                          ToolTip.Tip="{Binding Explanation}">
+                                <Border Classes="leaderMark" IsVisible="{Binding IsLeader}" />
+                                <TextBlock Text="{Binding DisplayName}"
+                                           FontSize="12"
+                                           FontWeight="{Binding IsLeader, Converter={x:Static vm:Converters.BoldWhenTrue}}"
+                                           TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding RoleLabel}"
+                                           FontSize="10"
+                                           FontWeight="Bold"
+                                           Opacity="0.8"
+                                           IsVisible="{Binding IsLeader}"
+                                           VerticalAlignment="Center" />
+                                <TextBlock Text="edited"
+                                           FontSize="10"
+                                           Opacity="0.7"
+                                           IsVisible="{Binding IsManual}"
+                                           VerticalAlignment="Center" />
+                              </StackPanel>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <TextBlock Classes="headcount"
+                                   Classes.short="{Binding IsShort}"
+                                   Text="{Binding Headcount}" />
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+            </DockPanel>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+
+  </DockPanel>
+
+</UserControl>

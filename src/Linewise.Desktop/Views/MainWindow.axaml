@@ -3,6 +3,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="using:Linewise.Desktop.ViewModels"
+        xmlns:views="using:Linewise.Desktop.Views"
         mc:Ignorable="d"
         d:DesignWidth="1280" d:DesignHeight="800"
         x:Class="Linewise.Desktop.Views.MainWindow"
@@ -12,22 +13,41 @@
         MinWidth="900" MinHeight="600"
         WindowStartupLocation="CenterScreen">
 
-  <!--
-    Deliberately empty. This is the shell: it starts, it logs, it does not crash. The week
-    grid arrives in its own change, where it can be reviewed as a grid rather than as
-    scaffolding.
-  -->
+  <DockPanel LastChildFill="True">
 
-  <Border Padding="24">
-    <StackPanel Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
-      <TextBlock Text="Linewise"
-                 FontSize="28"
-                 FontWeight="SemiBold"
-                 HorizontalAlignment="Center" />
-      <TextBlock Text="{Binding Version}"
-                 Opacity="0.7"
-                 HorizontalAlignment="Center" />
-    </StackPanel>
-  </Border>
+    <!-- Status bar. Draft or published state, and the build, which is what to ask for
+         first when somebody reports a fault. -->
+    <Border DockPanel.Dock="Bottom"
+            BorderBrush="#D6D9DC"
+            BorderThickness="0,1,0,0"
+            Padding="12,6">
+      <DockPanel LastChildFill="False">
+        <TextBlock DockPanel.Dock="Left" Text="{Binding Status}" FontSize="12" />
+        <TextBlock DockPanel.Dock="Right" Text="{Binding Version}" FontSize="11" Opacity="0.6" />
+      </DockPanel>
+    </Border>
+
+    <!-- Nothing stored yet. A first run has an empty database, which is normal rather than
+         a fault, so it is explained rather than drawn as an empty grid. -->
+    <Border IsVisible="{Binding !HasRoster}" Padding="24">
+      <StackPanel Spacing="10" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="440">
+        <TextBlock Text="Linewise" FontSize="28" FontWeight="SemiBold" HorizontalAlignment="Center" />
+        <TextBlock Text="{Binding Status}"
+                   HorizontalAlignment="Center"
+                   TextAlignment="Center"
+                   TextWrapping="Wrap"
+                   Opacity="0.8" />
+        <TextBlock Text="Importing a sheet and generating a roster arrive in the next change. This screen draws what is already stored."
+                   HorizontalAlignment="Center"
+                   TextAlignment="Center"
+                   TextWrapping="Wrap"
+                   FontSize="12"
+                   Opacity="0.6" />
+      </StackPanel>
+    </Border>
+
+    <views:RosterGridView DataContext="{Binding Grid}" IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).HasRoster}" />
+
+  </DockPanel>
 
 </Window>

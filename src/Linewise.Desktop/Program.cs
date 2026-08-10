@@ -42,6 +42,8 @@ internal static class Program
                 .AddDesktop()
                 .BuildServiceProvider();
 
+            InitialiseDatabase();
+
             return BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         }
         catch (Exception exception)
@@ -56,6 +58,33 @@ internal static class Program
             Log.Information("Linewise closing.");
             Log.CloseAndFlush();
         }
+    }
+
+    /// <summary>
+    /// Backs up and migrates before the window opens.
+    /// </summary>
+    /// <remarks>
+    /// Blocking, and deliberately so. Every screen in this application reads from the
+    /// database, so a window shown before the schema is ready is a window whose first act
+    /// is to fail. On a first run this creates the file; afterwards it is a version check
+    /// and a copy, which is well inside the cold start target.
+    /// <para>
+    /// Missing entirely until the grid was run against a real empty database, which is the
+    /// argument for running the thing rather than only testing it: every test that touches
+    /// the database calls this itself, so nothing noticed that the application did not.
+    /// </para>
+    /// </remarks>
+    private static void InitialiseDatabase()
+    {
+        using var scope = Services.CreateScope();
+
+        scope.ServiceProvider
+            .GetRequiredService<DatabaseInitialiser>()
+            .InitialiseAsync()
+            .GetAwaiter()
+            .GetResult();
+
+        Log.Information("Database ready.");
     }
 
     /// <summary>Used by the Avalonia designer as well as by <see cref="Main"/>.</summary>

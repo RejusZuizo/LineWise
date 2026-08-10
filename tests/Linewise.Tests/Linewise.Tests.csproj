@@ -12,6 +12,9 @@
     <ProjectReference Include="..\..\src\Linewise.Domain\Linewise.Domain.csproj" />
     <ProjectReference Include="..\..\src\Linewise.Application\Linewise.Application.csproj" />
     <ProjectReference Include="..\..\src\Linewise.Infrastructure\Linewise.Infrastructure.csproj" />
+    <!-- View models only. Nothing here constructs a control or needs a UI thread, which is
+         the practical test of whether MVVM is being honoured. -->
+    <ProjectReference Include="..\..\src\Linewise.Desktop\Linewise.Desktop.csproj" />
   </ItemGroup>
 
   <ItemGroup>
