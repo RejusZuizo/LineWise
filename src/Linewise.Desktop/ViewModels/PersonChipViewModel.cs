@@ -1,3 +1,4 @@
+using Linewise.Desktop.Resources;
 using Linewise.Domain.Entities;
 using Linewise.Domain.Enums;
 
@@ -31,7 +32,7 @@ public sealed class PersonChipViewModel
     public bool IsLeader { get; }
 
     /// <summary>The word, which is the part that survives every kind of impairment.</summary>
-    public string RoleLabel => IsLeader ? "Leader" : string.Empty;
+    public string RoleLabel => IsLeader ? Strings.RoleLeader : string.Empty;
 
     /// <summary>
     /// Placed by hand rather than by the engine. Shown from the first version of this grid

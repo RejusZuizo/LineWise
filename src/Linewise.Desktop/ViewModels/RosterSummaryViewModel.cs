@@ -1,3 +1,4 @@
+using Linewise.Desktop.Resources;
 using Linewise.Domain.Entities;
 using Linewise.Domain.Enums;
 using Linewise.Domain.Rostering;
@@ -74,11 +75,10 @@ public sealed class RosterSummaryViewModel
     /// a stale sheet gets noticed, and it is the same number printed in the header.
     /// </summary>
     public string StatusLabel => IsPublished
-        ? $"Published, version {VersionNumber}"
-        : "Draft, not published";
+        ? Strings.StatusPublished(VersionNumber)
+        : Strings.StatusDraft;
 
-    public string CountsLabel =>
-        $"{Placed} placed · {Unplaced} unplaced · {Overtime} on overtime · {Off} off";
+    public string CountsLabel => Strings.Counts(Placed, Unplaced, Overtime, Off);
 
     public bool HasWarnings => Errors + Notices > 0;
 
@@ -88,11 +88,11 @@ public sealed class RosterSummaryViewModel
     /// </summary>
     public string WarningsLabel => (Errors, Notices) switch
     {
-        (0, 0) => "No warnings",
-        (0, var notices) => $"{notices} notice{Plural(notices)}",
-        (var errors, 0) => $"{errors} error{Plural(errors)}",
-        var (errors, notices) => $"{errors} error{Plural(errors)}, {notices} notice{Plural(notices)}",
+        (0, 0) => Strings.NoWarnings,
+        (0, var notices) => Strings.NoticeCount(notices),
+        (var errors, 0) => Strings.ErrorCount(errors),
+        var (errors, notices) => Strings.WarningsSummary(
+            Strings.ErrorCount(errors),
+            Strings.NoticeCount(notices)),
     };
-
-    private static string Plural(int count) => count == 1 ? string.Empty : "s";
 }

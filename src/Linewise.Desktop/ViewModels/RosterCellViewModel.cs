@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Linewise.Desktop.Resources;
 
 namespace Linewise.Desktop.ViewModels;
 
@@ -29,7 +30,7 @@ public sealed class RosterCellViewModel
     public int Required { get; }
 
     /// <summary>Reads "3 of 4". Always both numbers, so short is visible without arithmetic.</summary>
-    public string Headcount => $"{Assigned} of {Required}";
+    public string Headcount => Strings.Headcount(Assigned, Required);
 
     /// <summary>
     /// Below what the line asked for. Paired with the numbers rather than replacing them:

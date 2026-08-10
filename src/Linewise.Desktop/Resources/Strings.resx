@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--
+    Every string the desktop application shows a person.
+
+    English is the only language that ships today. The file exists because the factory
+    floor is multilingual and retrofitting localisation costs far more than starting
+    with it, and because a string in a .axaml file is a string nobody can translate
+    without a rebuild.
+
+    Singular and plural are separate entries rather than an "s" appended in code. That
+    trick is English and stops being correct in the first language anybody asks for.
+
+    No employee names appear here, and none ever should. Names are resolved from
+    identifiers at the point of display.
+  -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <data name="ProductName" xml:space="preserve">
+    <value>Linewise</value>
+    <comment>The product name. Not translated, kept here so it appears once.</comment>
+  </data>
+  <data name="WindowTitle" xml:space="preserve">
+    <value>{0} — {1} — {2}</value>
+    <comment>0 = product name, 1 = week label, 2 = draft or published state.</comment>
+  </data>
+  <data name="WeekBeginning" xml:space="preserve">
+    <value>Week beginning {0:dddd d MMMM yyyy}</value>
+    <comment>0 = the Monday the roster week starts on.</comment>
+  </data>
+  <data name="Starting" xml:space="preserve">
+    <value>Starting.</value>
+    <comment>Shown before the first load finishes.</comment>
+  </data>
+  <data name="GenerateRoster" xml:space="preserve">
+    <value>Generate roster</value>
+    <comment>Toolbar button.</comment>
+  </data>
+  <data name="Print" xml:space="preserve">
+    <value>Print</value>
+    <comment>Toolbar button.</comment>
+  </data>
+  <data name="Working" xml:space="preserve">
+    <value>Working…</value>
+    <comment>Shown beside the toolbar while a long action runs.</comment>
+  </data>
+  <data name="NoRosterStored" xml:space="preserve">
+    <value>No roster stored for the week beginning {0:d MMMM yyyy}.</value>
+    <comment>0 = week start date.</comment>
+  </data>
+  <data name="NothingToDrawYet" xml:space="preserve">
+    <value>Importing a sheet and generating a roster arrive in the next change. This screen draws what is already stored.</value>
+    <comment>First run guidance.</comment>
+  </data>
+  <data name="CouldNotLoad" xml:space="preserve">
+    <value>Could not load the roster. See the log for details.</value>
+    <comment>Shown instead of a stack trace.</comment>
+  </data>
+  <data name="CouldNotGenerate" xml:space="preserve">
+    <value>Could not generate the roster. See the log for details.</value>
+    <comment>Shown instead of a stack trace.</comment>
+  </data>
+  <data name="CouldNotPrint" xml:space="preserve">
+    <value>Could not print the roster. See the log for details.</value>
+    <comment>Shown instead of a stack trace.</comment>
+  </data>
+  <data name="NothingToPrint" xml:space="preserve">
+    <value>There is nothing to print.</value>
+    <comment>Print pressed with no stored roster.</comment>
+  </data>
+  <data name="SentToPrinter" xml:space="preserve">
+    <value>Sent to the printer.</value>
+    <comment>Print handed the document to the platform.</comment>
+  </data>
+  <data name="StatusDraft" xml:space="preserve">
+    <value>Draft, not published</value>
+    <comment>Roster state, shown in the title bar and status bar.</comment>
+  </data>
+  <data name="StatusPublished" xml:space="preserve">
+    <value>Published, version {0}</value>
+    <comment>0 = version number. A published roster is on a wall somewhere.</comment>
+  </data>
+  <data name="Counts" xml:space="preserve">
+    <value>{0} placed · {1} unplaced · {2} on overtime · {3} off</value>
+    <comment>0 = placed, 1 = unplaced, 2 = overtime, 3 = off. Counted per person per day.</comment>
+  </data>
+  <data name="NoWarnings" xml:space="preserve">
+    <value>No warnings</value>
+    <comment>Warnings summary when there are none.</comment>
+  </data>
+  <data name="ErrorCountOne" xml:space="preserve">
+    <value>1 error</value>
+    <comment>Warnings summary.</comment>
+  </data>
+  <data name="ErrorCountMany" xml:space="preserve">
+    <value>{0} errors</value>
+    <comment>0 = count. Warnings summary.</comment>
+  </data>
+  <data name="NoticeCountOne" xml:space="preserve">
+    <value>1 notice</value>
+    <comment>Warnings summary.</comment>
+  </data>
+  <data name="NoticeCountMany" xml:space="preserve">
+    <value>{0} notices</value>
+    <comment>0 = count. Warnings summary.</comment>
+  </data>
+  <data name="WarningsSummary" xml:space="preserve">
+    <value>{0}, {1}</value>
+    <comment>0 = the errors phrase, 1 = the notices phrase.</comment>
+  </data>
+  <data name="SeverityError" xml:space="preserve">
+    <value>Error</value>
+    <comment>Warning severity. The word carries the meaning; styling only makes it findable.</comment>
+  </data>
+  <data name="SeverityNotice" xml:space="preserve">
+    <value>Notice</value>
+    <comment>Warning severity.</comment>
+  </data>
+  <data name="ContextSeparator" xml:space="preserve">
+    <value> · </value>
+    <comment>Between the date and the line name on a warning.</comment>
+  </data>
+  <data name="RoleLeader" xml:space="preserve">
+    <value>Leader</value>
+    <comment>One of the three ways a line leader is marked, alongside weight and a filled block.</comment>
+  </data>
+  <data name="ChipEdited" xml:space="preserve">
+    <value>edited</value>
+    <comment>Marks an assignment placed by hand rather than by the engine.</comment>
+  </data>
+  <data name="Headcount" xml:space="preserve">
+    <value>{0} of {1}</value>
+    <comment>0 = assigned, 1 = required. Always both numbers, so short needs no arithmetic.</comment>
+  </data>
+  <data name="LineNeeds" xml:space="preserve">
+    <value>needs {0}</value>
+    <comment>0 = required headcount, on the row header.</comment>
+  </data>
+  <data name="LineShortOneDay" xml:space="preserve">
+    <value>short 1 day</value>
+    <comment>Row header summary.</comment>
+  </data>
+  <data name="LineShortManyDays" xml:space="preserve">
+    <value>short {0} days</value>
+    <comment>0 = number of days. Row header summary.</comment>
+  </data>
+  <data name="UnknownEmployee" xml:space="preserve">
+    <value>[unknown]</value>
+    <comment>An identifier with no employee behind it. Should never appear; saying so beats a blank chip that looks like a rendering fault.</comment>
+  </data>
+</root>

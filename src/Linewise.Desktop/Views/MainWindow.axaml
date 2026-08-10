@@ -4,6 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="using:Linewise.Desktop.ViewModels"
         xmlns:views="using:Linewise.Desktop.Views"
+        xmlns:res="using:Linewise.Desktop.Resources"
         mc:Ignorable="d"
         d:DesignWidth="1280" d:DesignHeight="800"
         x:Class="Linewise.Desktop.Views.MainWindow"
@@ -44,13 +45,13 @@
             BorderThickness="0,0,0,1"
             Padding="12,8">
       <StackPanel Orientation="Horizontal" Spacing="8">
-        <Button Content="Generate roster"
+        <Button Content="{x:Static res:Strings.GenerateRoster}"
                 Command="{Binding GenerateCommand}"
                 IsEnabled="{Binding !IsBusy}" />
-        <Button Content="Print"
+        <Button Content="{x:Static res:Strings.Print}"
                 Command="{Binding PrintCommand}"
                 IsEnabled="{Binding !IsBusy}" />
-        <TextBlock Text="Working…"
+        <TextBlock Text="{x:Static res:Strings.Working}"
                    IsVisible="{Binding IsBusy}"
                    VerticalAlignment="Center"
                    Opacity="0.7" />
@@ -123,13 +124,13 @@
          a fault, so it is explained rather than drawn as an empty grid. -->
     <Border IsVisible="{Binding !HasRoster}" Padding="24">
       <StackPanel Spacing="10" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="440">
-        <TextBlock Text="Linewise" FontSize="28" FontWeight="SemiBold" HorizontalAlignment="Center" />
+        <TextBlock Text="{x:Static res:Strings.ProductName}" FontSize="28" FontWeight="SemiBold" HorizontalAlignment="Center" />
         <TextBlock Text="{Binding Status}"
                    HorizontalAlignment="Center"
                    TextAlignment="Center"
                    TextWrapping="Wrap"
                    Opacity="0.8" />
-        <TextBlock Text="Importing a sheet and generating a roster arrive in the next change. This screen draws what is already stored."
+        <TextBlock Text="{x:Static res:Strings.NothingToDrawYet}"
                    HorizontalAlignment="Center"
                    TextAlignment="Center"
                    TextWrapping="Wrap"
