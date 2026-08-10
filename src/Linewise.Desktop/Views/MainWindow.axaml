@@ -1,0 +1,33 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:Linewise.Desktop.ViewModels"
+        mc:Ignorable="d"
+        d:DesignWidth="1280" d:DesignHeight="800"
+        x:Class="Linewise.Desktop.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="{Binding Title}"
+        Width="1280" Height="800"
+        MinWidth="900" MinHeight="600"
+        WindowStartupLocation="CenterScreen">
+
+  <!--
+    Deliberately empty. This is the shell: it starts, it logs, it does not crash. The week
+    grid arrives in its own change, where it can be reviewed as a grid rather than as
+    scaffolding.
+  -->
+
+  <Border Padding="24">
+    <StackPanel Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center">
+      <TextBlock Text="Linewise"
+                 FontSize="28"
+                 FontWeight="SemiBold"
+                 HorizontalAlignment="Center" />
+      <TextBlock Text="{Binding Version}"
+                 Opacity="0.7"
+                 HorizontalAlignment="Center" />
+    </StackPanel>
+  </Border>
+
+</Window>
