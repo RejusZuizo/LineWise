@@ -38,7 +38,7 @@ files it reads.
 | T8 | Malicious transitive dependency | Lock file with locked mode restore, vulnerability scan in CI | Implemented |
 | T9 | Audit history altered to hide a change | Hash chained append only audit log | Implemented |
 | T10 | Exported PDFs left in shared folders | Default export path outside shared locations, documented in the manual | Planned, phase 6 |
-| T11 | A development key provider reaching a release build | Non-Windows key providers unreachable outside Debug | Planned, see below |
+| T11 | A development key provider reaching a release build | Registration compiled out of release builds | Implemented |
 
 ## Controls in detail
 
@@ -123,12 +123,18 @@ Development happens on Arch Linux; the product ships to Windows. DPAPI does not
 exist on Linux, so running the application on the development machine requires a
 non-Windows key provider — a libsecret binding, or a mode-0600 key file.
 
-Such a provider is weaker than DPAPI by construction. A build carrying one to a
-factory PC would present a database that looks encrypted and is not, and would do
-so silently. The requirement is therefore that non-Windows providers are
-**unreachable in a shipping build**, enforced in code rather than by convention,
-and that the Windows release build is produced on Windows.
+Such a provider is weaker than DPAPI by construction. DPAPI binds the key to an
+account on a machine, so a copied file opens nothing. A key file binds to nothing:
+any process running as that user can read it, and a backup of the home directory
+carries the key next to the database it unlocks.
 
-This threat did not exist when the design was written. It is a cost of the
-development platform, and it is worth naming before the code that creates it is
-written rather than after.
+**Control, implemented.** The key provider is selected at runtime on
+`OperatingSystem.IsWindows()`, and the registration of the development provider
+sits inside `#if DEBUG`. A release build does not contain the line that would hand
+it out; a release build on a non-Windows platform instead resolves a provider that
+refuses and says why. The enforcement is that the code is absent, not that somebody
+remembers. See ADR 0011.
+
+**Residual risk.** A debug build being distributed. Nothing here prevents that, and
+the release process has to: releases are built on Windows, in Release, from a
+tagged commit. Worth stating plainly rather than implying the control is total.

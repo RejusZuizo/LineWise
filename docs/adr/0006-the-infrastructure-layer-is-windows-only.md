@@ -32,3 +32,17 @@ worth writing down here too. The key is scoped to one Windows profile on one mac
 backups are encrypted with that same key, so losing the profile loses the database and the
 backups together. That is why the restore procedure is documented and covered by tests
 rather than assumed to work.
+
+## Addendum, 5 August 2026
+
+Extended by ADR 0011, not reversed.
+
+One thing this record left implicit, and which was later read the wrong way round: the
+target framework here is a statement to the compiler about what may be called, not a claim
+that the assembly cannot execute elsewhere. `net8.0-windows` without `UseWPF` or
+`UseWindowsForms` builds and runs anywhere `net8.0` does. The Windows dependency is DPAPI
+itself, and it is the only one.
+
+The practical consequence, which took a wrong assumption to discover: the whole solution
+builds and the entire test suite passes on Linux, unchanged. ADR 0011 covers what that
+means for running the application there.
