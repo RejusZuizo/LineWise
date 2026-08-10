@@ -15,6 +15,19 @@ updates:
     commit-message:
       prefix: "chore"
       include: scope
+    ignore:
+      # Major versions are a decision, not a Monday. The solution targets net8.0 and
+      # global.json pins the feature band, so EF Core 9 and 10 are not upgrades of
+      # what is here — they are a different runtime, and taking one would mean the
+      # factory PC needs a runtime nobody agreed to install.
+      #
+      # The first run of this file proposed exactly that, three times, along with a
+      # test tooling group that mixed an xunit patch in with three major bumps and
+      # so could not be partly accepted.
+      #
+      # Majors get taken deliberately, when the target framework moves.
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       # One pull request for the test tooling rather than four. These move together
       # and none of them ship.
@@ -27,6 +40,11 @@ updates:
   # Workflow actions are pinned to commit SHAs, which is the point of watching them:
   # a pin stops a tag being moved underneath us, and this stops the pin going stale
   # and unnoticed. Dependabot updates the SHA and the version comment together.
+  #
+  # Majors are deliberately NOT ignored here, unlike NuGet above. Nothing in a
+  # workflow ships, a broken action fails loudly on the pull request that proposes
+  # it, and the last major bump was how the Node 20 deprecation got fixed. Refusing
+  # them would mean carrying deprecated runners indefinitely.
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
