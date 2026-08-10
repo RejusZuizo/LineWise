@@ -369,23 +369,23 @@
       },
       "SQLitePCLRaw.core": {
         "type": "Transitive",
-        "resolved": "2.1.10",
-        "contentHash": "Ii8JCbC7oiVclaE/mbDEK000EFIJ+ShRPwAvvV89GOZhQ+ZLtlnSWl6ksCNMKu/VGXA4Nfi2B7LhN/QFN9oBcw==",
+        "resolved": "2.1.11",
+        "contentHash": "PK0GLFkfhZzLQeR3PJf71FmhtHox+U3vcY6ZtswoMjrefkB9k6ErNJEnwXqc5KgXDSjige2XXrezqS39gkpQKA==",
         "dependencies": {
           "System.Memory": "4.5.3"
         }
       },
       "SQLitePCLRaw.lib.e_sqlcipher": {
         "type": "Transitive",
-        "resolved": "2.1.10",
-        "contentHash": "IPLfZkNN9qnlk8IH7L4Z5xB0gWdQm4HCftZ2LVE54h17tRxjzUbwvx+3MfPE5nR/OgoeiQE2rsYycESXUekPMQ=="
+        "resolved": "2.1.11",
+        "contentHash": "Cg6UPeDbH8jyaOs1vqXYIgeewH0wYrBnmbC5Ml3GYBo+GKzNmyxrWSO52JV68bfB7Addt/PZLMekJV1RH2ftWQ=="
       },
       "SQLitePCLRaw.provider.e_sqlcipher": {
         "type": "Transitive",
-        "resolved": "2.1.10",
-        "contentHash": "XH9rdwv2+vDdfDymKF49+o5s252L4gdCb4/volPO3IqRBlhIBWTpO7+bS3Ghgzv7Nqh36pgeUSQj3M33iuiRxg==",
+        "resolved": "2.1.11",
+        "contentHash": "5L7YXWtPzKYHeXBHmj63QsHbLQmy0SYvhQp3xWA2yzSq1SvlnGFViveLfUDr/GEmePrqzXQ9tOJG9iQnFspfBA==",
         "dependencies": {
-          "SQLitePCLRaw.core": "2.1.10"
+          "SQLitePCLRaw.core": "2.1.11"
         }
       },
       "System.IO.Packaging": {
@@ -431,7 +431,7 @@
           "Microsoft.Extensions.DependencyInjection.Abstractions": "[8.0.2, )",
           "Microsoft.Extensions.Options": "[8.0.2, )",
           "QuestPDF": "[2024.12.3, )",
-          "SQLitePCLRaw.bundle_e_sqlcipher": "[2.1.10, )",
+          "SQLitePCLRaw.bundle_e_sqlcipher": "[2.1.11, )",
           "Serilog": "[4.4.0, )",
           "Serilog.Sinks.File": "[7.0.0, )",
           "System.Security.Cryptography.ProtectedData": "[8.0.0, )"
@@ -494,12 +494,12 @@
       },
       "SQLitePCLRaw.bundle_e_sqlcipher": {
         "type": "CentralTransitive",
-        "requested": "[2.1.10, )",
-        "resolved": "2.1.10",
-        "contentHash": "aWxuhHZjE27/u1S8/mJ+wwvKY6qJ83PGODTiftTWOh41+tGjstwIpPPnyvuYyZ9JXQlnErkTvQZziBeamj0DVg==",
+        "requested": "[2.1.11, )",
+        "resolved": "2.1.11",
+        "contentHash": "NFuxa/rD3Ah88jbFOgsoUjuWcLiBkj3iqgO2gJXola9NtjtCTRI3HMQtVjQDnrhCvdBOAJ4RqbwnqoEMLht8GQ==",
         "dependencies": {
-          "SQLitePCLRaw.lib.e_sqlcipher": "2.1.10",
-          "SQLitePCLRaw.provider.e_sqlcipher": "2.1.10"
+          "SQLitePCLRaw.lib.e_sqlcipher": "2.1.11",
+          "SQLitePCLRaw.provider.e_sqlcipher": "2.1.11"
         }
       },
       "System.Security.Cryptography.ProtectedData": {
