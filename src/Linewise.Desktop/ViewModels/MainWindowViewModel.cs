@@ -6,6 +6,7 @@ using Linewise.Application.Persistence;
 using Linewise.Application.Printing;
 using Linewise.Application.Rostering;
 using Linewise.Desktop.Resources;
+using Linewise.Desktop.Services;
 using Linewise.Domain.Enums;
 using Serilog;
 
@@ -24,6 +25,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly IRosterPrinter? _printer;
     private readonly IDocumentLauncher? _launcher;
     private readonly IShiftRepository? _shifts;
+    private readonly IDialogService? _dialogs;
 
     private DateOnly _weekStart = MondayOf(DateOnly.FromDateTime(DateTime.Today));
 
@@ -54,7 +56,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         IRosterGenerationService generation,
         IRosterPrinter printer,
         IDocumentLauncher launcher,
-        IShiftRepository shifts)
+        IShiftRepository shifts,
+        IDialogService dialogs)
     {
         _rosters = rosters;
         _configuration = configuration;
@@ -63,6 +66,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _printer = printer;
         _launcher = launcher;
         _shifts = shifts;
+        _dialogs = dialogs;
     }
 
     /// <summary>For the Avalonia designer, which cannot resolve from the container.</summary>
@@ -93,6 +97,22 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public bool HasRoster => Grid is { IsEmpty: false };
 
     public bool HasWarnings => Warnings.Count > 0;
+
+    /// <summary>
+    /// Opens line setup, then redraws. A line added while this window was open should show
+    /// up without anybody having to restart the application.
+    /// </summary>
+    [RelayCommand]
+    private async Task SetUpLinesAsync(CancellationToken cancellationToken)
+    {
+        if (_dialogs is null)
+        {
+            return;
+        }
+
+        await _dialogs.ShowLineEditorAsync().ConfigureAwait(true);
+        await LoadAsync(_weekStart, cancellationToken).ConfigureAwait(true);
+    }
 
     /// <summary>
     /// Builds a roster for the week on screen and stores it as the draft, then redraws.
