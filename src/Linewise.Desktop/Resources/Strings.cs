@@ -77,6 +77,42 @@ public static class Strings
 
     public static string Close => Get(nameof(Close));
 
+    public static string Import => Get(nameof(Import));
+
+    public static string ImportTitle => Get(nameof(ImportTitle));
+
+    public static string ChooseSheet => Get(nameof(ChooseSheet));
+
+    public static string ImportReadyToReview => Get(nameof(ImportReadyToReview));
+
+    public static string ImportNothingUsable => Get(nameof(ImportNothingUsable));
+
+    public static string ImportCouldNotRead => Get(nameof(ImportCouldNotRead));
+
+    public static string ImportCouldNotCommit => Get(nameof(ImportCouldNotCommit));
+
+    public static string ImportNeedingAttention => Get(nameof(ImportNeedingAttention));
+
+    public static string ImportAddAllAsTemporary => Get(nameof(ImportAddAllAsTemporary));
+
+    public static string ImportAddAsTemporary => Get(nameof(ImportAddAsTemporary));
+
+    public static string ImportCommit => Get(nameof(ImportCommit));
+
+    public static string ImportSummary(int matched, int needingAttention, int days) =>
+        Format(nameof(ImportSummary), matched, needingAttention, days);
+
+    public static string ImportUnrecognised(int cells) => Format(nameof(ImportUnrecognised), cells);
+
+    public static string ImportReason(string fileName) => Format(nameof(ImportReason), fileName);
+
+    public static string ImportRow(int row) => Format(nameof(ImportRow), row);
+
+    public static string ImportCommitted(int records, int added) =>
+        added == 1 && records == 0
+            ? Get("ImportCommittedOne")
+            : Format("ImportCommittedMany", records, added);
+
     public static string LineAdded(string name) => Format(nameof(LineAdded), name);
 
     public static string LinesSaved(int count) =>

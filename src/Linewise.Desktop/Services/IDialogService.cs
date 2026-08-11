@@ -1,4 +1,5 @@
 using Avalonia.Controls.ApplicationLifetimes;
+using Linewise.Desktop.ViewModels;
 using Linewise.Desktop.Views;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -15,6 +16,9 @@ namespace Linewise.Desktop.Services;
 public interface IDialogService
 {
     Task ShowLineEditorAsync();
+
+    /// <summary>Returns true when something was actually imported, so the caller redraws.</summary>
+    Task<bool> ShowImportAsync();
 }
 
 /// <inheritdoc cref="IDialogService"/>
@@ -37,6 +41,23 @@ public sealed class DialogService : IDialogService
         }
 
         window.Show();
+    }
+
+    public async Task<bool> ShowImportAsync()
+    {
+        var viewModel = _services.GetRequiredService<ImportViewModel>();
+        var window = new ImportWindow(viewModel);
+
+        if (Owner is { } owner)
+        {
+            await window.ShowDialog(owner).ConfigureAwait(true);
+        }
+        else
+        {
+            window.Show();
+        }
+
+        return viewModel.Committed;
     }
 
     private static Avalonia.Controls.Window? Owner =>
