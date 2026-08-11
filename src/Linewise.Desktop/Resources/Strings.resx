@@ -321,4 +321,32 @@
     <value>Row {0}</value>
     <comment>0 = Excel row number, so the operator can go and look at it.</comment>
   </data>
+  <data name="ToggleTheme" xml:space="preserve">
+    <value>Light / dark</value>
+    <comment>Button switching the palette.</comment>
+  </data>
+  <data name="WarningsHeading" xml:space="preserve">
+    <value>WARNINGS</value>
+    <comment>Section heading over the warnings panel.</comment>
+  </data>
+  <data name="GettingStartedHeading" xml:space="preserve">
+    <value>GETTING STARTED</value>
+    <comment>Section heading on the empty state.</comment>
+  </data>
+  <data name="GettingStartedImport" xml:space="preserve">
+    <value>1. Import a sheet — the availability spreadsheet for the week.</value>
+    <comment>First run step.</comment>
+  </data>
+  <data name="GettingStartedLines" xml:space="preserve">
+    <value>2. Set up lines — the production lines people are placed on.</value>
+    <comment>First run step.</comment>
+  </data>
+  <data name="GettingStartedGenerate" xml:space="preserve">
+    <value>3. Generate roster — Linewise fills the lines and tells you what is short.</value>
+    <comment>First run step.</comment>
+  </data>
+  <data name="LinesColumnHeading" xml:space="preserve">
+    <value>LINE</value>
+    <comment>Header over the row-header column of the roster grid.</comment>
+  </data>
 </root>

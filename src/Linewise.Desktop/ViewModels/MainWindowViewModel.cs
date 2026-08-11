@@ -26,6 +26,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly IDocumentLauncher? _launcher;
     private readonly IShiftRepository? _shifts;
     private readonly IDialogService? _dialogs;
+    private readonly IThemeService? _theme;
 
     private DateOnly _weekStart = MondayOf(DateOnly.FromDateTime(DateTime.Today));
 
@@ -57,7 +58,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         IRosterPrinter printer,
         IDocumentLauncher launcher,
         IShiftRepository shifts,
-        IDialogService dialogs)
+        IDialogService dialogs,
+        IThemeService theme)
     {
         _rosters = rosters;
         _configuration = configuration;
@@ -67,6 +69,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _launcher = launcher;
         _shifts = shifts;
         _dialogs = dialogs;
+        _theme = theme;
     }
 
     /// <summary>For the Avalonia designer, which cannot resolve from the container.</summary>
@@ -97,6 +100,22 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public bool HasRoster => Grid is { IsEmpty: false };
 
     public bool HasWarnings => Warnings.Count > 0;
+
+    /// <summary>
+    /// Switches between the light and dark palettes.
+    /// </summary>
+    /// <remarks>
+    /// Light remains the default, because a roster on screen is compared against a sheet of
+    /// white paper on a wall. This exists for the office rather than the wall, and it
+    /// deliberately does not follow the system: the comparison is a property of the job,
+    /// not of the time of day.
+    /// <para>
+    /// Not yet persisted. The choice resets on restart until the settings screen in phase 7
+    /// gives it somewhere to live in the database, where it travels with a backup.
+    /// </para>
+    /// </remarks>
+    [RelayCommand]
+    private void ToggleTheme() => _theme?.Toggle();
 
     /// <summary>
     /// Opens line setup, then redraws. A line added while this window was open should show
