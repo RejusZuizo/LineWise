@@ -77,6 +77,20 @@ public static class Strings
 
     public static string Close => Get(nameof(Close));
 
+    public static string ToggleTheme => Get(nameof(ToggleTheme));
+
+    public static string LinesColumnHeading => Get(nameof(LinesColumnHeading));
+
+    public static string WarningsHeading => Get(nameof(WarningsHeading));
+
+    public static string GettingStartedHeading => Get(nameof(GettingStartedHeading));
+
+    public static string GettingStartedImport => Get(nameof(GettingStartedImport));
+
+    public static string GettingStartedLines => Get(nameof(GettingStartedLines));
+
+    public static string GettingStartedGenerate => Get(nameof(GettingStartedGenerate));
+
     public static string Import => Get(nameof(Import));
 
     public static string ImportTitle => Get(nameof(ImportTitle));

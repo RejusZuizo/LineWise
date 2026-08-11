@@ -6,117 +6,152 @@
         xmlns:views="using:Linewise.Desktop.Views"
         xmlns:res="using:Linewise.Desktop.Resources"
         mc:Ignorable="d"
-        d:DesignWidth="1280" d:DesignHeight="800"
+        d:DesignWidth="1360" d:DesignHeight="820"
         x:Class="Linewise.Desktop.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="{Binding Title}"
-        Width="1280" Height="800"
-        MinWidth="900" MinHeight="600"
+        Width="1360" Height="820"
+        MinWidth="960" MinHeight="620"
+        Background="{DynamicResource LinewiseSurfaceAlt}"
         WindowStartupLocation="CenterScreen">
 
   <Window.Styles>
-    <!-- Severity is carried by the word in the badge, not by the styling. The border and
-         weight only make it findable at a glance. -->
+    <!-- Severity is carried by the word inside the badge. The border weight only makes an
+         error findable at a glance; it is never the thing that says which it is. -->
     <Style Selector="Border.severity">
-      <Setter Property="BorderBrush" Value="#9AA0A6" />
+      <Setter Property="BorderBrush" Value="{DynamicResource LinewiseBorderStrong}" />
       <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="CornerRadius" Value="2" />
-      <Setter Property="Padding" Value="4,1" />
+      <Setter Property="CornerRadius" Value="{StaticResource RadiusSm}" />
+      <Setter Property="Padding" Value="5,1" />
       <Setter Property="VerticalAlignment" Value="Top" />
     </Style>
 
     <Style Selector="Border.severity.error">
       <Setter Property="BorderThickness" Value="2" />
-      <Setter Property="BorderBrush" Value="#2E3438" />
+      <Setter Property="BorderBrush" Value="{DynamicResource LinewiseInk}" />
     </Style>
 
     <Style Selector="Border.severity.error > TextBlock">
       <Setter Property="FontWeight" Value="Bold" />
     </Style>
+
+    <Style Selector="Border.card">
+      <Setter Property="Background" Value="{DynamicResource LinewiseSurfaceRaised}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource LinewiseBorder}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="{StaticResource RadiusMd}" />
+    </Style>
   </Window.Styles>
 
   <DockPanel LastChildFill="True">
 
-    <!-- Toolbar. Three actions, spelled out in words rather than icons: this is used
-         occasionally by one person, and an icon nobody recognises is worse than a label
-         that takes a little more room. -->
+    <!-- Toolbar. Words rather than icons: used occasionally by one person, and an icon
+         nobody recognises is worse than a label taking a little more room. One primary
+         action, so the eye lands on the thing they came to do. -->
     <Border DockPanel.Dock="Top"
-            BorderBrush="#D6D9DC"
+            Background="{DynamicResource LinewiseSurface}"
+            BorderBrush="{DynamicResource LinewiseBorder}"
             BorderThickness="0,0,0,1"
-            Padding="12,8">
-      <StackPanel Orientation="Horizontal" Spacing="8">
-        <Button Content="{x:Static res:Strings.Import}"
-                Command="{Binding ImportSheetCommand}"
-                IsEnabled="{Binding !IsBusy}" />
-        <Button Content="{x:Static res:Strings.SetUpLines}"
-                Command="{Binding SetUpLinesCommand}"
-                IsEnabled="{Binding !IsBusy}" />
-        <Button Content="{x:Static res:Strings.GenerateRoster}"
-                Command="{Binding GenerateCommand}"
-                IsEnabled="{Binding !IsBusy}" />
-        <Button Content="{x:Static res:Strings.Print}"
-                Command="{Binding PrintCommand}"
-                IsEnabled="{Binding !IsBusy}" />
-        <TextBlock Text="{x:Static res:Strings.Working}"
-                   IsVisible="{Binding IsBusy}"
-                   VerticalAlignment="Center"
-                   Opacity="0.7" />
-      </StackPanel>
+            Padding="16,10">
+      <DockPanel LastChildFill="False">
+        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="8">
+          <Button Content="{x:Static res:Strings.GenerateRoster}"
+                  Classes="primary"
+                  Command="{Binding GenerateCommand}"
+                  IsEnabled="{Binding !IsBusy}" />
+          <Border Width="1"
+                  Margin="4,2"
+                  Background="{DynamicResource LinewiseBorder}" />
+          <Button Content="{x:Static res:Strings.Import}"
+                  Classes="quiet"
+                  Command="{Binding ImportSheetCommand}"
+                  IsEnabled="{Binding !IsBusy}" />
+          <Button Content="{x:Static res:Strings.SetUpLines}"
+                  Classes="quiet"
+                  Command="{Binding SetUpLinesCommand}"
+                  IsEnabled="{Binding !IsBusy}" />
+          <Button Content="{x:Static res:Strings.Print}"
+                  Classes="quiet"
+                  Command="{Binding PrintCommand}"
+                  IsEnabled="{Binding !IsBusy}" />
+          <TextBlock Text="{x:Static res:Strings.Working}"
+                     Classes="subtitle"
+                     IsVisible="{Binding IsBusy}"
+                     VerticalAlignment="Center"
+                     Margin="4,0,0,0" />
+        </StackPanel>
+
+        <Button DockPanel.Dock="Right"
+                Content="{x:Static res:Strings.ToggleTheme}"
+                Classes="quiet"
+                Command="{Binding ToggleThemeCommand}" />
+      </DockPanel>
     </Border>
 
-    <!-- Status bar. State, counts, and the build, which is what to ask for first when
+    <!-- Status bar. State, counts, and the build, which is the first thing to ask for when
          somebody reports a fault. -->
     <Border DockPanel.Dock="Bottom"
-            BorderBrush="#D6D9DC"
+            Background="{DynamicResource LinewiseSurface}"
+            BorderBrush="{DynamicResource LinewiseBorder}"
             BorderThickness="0,1,0,0"
-            Padding="12,6">
+            Padding="16,7">
       <DockPanel LastChildFill="False">
         <TextBlock DockPanel.Dock="Left"
                    Text="{Binding Summary.CountsLabel}"
                    IsVisible="{Binding HasRoster}"
-                   FontSize="12" />
+                   Classes="subtitle"
+                   VerticalAlignment="Center" />
         <TextBlock DockPanel.Dock="Left"
                    Text="{Binding Status}"
                    IsVisible="{Binding !HasRoster}"
-                   FontSize="12" />
-        <TextBlock DockPanel.Dock="Right" Text="{Binding Version}" FontSize="11" Opacity="0.6" />
+                   Classes="subtitle"
+                   VerticalAlignment="Center" />
         <TextBlock DockPanel.Dock="Right"
-                   Text="{Binding Summary.StatusLabel}"
-                   IsVisible="{Binding HasRoster}"
-                   FontSize="12"
-                   FontWeight="SemiBold"
-                   Margin="0,0,16,0" />
+                   Text="{Binding Version}"
+                   Classes="caption"
+                   VerticalAlignment="Center" />
+        <Border DockPanel.Dock="Right"
+                Classes="card"
+                IsVisible="{Binding HasRoster}"
+                Padding="8,2"
+                Margin="0,0,12,0">
+          <TextBlock Text="{Binding Summary.StatusLabel}" FontSize="12" FontWeight="SemiBold" />
+        </Border>
       </DockPanel>
     </Border>
 
-    <!-- Warnings strip. Always visible when there are any, never behind a tab: a line that
-         cannot run is not something to go looking for. -->
+    <!-- Warnings. Always visible when there are any, never behind a tab: a line that cannot
+         run is not something to go looking for. -->
     <Border DockPanel.Dock="Right"
-            Width="320"
+            Width="340"
             IsVisible="{Binding HasWarnings}"
-            BorderBrush="#D6D9DC"
+            Background="{DynamicResource LinewiseSurface}"
+            BorderBrush="{DynamicResource LinewiseBorder}"
             BorderThickness="1,0,0,0">
       <DockPanel LastChildFill="True">
-        <TextBlock DockPanel.Dock="Top"
-                   Text="{Binding Summary.WarningsLabel}"
-                   FontWeight="SemiBold"
-                   Margin="12,10,12,6" />
+        <StackPanel DockPanel.Dock="Top" Spacing="2" Margin="16,14,16,8">
+          <TextBlock Text="{x:Static res:Strings.WarningsHeading}" Classes="sectionHeading" />
+          <TextBlock Text="{Binding Summary.WarningsLabel}" FontSize="14" FontWeight="SemiBold" />
+        </StackPanel>
+
         <ScrollViewer>
-          <ItemsControl ItemsSource="{Binding Warnings}" Margin="8,0,8,8">
+          <ItemsControl ItemsSource="{Binding Warnings}" Margin="12,0,12,12">
             <ItemsControl.ItemTemplate>
               <DataTemplate x:DataType="vm:WarningViewModel">
-                <Border BorderBrush="#E4E6E8" BorderThickness="0,0,0,1" Padding="4,8">
-                  <StackPanel Spacing="3">
+                <Border Classes="card" Padding="10" Margin="0,0,0,6">
+                  <StackPanel Spacing="5">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                       <Border Classes="severity" Classes.error="{Binding IsError}">
                         <TextBlock Text="{Binding SeverityLabel}" FontSize="10" />
                       </Border>
                       <TextBlock Text="{Binding Context}"
-                                 FontSize="11"
-                                 Opacity="0.75"
+                                 Classes="caption"
                                  VerticalAlignment="Center" />
                     </StackPanel>
-                    <TextBlock Text="{Binding Message}" FontSize="12" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding Message}"
+                               FontSize="12.5"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource LinewiseInk}" />
                   </StackPanel>
                 </Border>
               </DataTemplate>
@@ -127,22 +162,32 @@
     </Border>
 
     <!-- Nothing stored yet. A first run has an empty database, which is normal rather than
-         a fault, so it is explained rather than drawn as an empty grid. -->
+         a fault, so it says what to do next instead of drawing an empty grid. -->
     <Border IsVisible="{Binding !HasRoster}" Padding="24">
-      <StackPanel Spacing="10" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="440">
-        <TextBlock Text="{x:Static res:Strings.ProductName}" FontSize="28" FontWeight="SemiBold" HorizontalAlignment="Center" />
-        <TextBlock Text="{Binding Status}"
-                   HorizontalAlignment="Center"
-                   TextAlignment="Center"
-                   TextWrapping="Wrap"
-                   Opacity="0.8" />
-        <TextBlock Text="{x:Static res:Strings.NothingToDrawYet}"
-                   HorizontalAlignment="Center"
-                   TextAlignment="Center"
-                   TextWrapping="Wrap"
-                   FontSize="12"
-                   Opacity="0.6" />
-      </StackPanel>
+      <Border Classes="card"
+              Padding="32"
+              MaxWidth="520"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center">
+        <StackPanel Spacing="14">
+          <TextBlock Text="{x:Static res:Strings.ProductName}"
+                     FontSize="26"
+                     FontWeight="SemiBold"
+                     HorizontalAlignment="Center" />
+          <TextBlock Text="{Binding Status}"
+                     Classes="subtitle"
+                     HorizontalAlignment="Center"
+                     TextAlignment="Center"
+                     TextWrapping="Wrap" />
+          <Border Height="1" Background="{DynamicResource LinewiseBorderSubtle}" />
+          <TextBlock Text="{x:Static res:Strings.GettingStartedHeading}" Classes="sectionHeading" />
+          <StackPanel Spacing="6">
+            <TextBlock Text="{x:Static res:Strings.GettingStartedImport}" Classes="subtitle" TextWrapping="Wrap" />
+            <TextBlock Text="{x:Static res:Strings.GettingStartedLines}" Classes="subtitle" TextWrapping="Wrap" />
+            <TextBlock Text="{x:Static res:Strings.GettingStartedGenerate}" Classes="subtitle" TextWrapping="Wrap" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
     </Border>
 
     <views:RosterGridView DataContext="{Binding Grid}"

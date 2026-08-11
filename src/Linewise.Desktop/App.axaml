@@ -5,37 +5,67 @@
              RequestedThemeVariant="Light">
 
   <!--
-    Light by default, and not following the system. The design document's reasoning holds:
-    a roster on screen is compared against a sheet of white paper on a wall, and the screen
-    should not be arguing with the printer. Dark is available for anybody who wants it.
+    Light by default and not following the system. The design document's reasoning holds: a
+    roster on screen is compared against a sheet of white paper on a wall, and the screen
+    should not be arguing with the printer. Dark is one button away for anybody working in
+    an office where it matters more than the comparison does.
   -->
 
   <Application.Resources>
     <ResourceDictionary>
+
+      <!--
+        Spacing and shape. Named once, so density is a decision made in one place rather
+        than a number typed forty times. A full week across every line has to fit without
+        scrolling, which is what keeps these small.
+      -->
+      <x:Double x:Key="SpaceXs">4</x:Double>
+      <x:Double x:Key="SpaceSm">8</x:Double>
+      <x:Double x:Key="SpaceMd">12</x:Double>
+      <x:Double x:Key="SpaceLg">16</x:Double>
+      <x:Double x:Key="SpaceXl">24</x:Double>
+      <CornerRadius x:Key="RadiusSm">4</CornerRadius>
+      <CornerRadius x:Key="RadiusMd">6</CornerRadius>
+      <CornerRadius x:Key="RadiusPill">10</CornerRadius>
+      <x:Double x:Key="LineColumnWidth">180</x:Double>
+
       <ResourceDictionary.ThemeDictionaries>
 
         <!--
-          Named rather than inline hex, so the two themes are defined in one place and a
-          view never has to know which one is active. Every key here is chrome: lines,
-          surfaces, separators. None of them carries a meaning on its own, which is the
-          rule that lets the whole palette change without anything becoming unreadable.
+          Every key here is chrome: surfaces, lines, text. None of them carries a meaning on
+          its own, which is the rule that lets the whole palette change without anything
+          becoming unreadable. Meaning is carried by words, weight and position.
         -->
         <ResourceDictionary x:Key="Light">
-          <SolidColorBrush x:Key="LinewiseBorder" Color="#D6D9DC" />
-          <SolidColorBrush x:Key="LinewiseBorderSubtle" Color="#E4E6E8" />
-          <SolidColorBrush x:Key="LinewiseBorderStrong" Color="#8A8F94" />
           <SolidColorBrush x:Key="LinewiseSurface" Color="#FFFFFF" />
-          <SolidColorBrush x:Key="LinewiseSurfaceAlt" Color="#F5F6F7" />
-          <SolidColorBrush x:Key="LinewiseInk" Color="#2E3438" />
+          <SolidColorBrush x:Key="LinewiseSurfaceAlt" Color="#F4F6F8" />
+          <SolidColorBrush x:Key="LinewiseSurfaceRaised" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="LinewiseSurfaceSunken" Color="#EDF0F3" />
+          <SolidColorBrush x:Key="LinewiseBorder" Color="#DBE0E5" />
+          <SolidColorBrush x:Key="LinewiseBorderSubtle" Color="#EAEDF0" />
+          <SolidColorBrush x:Key="LinewiseBorderStrong" Color="#7C858E" />
+          <SolidColorBrush x:Key="LinewiseInk" Color="#1F262B" />
+          <SolidColorBrush x:Key="LinewiseInkMuted" Color="#5B666F" />
+          <SolidColorBrush x:Key="LinewiseInkFaint" Color="#8B959D" />
+          <SolidColorBrush x:Key="LinewiseAccent" Color="#1F6FEB" />
+          <SolidColorBrush x:Key="LinewiseAccentInk" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="LinewiseChip" Color="#F0F3F6" />
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="Dark">
-          <SolidColorBrush x:Key="LinewiseBorder" Color="#3A4045" />
-          <SolidColorBrush x:Key="LinewiseBorderSubtle" Color="#2E3438" />
-          <SolidColorBrush x:Key="LinewiseBorderStrong" Color="#6E767C" />
-          <SolidColorBrush x:Key="LinewiseSurface" Color="#1C2023" />
-          <SolidColorBrush x:Key="LinewiseSurfaceAlt" Color="#23282C" />
-          <SolidColorBrush x:Key="LinewiseInk" Color="#E6E9EB" />
+          <SolidColorBrush x:Key="LinewiseSurface" Color="#171A1D" />
+          <SolidColorBrush x:Key="LinewiseSurfaceAlt" Color="#1E2226" />
+          <SolidColorBrush x:Key="LinewiseSurfaceRaised" Color="#22272B" />
+          <SolidColorBrush x:Key="LinewiseSurfaceSunken" Color="#121517" />
+          <SolidColorBrush x:Key="LinewiseBorder" Color="#333A40" />
+          <SolidColorBrush x:Key="LinewiseBorderSubtle" Color="#282E33" />
+          <SolidColorBrush x:Key="LinewiseBorderStrong" Color="#7E8994" />
+          <SolidColorBrush x:Key="LinewiseInk" Color="#E7EBEE" />
+          <SolidColorBrush x:Key="LinewiseInkMuted" Color="#A3ADB6" />
+          <SolidColorBrush x:Key="LinewiseInkFaint" Color="#7A848D" />
+          <SolidColorBrush x:Key="LinewiseAccent" Color="#4C93FF" />
+          <SolidColorBrush x:Key="LinewiseAccentInk" Color="#0E1114" />
+          <SolidColorBrush x:Key="LinewiseChip" Color="#2A3036" />
         </ResourceDictionary>
 
       </ResourceDictionary.ThemeDictionaries>
@@ -44,6 +74,74 @@
 
   <Application.Styles>
     <sty:FluentAvaloniaTheme PreferSystemTheme="False" />
+
+    <!-- Shared control styling. Kept here rather than per window, so two screens cannot
+         drift into looking like two products. -->
+    <Style Selector="Window">
+      <Setter Property="Background" Value="{DynamicResource LinewiseSurface}" />
+      <Setter Property="Foreground" Value="{DynamicResource LinewiseInk}" />
+    </Style>
+
+    <Style Selector="Button">
+      <Setter Property="CornerRadius" Value="{StaticResource RadiusSm}" />
+      <Setter Property="Padding" Value="14,7" />
+      <Setter Property="MinHeight" Value="32" />
+    </Style>
+
+    <!-- One primary action per screen. The rest are quiet, so the eye lands on the thing
+         the operator came to do rather than on whichever button is furthest left. -->
+    <Style Selector="Button.primary">
+      <Setter Property="Background" Value="{DynamicResource LinewiseAccent}" />
+      <Setter Property="Foreground" Value="{DynamicResource LinewiseAccentInk}" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource LinewiseAccent}" />
+      <Setter Property="Foreground" Value="{DynamicResource LinewiseAccentInk}" />
+      <Setter Property="Opacity" Value="0.88" />
+    </Style>
+
+    <Style Selector="Button.quiet">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="{DynamicResource LinewiseBorder}" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+
+    <Style Selector="TextBox">
+      <Setter Property="CornerRadius" Value="{StaticResource RadiusSm}" />
+      <Setter Property="MinHeight" Value="32" />
+    </Style>
+
+    <Style Selector="NumericUpDown">
+      <Setter Property="CornerRadius" Value="{StaticResource RadiusSm}" />
+      <Setter Property="MinHeight" Value="32" />
+    </Style>
+
+    <!-- Typography. Three sizes and three weights across the whole application; a screen
+         that needs a fourth usually needs rearranging instead. -->
+    <Style Selector="TextBlock.title">
+      <Setter Property="FontSize" Value="19" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{DynamicResource LinewiseInk}" />
+    </Style>
+
+    <Style Selector="TextBlock.subtitle">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="Foreground" Value="{DynamicResource LinewiseInkMuted}" />
+    </Style>
+
+    <Style Selector="TextBlock.caption">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="Foreground" Value="{DynamicResource LinewiseInkFaint}" />
+    </Style>
+
+    <Style Selector="TextBlock.sectionHeading">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="Foreground" Value="{DynamicResource LinewiseInkMuted}" />
+      <Setter Property="LetterSpacing" Value="0.6" />
+    </Style>
   </Application.Styles>
 
 </Application>
