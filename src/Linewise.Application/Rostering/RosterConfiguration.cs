@@ -18,4 +18,6 @@ public sealed record RosterConfiguration
     public IReadOnlyList<LinePreference> Preferences { get; init; } = [];
 
     public IReadOnlyList<LeaderEligibility> LeaderEligibilities { get; init; } = [];
+
+    public IReadOnlyList<OperatingAssistantEligibility> OperatingAssistantEligibilities { get; init; } = [];
 }

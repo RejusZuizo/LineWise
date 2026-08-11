@@ -14,6 +14,13 @@ public sealed record ProductionLine
     public required int RequiredHeadcount { get; init; }
 
     /// <summary>
+    /// How many operating assistants this line wants, out of its headcount rather than on
+    /// top of it. Zero means the line does not use them, which keeps every existing line
+    /// behaving exactly as it did.
+    /// </summary>
+    public int RequiredOperatingAssistants { get; init; }
+
+    /// <summary>
     /// Skills every person on this line must hold, by <see cref="Skill"/> identifier.
     /// Absolute: never violated by the engine.
     /// </summary>

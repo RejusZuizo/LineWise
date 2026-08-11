@@ -84,6 +84,14 @@ public sealed class RosterRuleValidator : IRosterRuleValidator
             {
                 warnings.Add(RosterWarnings.LineHasNoEligibleLeader(line));
             }
+
+            // A line asking for a second in charge that nobody may fill is the same class of
+            // fault, and just as invisible until a week is generated.
+            if (line.RequiredOperatingAssistants > 0
+                && !configuration.OperatingAssistantEligibilities.Any(e => e.LineId == line.Id))
+            {
+                warnings.Add(RosterWarnings.LineHasNoEligibleOperatingAssistant(line));
+            }
         }
     }
 

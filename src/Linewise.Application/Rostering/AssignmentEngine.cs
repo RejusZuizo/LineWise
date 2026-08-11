@@ -195,6 +195,60 @@ public sealed class AssignmentEngine : IAssignmentEngine
             context.Ledger.RecordLead(leader, shift.Date);
         }
 
+        // Rule 4b. Operating assistants, chosen the same way and immediately after, because
+        // a line's second in charge is picked from the same pool the leader came out of and
+        // choosing them before ranked preferences is what stops the pool being empty by the
+        // time we get here.
+        //
+        // A line asks for a number rather than exactly one, and asking for none is the
+        // ordinary case, so this loop does nothing at all for a site that does not use them.
+        foreach (var line in context.Lines)
+        {
+            var wanted = line.RequiredOperatingAssistants;
+
+            if (wanted <= 0)
+            {
+                continue;
+            }
+
+            for (var placed = CountAssistants(placements[line.Id]); placed < wanted; placed++)
+            {
+                var alreadyOnLine = placements[line.Id].Select(assignment => assignment.EmployeeId).ToHashSet();
+                var hasRoom = placements[line.Id].Count < context.HeadcountFor(line, shift.Date);
+
+                var candidates = availableToday
+                    .Where(employeeId => context.CanAssist(employeeId, line.Id))
+                    .Where(employeeId => !IsAlreadyRanked(placements[line.Id], employeeId))
+                    .Where(employeeId => alreadyOnLine.Contains(employeeId)
+                        || (hasRoom && !assignedToday.Contains(employeeId) && context.IsEligibleFor(employeeId, line)))
+                    .ToList();
+
+                if (candidates.Count == 0)
+                {
+                    // Rule 9 raises the warning once the day is settled, the same as a line
+                    // that could not find a leader.
+                    break;
+                }
+
+                var assistant = candidates
+                    .OrderBy(employeeId => context.Ledger.LastLedOn(employeeId) ?? DateOnly.MinValue)
+                    .ThenBy(employeeId => employeeId)
+                    .First();
+
+                if (alreadyOnLine.Contains(assistant))
+                {
+                    // Promoted in place, keeping the explanation that put them on the line.
+                    var index = placements[line.Id].FindIndex(a => a.EmployeeId == assistant);
+                    placements[line.Id][index] =
+                        placements[line.Id][index] with { Role = AssignmentRole.OperatingAssistant };
+                }
+                else
+                {
+                    Place(line, assistant, AssignmentRole.OperatingAssistant, AssignmentExplanation.LeaderSelection);
+                }
+            }
+        }
+
         // Rule 5. Overtime goes to the lines running above their usual headcount, because
         // that is what overtime is being paid for. This has to happen before ranked
         // preferences rather than at the backfill: an overtime worker with a first choice
@@ -310,6 +364,20 @@ public sealed class AssignmentEngine : IAssignmentEngine
                 warnings.Add(RosterWarnings.LineHasNoLeader(line, shift.Date));
             }
 
+            if (line.RequiredOperatingAssistants > 0)
+            {
+                var assistants = onLine.Count(a => a.Role == AssignmentRole.OperatingAssistant);
+
+                if (assistants < line.RequiredOperatingAssistants)
+                {
+                    warnings.Add(RosterWarnings.LineShortOfOperatingAssistants(
+                        line,
+                        assistants,
+                        line.RequiredOperatingAssistants,
+                        shift.Date));
+                }
+            }
+
             // Somebody on overtime standing on a quiet line. Not wrong, and not worth
             // undoing, but the manager is paying a premium for it.
             if (!context.IsRunningHot(line, shift.Date))
@@ -341,4 +409,15 @@ public sealed class AssignmentEngine : IAssignmentEngine
             Warnings = warnings,
         };
     }
+
+    private static int CountAssistants(IEnumerable<Assignment> onLine) =>
+        onLine.Count(assignment => assignment.Role == AssignmentRole.OperatingAssistant);
+
+    /// <summary>
+    /// Already the leader or already an assistant. Somebody cannot hold two ranks on one
+    /// line, and promoting the leader again would quietly cost the line its leader.
+    /// </summary>
+    private static bool IsAlreadyRanked(IEnumerable<Assignment> onLine, Guid employeeId) =>
+        onLine.Any(assignment => assignment.EmployeeId == employeeId
+            && assignment.Role != AssignmentRole.Worker);
 }

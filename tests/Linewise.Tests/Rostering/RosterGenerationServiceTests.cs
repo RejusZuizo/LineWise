@@ -262,6 +262,12 @@ public sealed class RosterGenerationServiceTests
             CancellationToken cancellationToken = default) =>
             Task.CompletedTask;
 
+        public Task ReplaceOperatingAssistantEligibilityAsync(
+            Guid employeeId,
+            IReadOnlyList<OperatingAssistantEligibility> eligibilities,
+            CancellationToken cancellationToken = default) =>
+            Task.CompletedTask;
+
         public Task<PrintSettings> GetPrintSettingsAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult(new PrintSettings { Id = Guid.Empty });
 

@@ -45,10 +45,29 @@
       <Setter Property="Padding" Value="7,2" />
     </Style>
 
+    <!--
+      A rank gets a colour and a word and a shape, never a colour alone. Leader is the
+      strongest mark because it is the one somebody looks for first; assistant sits between
+      that and a line worker, which is exactly where it sits on the line.
+    -->
     <Style Selector="Border.chip.leader">
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderBrush" Value="{DynamicResource LinewiseInk}" />
+      <Setter Property="Background" Value="{DynamicResource LinewiseLeaderFill}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource LinewiseLeaderInk}" />
+      <Setter Property="BorderThickness" Value="1.5" />
+    </Style>
+
+    <Style Selector="Border.chip.leader TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource LinewiseLeaderInk}" />
+    </Style>
+
+    <Style Selector="Border.chip.assistant">
+      <Setter Property="Background" Value="{DynamicResource LinewiseAssistantFill}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource LinewiseAssistantInk}" />
       <Setter Property="BorderThickness" Value="1" />
+    </Style>
+
+    <Style Selector="Border.chip.assistant TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource LinewiseAssistantInk}" />
     </Style>
 
     <Style Selector="Border.headcount">
@@ -175,17 +194,18 @@
                                 <DataTemplate x:DataType="vm:PersonChipViewModel">
                                   <Border Classes="chip"
                                           Classes.leader="{Binding IsLeader}"
+                                          Classes.assistant="{Binding IsOperatingAssistant}"
                                           Margin="0,0,0,3"
                                           ToolTip.Tip="{Binding Explanation}">
                                     <StackPanel Orientation="Horizontal" Spacing="5">
                                       <TextBlock Text="{Binding DisplayName}"
                                                  FontSize="12"
-                                                 FontWeight="{Binding IsLeader, Converter={x:Static vm:Converters.BoldWhenTrue}}"
+                                                 FontWeight="{Binding IsRanked, Converter={x:Static vm:Converters.BoldWhenTrue}}"
                                                  TextTrimming="CharacterEllipsis" />
                                       <TextBlock Text="{Binding RoleLabel}"
                                                  FontSize="9.5"
                                                  FontWeight="Bold"
-                                                 IsVisible="{Binding IsLeader}"
+                                                 IsVisible="{Binding IsRanked}"
                                                  VerticalAlignment="Center" />
                                       <TextBlock Text="{x:Static res:Strings.ChipEdited}"
                                                  Classes="caption"

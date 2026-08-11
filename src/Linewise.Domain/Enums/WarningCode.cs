@@ -41,6 +41,9 @@ public enum WarningCode
     /// </summary>
     OvertimeNotOnABusyLine = 9,
 
+    /// <summary>The line asked for operating assistants and got fewer than it wanted.</summary>
+    LineShortOfOperatingAssistants = 10,
+
     // Raised by the rule validator, before generation is attempted.
 
     /// <summary>More employees are mandatory on a line than the line has places.</summary>
@@ -57,6 +60,12 @@ public enum WarningCode
 
     /// <summary>An employee is both mandatory on and blocked from the same line.</summary>
     ContradictoryPreference = 104,
+
+    /// <summary>
+    /// The line asks for operating assistants and nobody is permitted to be one on it, so
+    /// the slot can never be filled. A configuration fault rather than a bad week.
+    /// </summary>
+    LineHasNoEligibleOperatingAssistant = 105,
 
     /// <summary>An employee is mandatory on a line whose required skills they do not hold.</summary>
     MandatoryPreferenceWithoutRequiredSkills = 105,

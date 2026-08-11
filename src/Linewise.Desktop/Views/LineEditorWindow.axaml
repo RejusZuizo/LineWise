@@ -91,6 +91,13 @@
                                Increment="1"
                                FormatString="0"
                                Width="110" />
+                <NumericUpDown Value="{Binding RequiredOperatingAssistants}"
+                               Minimum="0"
+                               Maximum="50"
+                               Increment="1"
+                               FormatString="0"
+                               Width="110"
+                               ToolTip.Tip="{x:Static res:Strings.OperatingAssistantsNeeded}" />
                 <NumericUpDown Value="{Binding DisplayOrder}"
                                Minimum="1"
                                Maximum="999"

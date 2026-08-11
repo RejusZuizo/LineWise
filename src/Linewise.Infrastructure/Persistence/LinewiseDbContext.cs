@@ -34,6 +34,9 @@ public sealed class LinewiseDbContext : DbContext
 
     public DbSet<LeaderEligibility> LeaderEligibilities => Set<LeaderEligibility>();
 
+    public DbSet<OperatingAssistantEligibility> OperatingAssistantEligibilities =>
+        Set<OperatingAssistantEligibility>();
+
     public DbSet<RosterVersion> RosterVersions => Set<RosterVersion>();
 
     public DbSet<Assignment> Assignments => Set<Assignment>();
