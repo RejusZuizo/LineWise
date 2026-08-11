@@ -1,3 +1,4 @@
+using Linewise.Desktop.Services;
 using Linewise.Desktop.ViewModels;
 using Linewise.Desktop.Views;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,8 +15,15 @@ public static class ServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
+        services.AddSingleton<IDialogService, DialogService>();
+
         services.AddSingleton<MainWindowViewModel>();
         services.AddSingleton<MainWindow>();
+
+        // Transient: a dialog opened twice should be a fresh window with freshly loaded
+        // lines, not the one that was closed with half an edit in it.
+        services.AddTransient<LineEditorViewModel>();
+        services.AddTransient<LineEditorWindow>();
 
         return services;
     }

@@ -205,4 +205,52 @@
     <value>[unknown]</value>
     <comment>An identifier with no employee behind it. Should never appear; saying so beats a blank chip that looks like a rendering fault.</comment>
   </data>
+  <data name="Lines" xml:space="preserve">
+    <value>Production lines</value>
+    <comment>Title of the line setup screen.</comment>
+  </data>
+  <data name="SetUpLines" xml:space="preserve">
+    <value>Set up lines</value>
+    <comment>Toolbar button opening line setup.</comment>
+  </data>
+  <data name="LineName" xml:space="preserve">
+    <value>Line name</value>
+    <comment>Watermark on the new line box.</comment>
+  </data>
+  <data name="AddLine" xml:space="preserve">
+    <value>Add line</value>
+    <comment>Button.</comment>
+  </data>
+  <data name="SaveLines" xml:space="preserve">
+    <value>Save changes</value>
+    <comment>Button.</comment>
+  </data>
+  <data name="LineAdded" xml:space="preserve">
+    <value>Added {0}.</value>
+    <comment>0 = line name.</comment>
+  </data>
+  <data name="LinesSavedOne" xml:space="preserve">
+    <value>Saved 1 line.</value>
+    <comment>Confirmation.</comment>
+  </data>
+  <data name="LinesSavedMany" xml:space="preserve">
+    <value>Saved {0} lines.</value>
+    <comment>0 = count.</comment>
+  </data>
+  <data name="NoLinesYet" xml:space="preserve">
+    <value>No production lines yet. A roster needs at least one line to put people on.</value>
+    <comment>Empty state on the line setup screen.</comment>
+  </data>
+  <data name="HeadcountNeeded" xml:space="preserve">
+    <value>People needed</value>
+    <comment>Column header on the line setup screen.</comment>
+  </data>
+  <data name="DisplayOrder" xml:space="preserve">
+    <value>Order</value>
+    <comment>Column header. The order lines appear in on screen and on the printed sheet.</comment>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Close</value>
+    <comment>Button.</comment>
+  </data>
 </root>

@@ -5,9 +5,42 @@
              RequestedThemeVariant="Light">
 
   <!--
-    Light, and not following the system. A roster is compared against a sheet of white
-    paper on a wall, and the screen should not be arguing with the printer.
+    Light by default, and not following the system. The design document's reasoning holds:
+    a roster on screen is compared against a sheet of white paper on a wall, and the screen
+    should not be arguing with the printer. Dark is available for anybody who wants it.
   -->
+
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+
+        <!--
+          Named rather than inline hex, so the two themes are defined in one place and a
+          view never has to know which one is active. Every key here is chrome: lines,
+          surfaces, separators. None of them carries a meaning on its own, which is the
+          rule that lets the whole palette change without anything becoming unreadable.
+        -->
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="LinewiseBorder" Color="#D6D9DC" />
+          <SolidColorBrush x:Key="LinewiseBorderSubtle" Color="#E4E6E8" />
+          <SolidColorBrush x:Key="LinewiseBorderStrong" Color="#8A8F94" />
+          <SolidColorBrush x:Key="LinewiseSurface" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="LinewiseSurfaceAlt" Color="#F5F6F7" />
+          <SolidColorBrush x:Key="LinewiseInk" Color="#2E3438" />
+        </ResourceDictionary>
+
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="LinewiseBorder" Color="#3A4045" />
+          <SolidColorBrush x:Key="LinewiseBorderSubtle" Color="#2E3438" />
+          <SolidColorBrush x:Key="LinewiseBorderStrong" Color="#6E767C" />
+          <SolidColorBrush x:Key="LinewiseSurface" Color="#1C2023" />
+          <SolidColorBrush x:Key="LinewiseSurfaceAlt" Color="#23282C" />
+          <SolidColorBrush x:Key="LinewiseInk" Color="#E6E9EB" />
+        </ResourceDictionary>
+
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </Application.Resources>
 
   <Application.Styles>
     <sty:FluentAvaloniaTheme PreferSystemTheme="False" />

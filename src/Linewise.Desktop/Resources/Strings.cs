@@ -59,6 +59,29 @@ public static class Strings
 
     public static string UnknownEmployee => Get(nameof(UnknownEmployee));
 
+    public static string Lines => Get(nameof(Lines));
+
+    public static string SetUpLines => Get(nameof(SetUpLines));
+
+    public static string LineName => Get(nameof(LineName));
+
+    public static string AddLine => Get(nameof(AddLine));
+
+    public static string SaveLines => Get(nameof(SaveLines));
+
+    public static string NoLinesYet => Get(nameof(NoLinesYet));
+
+    public static string HeadcountNeeded => Get(nameof(HeadcountNeeded));
+
+    public static string DisplayOrder => Get(nameof(DisplayOrder));
+
+    public static string Close => Get(nameof(Close));
+
+    public static string LineAdded(string name) => Format(nameof(LineAdded), name);
+
+    public static string LinesSaved(int count) =>
+        count == 1 ? Get("LinesSavedOne") : Format("LinesSavedMany", count);
+
     public static string WindowTitle(string week, string state) =>
         Format(nameof(WindowTitle), ProductName, week, state);
 

@@ -1,0 +1,104 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:Linewise.Desktop.ViewModels"
+        xmlns:res="using:Linewise.Desktop.Resources"
+        mc:Ignorable="d"
+        d:DesignWidth="620" d:DesignHeight="560"
+        x:Class="Linewise.Desktop.Views.LineEditorWindow"
+        x:DataType="vm:LineEditorViewModel"
+        Title="{x:Static res:Strings.Lines}"
+        Width="620" Height="560"
+        MinWidth="520" MinHeight="420"
+        WindowStartupLocation="CenterOwner">
+
+  <DockPanel LastChildFill="True" Margin="16">
+
+    <TextBlock DockPanel.Dock="Top"
+               Text="{x:Static res:Strings.Lines}"
+               FontSize="18"
+               FontWeight="SemiBold"
+               Margin="0,0,0,12" />
+
+    <!-- Adding. Name and headcount are the only two things a line cannot do without. -->
+    <Border DockPanel.Dock="Top"
+            BorderBrush="{DynamicResource LinewiseBorder}"
+            BorderThickness="1"
+            CornerRadius="4"
+            Padding="12"
+            Margin="0,0,0,12">
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <TextBox Text="{Binding NewLineName}"
+                 Watermark="{x:Static res:Strings.LineName}"
+                 Width="220" />
+        <NumericUpDown Value="{Binding NewLineHeadcount}"
+                       Minimum="1"
+                       Maximum="200"
+                       Increment="1"
+                       FormatString="0"
+                       Width="120" />
+        <Button Content="{x:Static res:Strings.AddLine}"
+                Command="{Binding AddCommand}"
+                IsDefault="True" />
+      </StackPanel>
+    </Border>
+
+    <!-- Footer -->
+    <DockPanel DockPanel.Dock="Bottom" LastChildFill="False" Margin="0,12,0,0">
+      <TextBlock DockPanel.Dock="Left"
+                 Text="{Binding Status}"
+                 VerticalAlignment="Center"
+                 Opacity="0.75"
+                 FontSize="12" />
+      <Button DockPanel.Dock="Right"
+              Content="{x:Static res:Strings.Close}"
+              Click="OnClose"
+              Margin="8,0,0,0" />
+      <Button DockPanel.Dock="Right"
+              Content="{x:Static res:Strings.SaveLines}"
+              Command="{Binding SaveCommand}"
+              IsEnabled="{Binding HasLines}" />
+    </DockPanel>
+
+    <TextBlock Text="{x:Static res:Strings.NoLinesYet}"
+               IsVisible="{Binding !HasLines}"
+               TextWrapping="Wrap"
+               Opacity="0.75"
+               VerticalAlignment="Top" />
+
+    <ScrollViewer IsVisible="{Binding HasLines}">
+      <ItemsControl ItemsSource="{Binding Lines}">
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:EditableLineViewModel">
+            <Border BorderBrush="{DynamicResource LinewiseBorder}"
+                    BorderThickness="0,0,0,1"
+                    Padding="0,8">
+              <StackPanel Orientation="Horizontal" Spacing="10">
+                <!-- The line's colour, beside its name and never instead of it. -->
+                <Border Width="4"
+                        CornerRadius="2"
+                        Background="{Binding AccentColour}" />
+                <TextBox Text="{Binding Name}" Width="240" />
+                <NumericUpDown Value="{Binding RequiredHeadcount}"
+                               Minimum="1"
+                               Maximum="200"
+                               Increment="1"
+                               FormatString="0"
+                               Width="110" />
+                <NumericUpDown Value="{Binding DisplayOrder}"
+                               Minimum="1"
+                               Maximum="999"
+                               Increment="1"
+                               FormatString="0"
+                               Width="90" />
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+
+  </DockPanel>
+
+</Window>

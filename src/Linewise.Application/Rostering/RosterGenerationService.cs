@@ -1,5 +1,6 @@
 using Linewise.Application.Persistence;
 using Linewise.Domain.Entities;
+using Linewise.Domain.Enums;
 
 namespace Linewise.Application.Rostering;
 
@@ -43,7 +44,7 @@ public sealed class RosterGenerationService : IRosterGenerationService
         var weekEnd = weekStart.AddDays(7);
 
         var configuration = await _configuration.GetAsync(cancellationToken).ConfigureAwait(false);
-        var shifts = await _shifts.GetAsync(weekStart, weekEnd, cancellationToken).ConfigureAwait(false);
+        var shifts = await EnsureShiftsAsync(weekStart, weekEnd, cancellationToken).ConfigureAwait(false);
         var availability = await _availability.GetAsync(weekStart, weekEnd, cancellationToken).ConfigureAwait(false);
         var demands = await _demands.GetAsync(weekStart, weekEnd, cancellationToken).ConfigureAwait(false);
 
@@ -76,5 +77,39 @@ public sealed class RosterGenerationService : IRosterGenerationService
             .ConfigureAwait(false);
 
         return new StoredRoster(version, roster);
+    }
+
+    /// <summary>
+    /// A roster is generated per shift, so a week with no shifts produces no days at all —
+    /// an empty grid, with nothing on screen to explain why.
+    /// </summary>
+    /// <remarks>
+    /// A single day shift per date is created when none exist. The design document is
+    /// explicit that the product must be useful with zero rules configured, producing a
+    /// reasonable roster from availability and headcount alone; requiring somebody to
+    /// define a shift before the first generate is exactly the kind of setup step that
+    /// kills a tool at first contact.
+    /// <para>
+    /// Only ever adds. A site running nights configures them once and this leaves them
+    /// alone thereafter, because <c>EnsureAsync</c> returns what already exists.
+    /// </para>
+    /// </remarks>
+    private async Task<IReadOnlyList<Shift>> EnsureShiftsAsync(
+        DateOnly weekStart,
+        DateOnly weekEnd,
+        CancellationToken cancellationToken)
+    {
+        var existing = await _shifts.GetAsync(weekStart, weekEnd, cancellationToken).ConfigureAwait(false);
+
+        var missing = Enumerable
+            .Range(0, weekEnd.DayNumber - weekStart.DayNumber)
+            .Select(offset => weekStart.AddDays(offset))
+            .Where(date => !existing.Any(shift => shift.Date == date))
+            .Select(date => new Shift { Id = Guid.NewGuid(), Date = date, Name = ShiftName.Day })
+            .ToList();
+
+        return missing.Count == 0
+            ? existing
+            : await _shifts.EnsureAsync([.. existing, .. missing], cancellationToken).ConfigureAwait(false);
     }
 }
