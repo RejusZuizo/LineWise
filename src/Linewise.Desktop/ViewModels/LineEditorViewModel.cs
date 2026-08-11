@@ -142,6 +142,13 @@ public sealed partial class EditableLineViewModel : ObservableObject
     [ObservableProperty]
     private int _displayOrder;
 
+    /// <summary>
+    /// Out of the line's headcount rather than on top of it. Zero is the ordinary answer
+    /// and keeps a line behaving exactly as it did before the role existed.
+    /// </summary>
+    [ObservableProperty]
+    private int _requiredOperatingAssistants;
+
     public EditableLineViewModel(ProductionLine line)
     {
         ArgumentNullException.ThrowIfNull(line);
@@ -150,6 +157,7 @@ public sealed partial class EditableLineViewModel : ObservableObject
         _name = line.Name;
         _requiredHeadcount = line.RequiredHeadcount;
         _displayOrder = line.DisplayOrder;
+        _requiredOperatingAssistants = line.RequiredOperatingAssistants;
     }
 
     public string AccentColour => _original.AccentColour;
@@ -163,5 +171,6 @@ public sealed partial class EditableLineViewModel : ObservableObject
         Name = Name.Trim(),
         RequiredHeadcount = Math.Max(1, RequiredHeadcount),
         DisplayOrder = DisplayOrder,
+        RequiredOperatingAssistants = Math.Max(0, RequiredOperatingAssistants),
     };
 }

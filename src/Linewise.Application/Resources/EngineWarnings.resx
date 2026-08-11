@@ -190,4 +190,12 @@
   <data name="ImportEmployeeOnMoreThanOneRow" xml:space="preserve">
     <value>Appears on more than one row. The first was used.</value>
   </data>
+  <data name="LineShortOfOperatingAssistants" xml:space="preserve">
+    <value>{0} has {1} of the {2} operating assistants it asked for.</value>
+    <comment>0 = line name, 1 = actual, 2 = required.</comment>
+  </data>
+  <data name="LineHasNoEligibleOperatingAssistant" xml:space="preserve">
+    <value>{0} asks for operating assistants, but nobody is permitted to be one on it.</value>
+    <comment>0 = line name. A configuration fault: the slot can never be filled.</comment>
+  </data>
 </root>

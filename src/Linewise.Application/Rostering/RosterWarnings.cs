@@ -100,6 +100,29 @@ internal static class RosterWarnings
     public static RosterWarning LineRequiresSkillNobodyHolds(ProductionLine line, string skillName) =>
         Build(WarningCode.LineRequiresSkillNobodyHolds, WarningSeverity.Error, [line.Name, skillName], lineId: line.Id);
 
+    /// <summary>
+    /// The line wanted a second in charge and did not get one, or got fewer than it asked
+    /// for. Both numbers are carried, because "1 of 2" and "0 of 2" are different mornings.
+    /// </summary>
+    public static RosterWarning LineShortOfOperatingAssistants(
+        ProductionLine line,
+        int actual,
+        int required,
+        DateOnly date) =>
+        Build(
+            WarningCode.LineShortOfOperatingAssistants,
+            WarningSeverity.Notice,
+            [line.Name, actual, required],
+            lineId: line.Id,
+            date: date);
+
+    public static RosterWarning LineHasNoEligibleOperatingAssistant(ProductionLine line) =>
+        Build(
+            WarningCode.LineHasNoEligibleOperatingAssistant,
+            WarningSeverity.Error,
+            [line.Name],
+            lineId: line.Id);
+
     public static RosterWarning LineHasNoEligibleLeader(ProductionLine line) =>
         Build(WarningCode.LineHasNoEligibleLeader, WarningSeverity.Error, [line.Name], lineId: line.Id);
 

@@ -15,6 +15,8 @@ internal sealed class GenerationContext
     private readonly Dictionary<(Guid EmployeeId, DateOnly Date), AvailabilityStatus> _availability = new();
     private readonly Dictionary<(Guid EmployeeId, Guid LineId), LinePreference> _preferences = new();
     private readonly HashSet<(Guid EmployeeId, Guid LineId)> _leaderEligibility = new();
+
+    private readonly HashSet<(Guid EmployeeId, Guid LineId)> _assistantEligibility = new();
     private readonly Dictionary<(DateOnly Date, Guid ShiftId), List<Assignment>> _lockedAssignments = new();
     private readonly Dictionary<DateOnly, HashSet<Guid>> _assignedByDate = new();
     private readonly Dictionary<(Guid LineId, DateOnly Date), int> _demand = new();
@@ -54,6 +56,11 @@ internal sealed class GenerationContext
         foreach (var eligibility in configuration.LeaderEligibilities)
         {
             _leaderEligibility.Add((eligibility.EmployeeId, eligibility.LineId));
+        }
+
+        foreach (var eligibility in configuration.OperatingAssistantEligibilities)
+        {
+            _assistantEligibility.Add((eligibility.EmployeeId, eligibility.LineId));
         }
 
         foreach (var demand in request.Demands)
@@ -153,6 +160,9 @@ internal sealed class GenerationContext
 
     public bool CanLead(Guid employeeId, Guid lineId) =>
         _leaderEligibility.Contains((employeeId, lineId));
+
+    public bool CanAssist(Guid employeeId, Guid lineId) =>
+        _assistantEligibility.Contains((employeeId, lineId));
 
     /// <summary>
     /// Blocked lines and missing skills. Absolute: nothing but a locked assignment placed by

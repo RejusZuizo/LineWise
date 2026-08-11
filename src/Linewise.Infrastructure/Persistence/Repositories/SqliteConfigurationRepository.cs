@@ -34,6 +34,8 @@ public sealed class SqliteConfigurationRepository : IConfigurationRepository
             .ToListAsync(cancellationToken).ConfigureAwait(false);
         var eligibilities = await _context.LeaderEligibilities.AsNoTracking()
             .ToListAsync(cancellationToken).ConfigureAwait(false);
+        var assistantEligibilities = await _context.OperatingAssistantEligibilities.AsNoTracking()
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         var aliases = await _context.Set<EmployeeAliasRow>().AsNoTracking()
             .ToListAsync(cancellationToken).ConfigureAwait(false);
@@ -81,6 +83,7 @@ public sealed class SqliteConfigurationRepository : IConfigurationRepository
             Skills = skills,
             Preferences = preferences,
             LeaderEligibilities = eligibilities,
+            OperatingAssistantEligibilities = assistantEligibilities,
         };
     }
 
@@ -176,6 +179,21 @@ public sealed class SqliteConfigurationRepository : IConfigurationRepository
             .ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
 
         _context.LeaderEligibilities.AddRange(eligibilities);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task ReplaceOperatingAssistantEligibilityAsync(
+        Guid employeeId,
+        IReadOnlyList<OperatingAssistantEligibility> eligibilities,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(eligibilities);
+
+        await _context.OperatingAssistantEligibilities
+            .Where(eligibility => eligibility.EmployeeId == employeeId)
+            .ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
+
+        _context.OperatingAssistantEligibilities.AddRange(eligibilities);
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 

@@ -50,6 +50,10 @@
           <SolidColorBrush x:Key="LinewiseAccent" Color="#1F6FEB" />
           <SolidColorBrush x:Key="LinewiseAccentInk" Color="#FFFFFF" />
           <SolidColorBrush x:Key="LinewiseChip" Color="#F0F3F6" />
+          <SolidColorBrush x:Key="LinewiseLeaderFill" Color="#E3EDFB" />
+          <SolidColorBrush x:Key="LinewiseLeaderInk" Color="#14448F" />
+          <SolidColorBrush x:Key="LinewiseAssistantFill" Color="#E6F1E9" />
+          <SolidColorBrush x:Key="LinewiseAssistantInk" Color="#1E5B34" />
         </ResourceDictionary>
 
         <ResourceDictionary x:Key="Dark">
@@ -66,6 +70,10 @@
           <SolidColorBrush x:Key="LinewiseAccent" Color="#4C93FF" />
           <SolidColorBrush x:Key="LinewiseAccentInk" Color="#0E1114" />
           <SolidColorBrush x:Key="LinewiseChip" Color="#2A3036" />
+          <SolidColorBrush x:Key="LinewiseLeaderFill" Color="#16283F" />
+          <SolidColorBrush x:Key="LinewiseLeaderInk" Color="#9CC4FF" />
+          <SolidColorBrush x:Key="LinewiseAssistantFill" Color="#17301F" />
+          <SolidColorBrush x:Key="LinewiseAssistantInk" Color="#8FD3A6" />
         </ResourceDictionary>
 
       </ResourceDictionary.ThemeDictionaries>

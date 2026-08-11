@@ -349,4 +349,12 @@
     <value>LINE</value>
     <comment>Header over the row-header column of the roster grid.</comment>
   </data>
+  <data name="OperatingAssistantsNeeded" xml:space="preserve">
+    <value>Operating assistants needed, out of the headcount rather than on top of it</value>
+    <comment>Tooltip on the line editor field.</comment>
+  </data>
+  <data name="RoleOperatingAssistant" xml:space="preserve">
+    <value>Assistant</value>
+    <comment>Shown on the chip. The word, not only the colour.</comment>
+  </data>
 </root>

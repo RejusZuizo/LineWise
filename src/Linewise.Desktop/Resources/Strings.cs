@@ -55,6 +55,10 @@ public static class Strings
 
     public static string RoleLeader => Get(nameof(RoleLeader));
 
+    public static string RoleOperatingAssistant => Get(nameof(RoleOperatingAssistant));
+
+    public static string OperatingAssistantsNeeded => Get(nameof(OperatingAssistantsNeeded));
+
     public static string ChipEdited => Get(nameof(ChipEdited));
 
     public static string UnknownEmployee => Get(nameof(UnknownEmployee));

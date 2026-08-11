@@ -130,6 +130,16 @@ internal sealed class LeaderEligibilityConfiguration : IEntityTypeConfiguration<
     }
 }
 
+internal sealed class OperatingAssistantEligibilityConfiguration
+    : IEntityTypeConfiguration<OperatingAssistantEligibility>
+{
+    public void Configure(EntityTypeBuilder<OperatingAssistantEligibility> builder)
+    {
+        builder.ToTable("OperatingAssistantEligibilities");
+        builder.HasKey(eligibility => new { eligibility.EmployeeId, eligibility.LineId });
+    }
+}
+
 internal sealed class EmployeeAliasConfiguration : IEntityTypeConfiguration<EmployeeAliasRow>
 {
     public void Configure(EntityTypeBuilder<EmployeeAliasRow> builder)

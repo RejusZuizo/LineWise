@@ -22,6 +22,7 @@ public sealed class PersonChipViewModel
 
         DisplayName = displayName;
         IsLeader = assignment.Role == AssignmentRole.LineLeader;
+        IsOperatingAssistant = assignment.Role == AssignmentRole.OperatingAssistant;
         IsManual = assignment.Source == AssignmentSource.Manual;
         IsLocked = assignment.IsLocked;
         Explanation = assignment.Explanation.ToString();
@@ -31,8 +32,23 @@ public sealed class PersonChipViewModel
 
     public bool IsLeader { get; }
 
-    /// <summary>The word, which is the part that survives every kind of impairment.</summary>
-    public string RoleLabel => IsLeader ? Strings.RoleLeader : string.Empty;
+    public bool IsOperatingAssistant { get; }
+
+    /// <summary>A rank of some kind, so the chip is drawn differently from a line worker.</summary>
+    public bool IsRanked => IsLeader || IsOperatingAssistant;
+
+    /// <summary>
+    /// The word, which is the part that survives every kind of impairment.
+    /// </summary>
+    /// <remarks>
+    /// Each rank now has a colour as well, which is a genuine improvement for the ninety
+    /// odd percent of people who can use it. The word stays because roughly eight percent of
+    /// men cannot, and because this same data is printed on a monochrome laser and stuck to
+    /// a wall. Colour is an additional channel here, never the only one. ADR 0010.
+    /// </remarks>
+    public string RoleLabel => IsLeader
+        ? Strings.RoleLeader
+        : IsOperatingAssistant ? Strings.RoleOperatingAssistant : string.Empty;
 
     /// <summary>
     /// Placed by hand rather than by the engine. Shown from the first version of this grid

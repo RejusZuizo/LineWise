@@ -25,6 +25,7 @@ internal sealed class RosterScenarioBuilder
     private readonly HashSet<string> _withoutAvailabilityRecord = new(StringComparer.Ordinal);
     private readonly List<LinePreference> _preferences = [];
     private readonly List<LeaderEligibility> _leaderEligibilities = [];
+    private readonly List<OperatingAssistantEligibility> _assistantEligibilities = [];
     private readonly List<LineDemand> _demands = [];
     private readonly List<Assignment> _lockedAssignments = [];
     private readonly List<HistoricAssignment> _history = [];
@@ -44,7 +45,7 @@ internal sealed class RosterScenarioBuilder
         return this;
     }
 
-    public RosterScenarioBuilder Line(string name, int headcount = 2)
+    public RosterScenarioBuilder Line(string name, int headcount = 2, int operatingAssistants = 0)
     {
         _lines[name] = new ProductionLine
         {
@@ -52,6 +53,7 @@ internal sealed class RosterScenarioBuilder
             Name = name,
             DisplayOrder = _lines.Count,
             RequiredHeadcount = headcount,
+            RequiredOperatingAssistants = operatingAssistants,
         };
 
         return this;
@@ -126,6 +128,18 @@ internal sealed class RosterScenarioBuilder
     public RosterScenarioBuilder CanLead(string employee, string line)
     {
         _leaderEligibilities.Add(new LeaderEligibility
+        {
+            EmployeeId = _employees[employee].Id,
+            LineId = _lines[line].Id,
+        });
+
+        return this;
+    }
+
+    /// <summary>Permitted to be the second in charge on this line.</summary>
+    public RosterScenarioBuilder CanAssist(string employee, string line)
+    {
+        _assistantEligibilities.Add(new OperatingAssistantEligibility
         {
             EmployeeId = _employees[employee].Id,
             LineId = _lines[line].Id,
@@ -212,6 +226,7 @@ internal sealed class RosterScenarioBuilder
         Skills = _skills.Values.ToList(),
         Preferences = _preferences.ToList(),
         LeaderEligibilities = _leaderEligibilities.ToList(),
+        OperatingAssistantEligibilities = _assistantEligibilities.ToList(),
     };
 
     public AssignmentRequest Build() => new()
