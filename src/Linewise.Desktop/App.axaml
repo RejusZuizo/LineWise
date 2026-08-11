@@ -116,6 +116,25 @@
       <Setter Property="BorderThickness" Value="1" />
     </Style>
 
+    <!-- Sidebar buttons. Full width and left aligned, so the list reads as a list rather
+         than as a row of controls that happen to be stacked. -->
+    <Style Selector="Button.nav">
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Left" />
+      <Setter Property="Padding" Value="10,7" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="FontSize" Value="13" />
+    </Style>
+
+    <Style Selector="Button.nav:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource LinewiseSurfaceSunken}" />
+    </Style>
+
+    <Style Selector="Button.nav.primary">
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+
     <Style Selector="TextBox">
       <Setter Property="CornerRadius" Value="{StaticResource RadiusSm}" />
       <Setter Property="MinHeight" Value="32" />
