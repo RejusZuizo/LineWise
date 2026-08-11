@@ -45,46 +45,112 @@
 
   <DockPanel LastChildFill="True">
 
-    <!-- Toolbar. Words rather than icons: used occasionally by one person, and an icon
-         nobody recognises is worse than a label taking a little more room. One primary
-         action, so the eye lands on the thing they came to do. -->
-    <Border DockPanel.Dock="Top"
+    <!--
+      Navigation down the side rather than a row of buttons across the top. A row gives
+      every action the same weight and no grouping, so "generate this week" and "configure
+      the factory" sit beside each other looking equally routine. Down the side there is
+      room to separate what you do weekly from what you set up once, and room for the lines
+      themselves, which are the thing a first run has to create before anything works.
+    -->
+    <Border DockPanel.Dock="Left"
+            Width="248"
             Background="{DynamicResource LinewiseSurface}"
             BorderBrush="{DynamicResource LinewiseBorder}"
-            BorderThickness="0,0,0,1"
-            Padding="16,10">
-      <DockPanel LastChildFill="False">
-        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="8">
-          <Button Content="{x:Static res:Strings.GenerateRoster}"
-                  Classes="primary"
-                  Command="{Binding GenerateCommand}"
-                  IsEnabled="{Binding !IsBusy}" />
-          <Border Width="1"
-                  Margin="4,2"
-                  Background="{DynamicResource LinewiseBorder}" />
-          <Button Content="{x:Static res:Strings.Import}"
-                  Classes="quiet"
-                  Command="{Binding ImportSheetCommand}"
-                  IsEnabled="{Binding !IsBusy}" />
-          <Button Content="{x:Static res:Strings.SetUpLines}"
-                  Classes="quiet"
-                  Command="{Binding SetUpLinesCommand}"
-                  IsEnabled="{Binding !IsBusy}" />
-          <Button Content="{x:Static res:Strings.Print}"
-                  Classes="quiet"
-                  Command="{Binding PrintCommand}"
-                  IsEnabled="{Binding !IsBusy}" />
-          <TextBlock Text="{x:Static res:Strings.Working}"
-                     Classes="subtitle"
-                     IsVisible="{Binding IsBusy}"
-                     VerticalAlignment="Center"
-                     Margin="4,0,0,0" />
+            BorderThickness="0,0,1,0">
+      <DockPanel LastChildFill="True">
+
+        <StackPanel DockPanel.Dock="Top" Margin="16,16,16,8" Spacing="2">
+          <TextBlock Text="{x:Static res:Strings.ProductName}"
+                     FontSize="17"
+                     FontWeight="Bold" />
+          <TextBlock Text="{Binding Summary.StatusLabel}"
+                     Classes="caption"
+                     IsVisible="{Binding HasRoster}" />
         </StackPanel>
 
-        <Button DockPanel.Dock="Right"
-                Content="{x:Static res:Strings.ToggleTheme}"
-                Classes="quiet"
-                Command="{Binding ToggleThemeCommand}" />
+        <!-- Appearance sits at the bottom, away from the things that change the roster. -->
+        <StackPanel DockPanel.Dock="Bottom" Margin="12,8,12,14" Spacing="6">
+          <TextBlock Text="{x:Static res:Strings.NavAppearance}"
+                     Classes="sectionHeading"
+                     Margin="4,0,0,0" />
+          <Button Content="{x:Static res:Strings.ToggleTheme}"
+                  Classes="nav"
+                  Command="{Binding ToggleThemeCommand}" />
+          <TextBlock Text="{Binding Version}" Classes="caption" Margin="4,4,0,0" TextWrapping="Wrap" />
+        </StackPanel>
+
+        <ScrollViewer>
+          <StackPanel Margin="12,4,12,12" Spacing="4">
+
+            <TextBlock Text="{x:Static res:Strings.NavActions}" Classes="sectionHeading" Margin="4,6,0,2" />
+
+            <Button Content="{x:Static res:Strings.GenerateRoster}"
+                    Classes="primary nav"
+                    Command="{Binding GenerateCommand}"
+                    IsEnabled="{Binding !IsBusy}" />
+
+            <Button Content="{x:Static res:Strings.Print}"
+                    Classes="nav"
+                    Command="{Binding PrintCommand}"
+                    IsEnabled="{Binding !IsBusy}" />
+
+            <TextBlock Text="{x:Static res:Strings.NavSetUp}" Classes="sectionHeading" Margin="4,12,0,2" />
+
+            <Button Content="{x:Static res:Strings.Import}"
+                    Classes="nav"
+                    Command="{Binding ImportSheetCommand}"
+                    IsEnabled="{Binding !IsBusy}" />
+
+            <!-- The lines themselves, listed rather than hidden behind a button. On a first
+                 run this is the empty list that explains why the grid has nothing in it. -->
+            <DockPanel Margin="4,12,0,2" LastChildFill="False">
+              <TextBlock DockPanel.Dock="Left"
+                         Text="{x:Static res:Strings.NavLines}"
+                         Classes="sectionHeading"
+                         VerticalAlignment="Center" />
+            </DockPanel>
+
+            <TextBlock Text="{x:Static res:Strings.NoLinesSidebar}"
+                       Classes="caption"
+                       Margin="4,2,0,4"
+                       IsVisible="{Binding !HasLines}" />
+
+            <ItemsControl ItemsSource="{Binding ConfiguredLines}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:SidebarLineViewModel">
+                  <Border Background="{DynamicResource LinewiseSurfaceAlt}"
+                          CornerRadius="{StaticResource RadiusSm}"
+                          Padding="8,6"
+                          Margin="0,0,0,4">
+                    <DockPanel LastChildFill="True">
+                      <Border DockPanel.Dock="Left"
+                              Width="3"
+                              CornerRadius="2"
+                              Margin="0,0,8,0"
+                              Background="{Binding AccentColour}" />
+                      <StackPanel>
+                        <TextBlock Text="{Binding Name}" FontSize="12.5" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding Summary}" Classes="caption" />
+                      </StackPanel>
+                    </DockPanel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <Button Content="{x:Static res:Strings.AddLineShort}"
+                    Classes="nav"
+                    Command="{Binding SetUpLinesCommand}"
+                    IsEnabled="{Binding !IsBusy}" />
+
+            <TextBlock Text="{x:Static res:Strings.Working}"
+                       Classes="subtitle"
+                       IsVisible="{Binding IsBusy}"
+                       Margin="4,8,0,0" />
+
+          </StackPanel>
+        </ScrollViewer>
+
       </DockPanel>
     </Border>
 
@@ -106,17 +172,13 @@
                    IsVisible="{Binding !HasRoster}"
                    Classes="subtitle"
                    VerticalAlignment="Center" />
+
         <TextBlock DockPanel.Dock="Right"
-                   Text="{Binding Version}"
-                   Classes="caption"
+                   Text="{Binding Summary.StatusLabel}"
+                   IsVisible="{Binding HasRoster}"
+                   FontSize="12"
+                   FontWeight="SemiBold"
                    VerticalAlignment="Center" />
-        <Border DockPanel.Dock="Right"
-                Classes="card"
-                IsVisible="{Binding HasRoster}"
-                Padding="8,2"
-                Margin="0,0,12,0">
-          <TextBlock Text="{Binding Summary.StatusLabel}" FontSize="12" FontWeight="SemiBold" />
-        </Border>
       </DockPanel>
     </Border>
 

@@ -357,4 +357,40 @@
     <value>Assistant</value>
     <comment>Shown on the chip. The word, not only the colour.</comment>
   </data>
+  <data name="NavRoster" xml:space="preserve">
+    <value>Roster</value>
+    <comment>Sidebar section.</comment>
+  </data>
+  <data name="NavSetUp" xml:space="preserve">
+    <value>Set up</value>
+    <comment>Sidebar section heading over lines and import.</comment>
+  </data>
+  <data name="NavActions" xml:space="preserve">
+    <value>This week</value>
+    <comment>Sidebar section heading over generate and print.</comment>
+  </data>
+  <data name="NavLines" xml:space="preserve">
+    <value>Production lines</value>
+    <comment>Sidebar item.</comment>
+  </data>
+  <data name="AddLineShort" xml:space="preserve">
+    <value>Add line</value>
+    <comment>Sidebar button beside the lines list.</comment>
+  </data>
+  <data name="ManageLines" xml:space="preserve">
+    <value>Manage</value>
+    <comment>Sidebar button opening the line editor.</comment>
+  </data>
+  <data name="NoLinesSidebar" xml:space="preserve">
+    <value>No lines yet</value>
+    <comment>Shown in the sidebar when nothing is configured.</comment>
+  </data>
+  <data name="LineSummary" xml:space="preserve">
+    <value>{0} needed · {1} assistant(s)</value>
+    <comment>0 = headcount, 1 = operating assistants. Sidebar line row.</comment>
+  </data>
+  <data name="NavAppearance" xml:space="preserve">
+    <value>Appearance</value>
+    <comment>Sidebar section heading over the theme switch.</comment>
+  </data>
 </root>

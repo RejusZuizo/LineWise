@@ -83,6 +83,25 @@ public static class Strings
 
     public static string ToggleTheme => Get(nameof(ToggleTheme));
 
+    public static string NavRoster => Get(nameof(NavRoster));
+
+    public static string NavSetUp => Get(nameof(NavSetUp));
+
+    public static string NavActions => Get(nameof(NavActions));
+
+    public static string NavLines => Get(nameof(NavLines));
+
+    public static string AddLineShort => Get(nameof(AddLineShort));
+
+    public static string ManageLines => Get(nameof(ManageLines));
+
+    public static string NoLinesSidebar => Get(nameof(NoLinesSidebar));
+
+    public static string NavAppearance => Get(nameof(NavAppearance));
+
+    public static string LineSummary(int headcount, int assistants) =>
+        Format(nameof(LineSummary), headcount, assistants);
+
     public static string LinesColumnHeading => Get(nameof(LinesColumnHeading));
 
     public static string WarningsHeading => Get(nameof(WarningsHeading));

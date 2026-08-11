@@ -84,6 +84,15 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public ObservableCollection<WarningViewModel> Warnings { get; } = [];
 
     /// <summary>
+    /// The configured lines, listed in the sidebar. Shown whether or not a roster exists,
+    /// because on a first run the lines are the thing somebody has to create before
+    /// anything else works, and a list of nothing is a clearer prompt than a hidden panel.
+    /// </summary>
+    public ObservableCollection<SidebarLineViewModel> ConfiguredLines { get; } = [];
+
+    public bool HasLines => ConfiguredLines.Count > 0;
+
+    /// <summary>
     /// Carries the state as well as the name, because a published roster is on a wall
     /// somewhere and confusing it with a draft is how two versions of Tuesday end up
     /// posted.
@@ -281,12 +290,25 @@ public sealed partial class MainWindowViewModel : ObservableObject
             if (stored is null)
             {
                 Clear();
+
+                // The sidebar still lists whatever lines exist. A first run with three lines
+                // and no roster is a different situation from a first run with nothing, and
+                // the window should say which one it is.
+                await LoadLinesAsync(cancellationToken).ConfigureAwait(true);
+
                 Status = Strings.NoRosterStored(weekStart);
                 Log.Information("No roster found for {WeekStart}.", weekStart);
                 return;
             }
 
             var configuration = await _configuration.GetAsync(cancellationToken).ConfigureAwait(true);
+
+            ConfiguredLines.Clear();
+
+            foreach (var line in configuration.Lines.OrderBy(line => line.DisplayOrder))
+            {
+                ConfiguredLines.Add(new SidebarLineViewModel(line));
+            }
 
             var availability = await _availability
                 .GetAsync(weekStart, weekStart.AddDays(7), cancellationToken)
@@ -336,6 +358,25 @@ public sealed partial class MainWindowViewModel : ObservableObject
         }
     }
 
+    private async Task LoadLinesAsync(CancellationToken cancellationToken)
+    {
+        if (_configuration is null)
+        {
+            return;
+        }
+
+        var configuration = await _configuration.GetAsync(cancellationToken).ConfigureAwait(true);
+
+        ConfiguredLines.Clear();
+
+        foreach (var line in configuration.Lines.OrderBy(line => line.DisplayOrder))
+        {
+            ConfiguredLines.Add(new SidebarLineViewModel(line));
+        }
+
+        OnPropertyChanged(nameof(HasLines));
+    }
+
     private void Clear()
     {
         Grid = null;
@@ -347,6 +388,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(HasRoster));
         OnPropertyChanged(nameof(HasWarnings));
+        OnPropertyChanged(nameof(HasLines));
         OnPropertyChanged(nameof(Title));
         PrintCommand.NotifyCanExecuteChanged();
     }
