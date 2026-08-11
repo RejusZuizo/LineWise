@@ -25,6 +25,10 @@ public static class ServiceCollectionExtensions
         services.AddTransient<LineEditorViewModel>();
         services.AddTransient<LineEditorWindow>();
 
+        services.AddSingleton<IFilePicker, FilePicker>();
+        services.AddTransient<ImportViewModel>();
+        services.AddTransient<ImportWindow>();
+
         return services;
     }
 }

@@ -13,4 +13,15 @@ public static class Converters
     /// </summary>
     public static readonly IValueConverter BoldWhenTrue = new FuncValueConverter<bool, FontWeight>(
         value => value ? FontWeight.Bold : FontWeight.Normal);
+
+    /// <summary>
+    /// Formats the count of cells carrying a mark nothing recognised. Through a resource,
+    /// like every other string, rather than composed in the view.
+    /// </summary>
+    public static readonly IValueConverter UnrecognisedCells = new FuncValueConverter<int, string>(
+        count => Resources.Strings.ImportUnrecognised(count));
+
+    /// <summary>Excel's own row number, so the operator can go and look at the row.</summary>
+    public static readonly IValueConverter RowLabel = new FuncValueConverter<int, string>(
+        row => Resources.Strings.ImportRow(row));
 }

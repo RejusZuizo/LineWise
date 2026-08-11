@@ -253,4 +253,72 @@
     <value>Close</value>
     <comment>Button.</comment>
   </data>
+  <data name="Import" xml:space="preserve">
+    <value>Import sheet</value>
+    <comment>Toolbar button.</comment>
+  </data>
+  <data name="ImportTitle" xml:space="preserve">
+    <value>Import availability</value>
+    <comment>Title of the import window.</comment>
+  </data>
+  <data name="ChooseSheet" xml:space="preserve">
+    <value>Choose a sheet…</value>
+    <comment>File picker title and button.</comment>
+  </data>
+  <data name="ImportSummary" xml:space="preserve">
+    <value>{0} matched · {1} needing attention · {2} days</value>
+    <comment>0 = matched rows, 1 = unresolved rows, 2 = dates found.</comment>
+  </data>
+  <data name="ImportReadyToReview" xml:space="preserve">
+    <value>Review what the sheet says, then import.</value>
+    <comment>After parsing.</comment>
+  </data>
+  <data name="ImportNothingUsable" xml:space="preserve">
+    <value>Nothing in this sheet could be used. Check it is the right file and the right layout.</value>
+    <comment>Parsed but nothing to commit.</comment>
+  </data>
+  <data name="ImportCouldNotRead" xml:space="preserve">
+    <value>Could not read that sheet. See the log for details.</value>
+    <comment>Shown instead of a stack trace.</comment>
+  </data>
+  <data name="ImportCouldNotCommit" xml:space="preserve">
+    <value>Could not import. Nothing was written. See the log for details.</value>
+    <comment>Commit failed; the whole point is that nothing half-happened.</comment>
+  </data>
+  <data name="ImportCommittedOne" xml:space="preserve">
+    <value>Imported. 1 person added, availability stored.</value>
+    <comment>Commit succeeded with one temporary employee.</comment>
+  </data>
+  <data name="ImportCommittedMany" xml:space="preserve">
+    <value>Imported {0} days of availability. {1} people added.</value>
+    <comment>0 = availability records, 1 = temporary employees added.</comment>
+  </data>
+  <data name="ImportNeedingAttention" xml:space="preserve">
+    <value>Names not on file</value>
+    <comment>Heading over the unresolved rows.</comment>
+  </data>
+  <data name="ImportAddAllAsTemporary" xml:space="preserve">
+    <value>Add all as temporary</value>
+    <comment>Button. A first import has nobody on file, so every row is unmatched.</comment>
+  </data>
+  <data name="ImportAddAsTemporary" xml:space="preserve">
+    <value>Add</value>
+    <comment>Per row checkbox label.</comment>
+  </data>
+  <data name="ImportUnrecognised" xml:space="preserve">
+    <value>{0} cells had a mark nothing recognised. They were treated as a day off and are worth a look.</value>
+    <comment>0 = count.</comment>
+  </data>
+  <data name="ImportReason" xml:space="preserve">
+    <value>Imported from {0}.</value>
+    <comment>0 = file name. Written to the audit trail.</comment>
+  </data>
+  <data name="ImportCommit" xml:space="preserve">
+    <value>Import</value>
+    <comment>The button that commits.</comment>
+  </data>
+  <data name="ImportRow" xml:space="preserve">
+    <value>Row {0}</value>
+    <comment>0 = Excel row number, so the operator can go and look at it.</comment>
+  </data>
 </root>

@@ -115,6 +115,24 @@ public sealed partial class MainWindowViewModel : ObservableObject
     }
 
     /// <summary>
+    /// Opens the import, then redraws if anything was written. An import that the operator
+    /// closed without committing should leave the screen exactly as it was.
+    /// </summary>
+    [RelayCommand]
+    private async Task ImportSheetAsync(CancellationToken cancellationToken)
+    {
+        if (_dialogs is null)
+        {
+            return;
+        }
+
+        if (await _dialogs.ShowImportAsync().ConfigureAwait(true))
+        {
+            await LoadAsync(_weekStart, cancellationToken).ConfigureAwait(true);
+        }
+    }
+
+    /// <summary>
     /// Builds a roster for the week on screen and stores it as the draft, then redraws.
     /// </summary>
     /// <remarks>
