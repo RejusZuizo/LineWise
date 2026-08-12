@@ -393,4 +393,24 @@
     <value>Appearance</value>
     <comment>Sidebar section heading over the theme switch.</comment>
   </data>
+  <data name="WarningGrouped" xml:space="preserve">
+    <value>{0} of these, including: {1}</value>
+    <comment>0 = count, 1 = the first message. Used when several warnings of one kind fall on one day.</comment>
+  </data>
+  <data name="WarningCount" xml:space="preserve">
+    <value>×{0}</value>
+    <comment>Badge on a grouped warning row.</comment>
+  </data>
+  <data name="ShowWarnings" xml:space="preserve">
+    <value>Warnings</value>
+    <comment>Sidebar toggle.</comment>
+  </data>
+  <data name="HideNavigation" xml:space="preserve">
+    <value>Hide sidebar</value>
+    <comment>Collapses the navigation.</comment>
+  </data>
+  <data name="ShowNavigation" xml:space="preserve">
+    <value>Menu</value>
+    <comment>Reopens the collapsed navigation.</comment>
+  </data>
 </root>

@@ -85,6 +85,17 @@ public static class Strings
 
     public static string NavRoster => Get(nameof(NavRoster));
 
+    public static string ShowWarnings => Get(nameof(ShowWarnings));
+
+    public static string HideNavigation => Get(nameof(HideNavigation));
+
+    public static string ShowNavigation => Get(nameof(ShowNavigation));
+
+    public static string WarningGrouped(int count, string first) =>
+        Format(nameof(WarningGrouped), count, first);
+
+    public static string WarningCount(int count) => Format(nameof(WarningCount), count);
+
     public static string NavSetUp => Get(nameof(NavSetUp));
 
     public static string NavActions => Get(nameof(NavActions));
