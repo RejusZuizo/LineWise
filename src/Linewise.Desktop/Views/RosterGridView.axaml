@@ -28,7 +28,7 @@
       <Setter Property="BorderBrush" Value="{DynamicResource LinewiseBorderSubtle}" />
       <Setter Property="BorderThickness" Value="0,0,1,1" />
       <Setter Property="Padding" Value="8,7" />
-      <Setter Property="MinHeight" Value="86" />
+      <Setter Property="MinHeight" Value="64" />
     </Style>
 
     <Style Selector="Border.cell.short">
@@ -42,7 +42,8 @@
     <Style Selector="Border.chip">
       <Setter Property="Background" Value="{DynamicResource LinewiseChip}" />
       <Setter Property="CornerRadius" Value="{StaticResource RadiusPill}" />
-      <Setter Property="Padding" Value="7,2" />
+      <Setter Property="Padding" Value="7,3" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
     </Style>
 
     <!--
@@ -197,11 +198,15 @@
                                           Classes.assistant="{Binding IsOperatingAssistant}"
                                           Margin="0,0,0,3"
                                           ToolTip.Tip="{Binding Explanation}">
-                                    <StackPanel Orientation="Horizontal" Spacing="5">
+                                    <StackPanel Orientation="Horizontal" Spacing="5" >
+                                      <!-- Wrapped, not trimmed. A truncated name is worse
+                                           than a taller row: the roster exists to tell
+                                           somebody who is on the line, and "Person 12 Fic…"
+                                           does not. -->
                                       <TextBlock Text="{Binding DisplayName}"
                                                  FontSize="12"
                                                  FontWeight="{Binding IsRanked, Converter={x:Static vm:Converters.BoldWhenTrue}}"
-                                                 TextTrimming="CharacterEllipsis" />
+                                                 TextWrapping="Wrap" />
                                       <TextBlock Text="{Binding RoleLabel}"
                                                  FontSize="9.5"
                                                  FontWeight="Bold"

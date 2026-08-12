@@ -88,7 +88,24 @@ public sealed partial class MainWindowViewModel : ObservableObject
     /// because on a first run the lines are the thing somebody has to create before
     /// anything else works, and a list of nothing is a clearer prompt than a hidden panel.
     /// </summary>
+    /// <summary>
+    /// What the panel actually shows: one row per kind of warning per day, with a count.
+    /// The flat list is still built, because it is what the editing screens will need.
+    /// </summary>
+    public ObservableCollection<WarningGroupViewModel> WarningGroups { get; } = [];
+
     public ObservableCollection<SidebarLineViewModel> ConfiguredLines { get; } = [];
+
+    /// <summary>
+    /// Both panels collapse. On a 1360 wide window the sidebar and the warnings take 588
+    /// pixels between them, which is most of a day column, and somebody reading names does
+    /// not need either of them on screen.
+    /// </summary>
+    [ObservableProperty]
+    private bool _isNavigationVisible = true;
+
+    [ObservableProperty]
+    private bool _areWarningsVisible = true;
 
     public bool HasLines => ConfiguredLines.Count > 0;
 
@@ -108,7 +125,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     public bool HasRoster => Grid is { IsEmpty: false };
 
-    public bool HasWarnings => Warnings.Count > 0;
+    public bool HasWarnings => WarningGroups.Count > 0;
 
     /// <summary>
     /// Switches between the light and dark palettes.
@@ -125,6 +142,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
     /// </remarks>
     [RelayCommand]
     private void ToggleTheme() => _theme?.Toggle();
+
+    [RelayCommand]
+    private void ToggleNavigation() => IsNavigationVisible = !IsNavigationVisible;
+
+    [RelayCommand]
+    private void ToggleWarnings() => AreWarningsVisible = !AreWarningsVisible;
 
     /// <summary>
     /// Opens line setup, then redraws. A line added while this window was open should show
@@ -332,17 +355,34 @@ public sealed partial class MainWindowViewModel : ObservableObject
                     warning.EmployeeId is { } id && employeeNames.TryGetValue(id, out var name) ? name : null));
             }
 
+            WarningGroups.Clear();
+
+            // Grouped by kind and day. Errors keep their order at the top, because the
+            // grouping must not bury the eight things that matter under the two hundred
+            // that are merely true.
+            foreach (var group in Warnings
+                .GroupBy(warning => (warning.Code, warning.Date))
+                .OrderByDescending(group => group.Any(warning => warning.IsError))
+                .ThenBy(group => group.Key.Date ?? DateOnly.MinValue)
+                .ThenBy(group => group.Key.Code))
+            {
+                WarningGroups.Add(new WarningGroupViewModel([.. group]));
+            }
+
             Status = Summary.WarningsLabel;
 
             // Counts, never names. The redaction policy covers structured logging of an
             // employee; this is the other half of the same habit.
             Log.Information(
-                "Loaded roster for {WeekStart}: {Lines} lines, {Days} days, {Placed} placed, {Errors} errors.",
+                "Loaded roster for {WeekStart}: {Lines} lines, {Days} days, {Placed} placed, "
+                + "{Errors} errors, {Warnings} warnings shown as {Groups} rows.",
                 weekStart,
                 Grid.Rows.Count,
                 Grid.DayCount,
                 Summary.Placed,
-                Summary.Errors);
+                Summary.Errors,
+                Warnings.Count,
+                WarningGroups.Count);
         }
         catch (Exception exception)
         {
@@ -382,6 +422,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Grid = null;
         Summary = null;
         Warnings.Clear();
+        WarningGroups.Clear();
     }
 
     private void Notify()

@@ -54,6 +54,7 @@
     -->
     <Border DockPanel.Dock="Left"
             Width="248"
+            IsVisible="{Binding IsNavigationVisible}"
             Background="{DynamicResource LinewiseSurface}"
             BorderBrush="{DynamicResource LinewiseBorder}"
             BorderThickness="0,0,1,0">
@@ -76,6 +77,12 @@
           <Button Content="{x:Static res:Strings.ToggleTheme}"
                   Classes="nav"
                   Command="{Binding ToggleThemeCommand}" />
+          <Button Content="{x:Static res:Strings.ShowWarnings}"
+                  Classes="nav"
+                  Command="{Binding ToggleWarningsCommand}" />
+          <Button Content="{x:Static res:Strings.HideNavigation}"
+                  Classes="nav"
+                  Command="{Binding ToggleNavigationCommand}" />
           <TextBlock Text="{Binding Version}" Classes="caption" Margin="4,4,0,0" TextWrapping="Wrap" />
         </StackPanel>
 
@@ -154,6 +161,18 @@
       </DockPanel>
     </Border>
 
+    <Border DockPanel.Dock="Left"
+            IsVisible="{Binding !IsNavigationVisible}"
+            Background="{DynamicResource LinewiseSurface}"
+            BorderBrush="{DynamicResource LinewiseBorder}"
+            BorderThickness="0,0,1,0"
+            Padding="6,10">
+      <Button Content="{x:Static res:Strings.ShowNavigation}"
+              Classes="quiet"
+              VerticalAlignment="Top"
+              Command="{Binding ToggleNavigationCommand}" />
+    </Border>
+
     <!-- Status bar. State, counts, and the build, which is the first thing to ask for when
          somebody reports a fault. -->
     <Border DockPanel.Dock="Bottom"
@@ -186,7 +205,7 @@
          run is not something to go looking for. -->
     <Border DockPanel.Dock="Right"
             Width="340"
-            IsVisible="{Binding HasWarnings}"
+            IsVisible="{Binding AreWarningsVisible}"
             Background="{DynamicResource LinewiseSurface}"
             BorderBrush="{DynamicResource LinewiseBorder}"
             BorderThickness="1,0,0,0">
@@ -197,9 +216,9 @@
         </StackPanel>
 
         <ScrollViewer>
-          <ItemsControl ItemsSource="{Binding Warnings}" Margin="12,0,12,12">
+          <ItemsControl ItemsSource="{Binding WarningGroups}" Margin="12,0,12,12">
             <ItemsControl.ItemTemplate>
-              <DataTemplate x:DataType="vm:WarningViewModel">
+              <DataTemplate x:DataType="vm:WarningGroupViewModel">
                 <Border Classes="card" Padding="10" Margin="0,0,0,6">
                   <StackPanel Spacing="5">
                     <StackPanel Orientation="Horizontal" Spacing="6">
@@ -209,6 +228,11 @@
                       <TextBlock Text="{Binding Context}"
                                  Classes="caption"
                                  VerticalAlignment="Center" />
+                      <Border Classes="severity"
+                              IsVisible="{Binding IsGrouped}"
+                              Background="{DynamicResource LinewiseChip}">
+                        <TextBlock Text="{Binding CountLabel}" FontSize="10" FontWeight="SemiBold" />
+                      </Border>
                     </StackPanel>
                     <TextBlock Text="{Binding Message}"
                                FontSize="12.5"
