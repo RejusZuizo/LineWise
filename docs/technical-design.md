@@ -435,7 +435,9 @@ published state in the title bar.
 With no database, no employees and no lines, guide the user through creating lines and
 running a first import. Never drop them into an empty grid.
 
-`Linewise.ConsoleHarness` is deleted in this phase.
+`Linewise.ConsoleHarness` is deleted in this phase. Done: the real window does
+everything it demonstrated, and a throwaway kept past its purpose becomes something
+somebody maintains by accident.
 
 **Done when:** a roster generated in phase 1 and stored in phase 2 renders correctly, and
 the window resizes without breaking.

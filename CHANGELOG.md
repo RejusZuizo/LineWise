@@ -9,27 +9,51 @@ to.
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.5.0] - 2026-08-16
+
+Desktop application. Phase 5.
+
 ### Added
 
-- `.editorconfig` pinning the style the codebase already followed, with a
-  `dotnet format` check in CI.
-- Vulnerability scan failing the build on a known advisory in any dependency,
-  including transitive ones.
-- Code coverage measured on every run and reported in the job summary. Baseline
-  85.5% line, 88.8% branch.
-- Print previews and coverage reports published as build artifacts, including
-  from failed runs.
-- `global.json` pinning the SDK feature band, so a machine with a newer SDK
-  alongside does not silently build the product with it.
-- `LICENSE`, `SECURITY.md`, `docs/threat-model.md`, `docs/data-protection.md`,
-  and a pull request template.
+- Avalonia desktop shell with dependency injection, Serilog to the per-user
+  application data folder with a policy that keeps employee names out of log
+  files, and handlers covering the interface thread, unobserved tasks and
+  everything else. A stack trace never reaches the operator.
+- Week grid: production lines down the side, days across the top, people in the
+  cells. Leaders and operating assistants each marked by a colour, a word and a
+  weight, never by colour alone.
+- Warnings panel, grouped by kind and day. A week where thirty people are spare
+  raises a hundred and sixty warnings; the panel shows fourteen rows and says how
+  many each stands for.
+- Availability import: choose a sheet, review what it says, commit. Parsing
+  writes nothing, and names nobody recognises can be added as temporary staff
+  without leaving the screen.
+- Production line setup, with headcount and operating assistants per line.
+- Generate and print from the application, with the roster stored as a draft.
+- Operating assistant, a third role chosen the way a line leader is.
+- Light and dark palettes, switchable, built on named tokens that carry no
+  meaning of their own.
+- Inter, embedded rather than fetched. ADR 0013.
+- Navigation sidebar, replacing the toolbar. Both it and the warnings panel
+  collapse.
 
 ### Fixed
 
-- Line endings are now LF in the working tree on every platform. A Windows
-  checkout was converting to CRLF and failing the formatting check that passed on
-  Linux.
-- File encoding normalised to UTF-8 without BOM, three files.
+- The application never initialised the database, so the first query failed on a
+  fresh install. Every test called the initialiser itself, which is why the suite
+  was green while the product was broken.
+- A week with no shifts produced no days and an unexplained empty grid. Generation
+  now defaults a day shift. ADR 0012.
+- Names in the grid were truncated rather than wrapped.
+
+### Notes
+
+Found by running the application rather than by testing it: the uninitialised
+database, the missing shifts, and a CRLF checkout that failed CI on Windows while
+passing on Linux. None of the three was visible to a green test suite, which is
+the argument for the done-when of every phase being something a person looks at.
 
 ## [0.4.0] - 2026-08-03
 
@@ -126,7 +150,8 @@ Domain model and assignment engine. Phase 1.
 - Console harness, so the engine can be watched working before there is a window.
   Deleted in phase 5.
 
-[Unreleased]: https://github.com/socom1/LineWise/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/socom1/LineWise/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/socom1/LineWise/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/socom1/LineWise/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/socom1/LineWise/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/socom1/LineWise/compare/v0.1.0...v0.2.0
