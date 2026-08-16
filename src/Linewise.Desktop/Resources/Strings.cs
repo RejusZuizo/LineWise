@@ -85,6 +85,35 @@ public static class Strings
 
     public static string NavRoster => Get(nameof(NavRoster));
 
+    public static string People => Get(nameof(People));
+
+    public static string PeopleSearch => Get(nameof(PeopleSearch));
+
+    public static string PeopleNone => Get(nameof(PeopleNone));
+
+    public static string PeoplePreferred => Get(nameof(PeoplePreferred));
+
+    public static string PeopleMandatory => Get(nameof(PeopleMandatory));
+
+    public static string PeopleBlocked => Get(nameof(PeopleBlocked));
+
+    public static string PeopleRank => Get(nameof(PeopleRank));
+
+    public static string PeopleCanLead => Get(nameof(PeopleCanLead));
+
+    public static string PeopleCanAssist => Get(nameof(PeopleCanAssist));
+
+    public static string PeopleTemporary => Get(nameof(PeopleTemporary));
+
+    public static string PeopleNobody => Get(nameof(PeopleNobody));
+
+    public static string SaveRules => Get(nameof(SaveRules));
+
+    public static string PeopleSaved(string name) => Format(nameof(PeopleSaved), name);
+
+    public static string PeopleSummary(int preferred, int mandatory, int blocked) =>
+        Format(nameof(PeopleSummary), preferred, mandatory, blocked);
+
     public static string ShowWarnings => Get(nameof(ShowWarnings));
 
     public static string HideNavigation => Get(nameof(HideNavigation));

@@ -27,6 +27,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<LineEditorWindow>();
 
         services.AddSingleton<IFilePicker, FilePicker>();
+        services.AddTransient<PeopleViewModel>();
+        services.AddTransient<PeopleWindow>();
         services.AddTransient<ImportViewModel>();
         services.AddTransient<ImportWindow>();
 

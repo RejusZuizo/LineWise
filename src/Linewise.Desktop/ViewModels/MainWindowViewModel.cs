@@ -150,6 +150,24 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private void ToggleWarnings() => AreWarningsVisible = !AreWarningsVisible;
 
     /// <summary>
+    /// Opens people and priorities, then redraws. Changing who prefers what does not move
+    /// anybody on its own: the roster on screen was generated under the old rules, and it
+    /// stays that way until somebody presses generate. Rewriting a published week because
+    /// a preference was edited would be the opposite of keeping the manager in control.
+    /// </summary>
+    [RelayCommand]
+    private async Task ShowPeopleAsync(CancellationToken cancellationToken)
+    {
+        if (_dialogs is null)
+        {
+            return;
+        }
+
+        await _dialogs.ShowPeopleAsync().ConfigureAwait(true);
+        await LoadAsync(_weekStart, cancellationToken).ConfigureAwait(true);
+    }
+
+    /// <summary>
     /// Opens line setup, then redraws. A line added while this window was open should show
     /// up without anybody having to restart the application.
     /// </summary>
