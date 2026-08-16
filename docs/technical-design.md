@@ -426,7 +426,9 @@ published state in the title bar.
 - Never convey meaning by colour alone; pair with an icon or label. Roughly 8% of men have
   a colour vision deficiency and the source sheet already uses red and green, the worst
   possible pair.
-- System font. No imported webfonts. No animation beyond instant state changes.
+- Embedded typeface (Inter), no *fetched* webfonts, and no typeface chosen for fashion.
+  Amended by ADR 0013; the original rule said system font. No animation beyond instant
+  state changes.
 
 #### First run
 

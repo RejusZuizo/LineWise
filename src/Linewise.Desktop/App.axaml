@@ -29,6 +29,11 @@
       <CornerRadius x:Key="RadiusPill">10</CornerRadius>
       <x:Double x:Key="LineColumnWidth">180</x:Double>
 
+      <!-- Inter. Chosen for a grid of short names and small numerals rather than for
+           fashion: it has unambiguous digits and a large x-height, which is what "3 of 4"
+           at eleven points needs. ADR 0013. -->
+      <FontFamily x:Key="InterFont">avares://Avalonia.Fonts.Inter/Assets#Inter</FontFamily>
+
       <ResourceDictionary.ThemeDictionaries>
 
         <!--
@@ -88,6 +93,7 @@
     <Style Selector="Window">
       <Setter Property="Background" Value="{DynamicResource LinewiseSurface}" />
       <Setter Property="Foreground" Value="{DynamicResource LinewiseInk}" />
+      <Setter Property="FontFamily" Value="{StaticResource InterFont}" />
     </Style>
 
     <Style Selector="Button">
