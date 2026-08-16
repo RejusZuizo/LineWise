@@ -469,4 +469,16 @@
     <value>Save rules</value>
     <comment>Button.</comment>
   </data>
+  <data name="CheckRules" xml:space="preserve">
+    <value>Check rules</value>
+    <comment>Button running the validator.</comment>
+  </data>
+  <data name="RulesPossible" xml:space="preserve">
+    <value>Nothing impossible. Every line can be filled by somebody.</value>
+    <comment>Validator found no problems.</comment>
+  </data>
+  <data name="RulesImpossibleHeading" xml:space="preserve">
+    <value>IMPOSSIBLE COMBINATIONS</value>
+    <comment>Heading over the validator's findings.</comment>
+  </data>
 </root>

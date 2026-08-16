@@ -65,7 +65,7 @@ public enum WarningCode
     /// The line asks for operating assistants and nobody is permitted to be one on it, so
     /// the slot can never be filled. A configuration fault rather than a bad week.
     /// </summary>
-    LineHasNoEligibleOperatingAssistant = 105,
+    LineHasNoEligibleOperatingAssistant = 109,
 
     /// <summary>An employee is mandatory on a line whose required skills they do not hold.</summary>
     MandatoryPreferenceWithoutRequiredSkills = 105,

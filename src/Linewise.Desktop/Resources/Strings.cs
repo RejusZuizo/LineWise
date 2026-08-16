@@ -109,6 +109,12 @@ public static class Strings
 
     public static string SaveRules => Get(nameof(SaveRules));
 
+    public static string CheckRules => Get(nameof(CheckRules));
+
+    public static string RulesPossible => Get(nameof(RulesPossible));
+
+    public static string RulesImpossibleHeading => Get(nameof(RulesImpossibleHeading));
+
     public static string PeopleSaved(string name) => Format(nameof(PeopleSaved), name);
 
     public static string PeopleSummary(int preferred, int mandatory, int blocked) =>
