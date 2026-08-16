@@ -84,7 +84,11 @@
                 <Border Width="4"
                         CornerRadius="2"
                         Background="{Binding AccentColour}" />
-                <TextBox Text="{Binding Name}" Width="240" />
+                <!-- On lost focus, not on every keystroke. A per-keystroke binding writes
+                     the value back into the control it came from, which is a caret reset
+                     waiting for the first property that does not round trip exactly. -->
+                <TextBox Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                         Width="240" />
                 <NumericUpDown Value="{Binding RequiredHeadcount}"
                                Minimum="1"
                                Maximum="200"
