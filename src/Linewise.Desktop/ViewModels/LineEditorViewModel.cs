@@ -104,10 +104,17 @@ public sealed partial class LineEditorViewModel : ObservableObject
 
         Log.Information("Added line {LineId}, needing {Headcount}.", line.Id, line.RequiredHeadcount);
 
+        // Appended, not reloaded. Reloading clears the collection, and a cleared
+        // ObservableCollection raises a reset that makes the list rebuild every row
+        // container — which destroys whichever text box was being edited and takes the
+        // caret with it. The database already holds this line; there is nothing to read
+        // back that is not already here.
+        Lines.Add(new EditableLineViewModel(line));
+
         NewLineName = string.Empty;
         Status = Strings.LineAdded(line.Name);
 
-        await LoadAsync(cancellationToken).ConfigureAwait(true);
+        OnPropertyChanged(nameof(HasLines));
     }
 
     [RelayCommand]
