@@ -32,11 +32,39 @@
               Click="OnClose"
               Margin="8,0,0,0" />
       <Button DockPanel.Dock="Right"
+              Content="{x:Static res:Strings.CheckRules}"
+              Classes="quiet"
+              Command="{Binding CheckRulesCommand}"
+              Margin="8,0,0,0" />
+      <Button DockPanel.Dock="Right"
               Content="{x:Static res:Strings.SaveRules}"
               Classes="primary"
               Command="{Binding SaveCommand}"
               IsEnabled="{Binding HasSelection}" />
     </DockPanel>
+
+    <Border DockPanel.Dock="Bottom"
+            Classes="card"
+            IsVisible="{Binding HasImpossibilities}"
+            Padding="12"
+            Margin="0,12,0,0">
+      <StackPanel Spacing="6">
+        <TextBlock Text="{x:Static res:Strings.RulesImpossibleHeading}" Classes="sectionHeading" />
+        <ItemsControl ItemsSource="{Binding Impossibilities}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <TextBlock Text="{Binding}" FontSize="12.5" TextWrapping="Wrap" Margin="0,2" />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+    </Border>
+
+    <TextBlock DockPanel.Dock="Bottom"
+               Text="{x:Static res:Strings.RulesPossible}"
+               Classes="subtitle"
+               IsVisible="{Binding IsPossible}"
+               Margin="0,12,0,0" />
 
     <!-- The list. Filtered rather than paged: a hundred and fifty people is a long list
          and a short search, and somebody looking for one person knows their name. -->

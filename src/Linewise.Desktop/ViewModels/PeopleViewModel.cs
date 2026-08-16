@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Linewise.Application.Persistence;
+using Linewise.Application.Validation;
 using Linewise.Desktop.Resources;
 using Linewise.Domain.Entities;
 using Linewise.Domain.Enums;
@@ -21,6 +22,7 @@ namespace Linewise.Desktop.ViewModels;
 public sealed partial class PeopleViewModel : ObservableObject
 {
     private readonly IConfigurationRepository? _configuration;
+    private readonly IRosterRuleValidator? _validator;
 
     [ObservableProperty]
     private EmployeeViewModel? _selected;
@@ -31,7 +33,11 @@ public sealed partial class PeopleViewModel : ObservableObject
     [ObservableProperty]
     private string _search = string.Empty;
 
-    public PeopleViewModel(IConfigurationRepository configuration) => _configuration = configuration;
+    public PeopleViewModel(IConfigurationRepository configuration, IRosterRuleValidator validator)
+    {
+        _configuration = configuration;
+        _validator = validator;
+    }
 
     /// <summary>For the Avalonia designer, which cannot resolve from the container.</summary>
     public PeopleViewModel()
@@ -41,6 +47,18 @@ public sealed partial class PeopleViewModel : ObservableObject
     public ObservableCollection<EmployeeViewModel> People { get; } = [];
 
     public ObservableCollection<EmployeeViewModel> Visible { get; } = [];
+
+    /// <summary>
+    /// Combinations of rules no roster could satisfy. Two people both required on a one
+    /// slot line, somebody blocked from everywhere, a line nobody may lead.
+    /// </summary>
+    public ObservableCollection<string> Impossibilities { get; } = [];
+
+    public bool HasBeenChecked { get; private set; }
+
+    public bool IsPossible => HasBeenChecked && Impossibilities.Count == 0;
+
+    public bool HasImpossibilities => Impossibilities.Count > 0;
 
     public bool HasSelection => Selected is not null;
 
@@ -127,6 +145,47 @@ public sealed partial class PeopleViewModel : ObservableObject
             person.ToAssistantEligibilities().Count);
 
         Status = Strings.PeopleSaved(person.Name);
+
+        // Checked on every save rather than only on demand. A contradiction entered thirty
+        // seconds ago is one somebody can still explain; the same contradiction found at
+        // generate on Monday is a puzzle.
+        await CheckRulesAsync(cancellationToken).ConfigureAwait(true);
+    }
+
+    /// <summary>
+    /// Runs the phase 1 validator over the whole configuration.
+    /// </summary>
+    /// <remarks>
+    /// The validator has existed since the engine did and nothing has ever called it from
+    /// the application. Finding out on Monday morning that a line requires a skill nobody
+    /// holds is a great deal worse than being told on the day the rule was written, which
+    /// is the sentence written above its own interface and was true of nothing until now.
+    /// </remarks>
+    [RelayCommand]
+    private async Task CheckRulesAsync(CancellationToken cancellationToken)
+    {
+        if (_configuration is null || _validator is null)
+        {
+            return;
+        }
+
+        var configuration = await _configuration.GetAsync(cancellationToken).ConfigureAwait(true);
+        var issues = _validator.Validate(configuration);
+
+        Impossibilities.Clear();
+
+        foreach (var issue in issues)
+        {
+            Impossibilities.Add(issue.Message);
+        }
+
+        HasBeenChecked = true;
+
+        OnPropertyChanged(nameof(HasBeenChecked));
+        OnPropertyChanged(nameof(IsPossible));
+        OnPropertyChanged(nameof(HasImpossibilities));
+
+        Log.Information("Checked the configuration: {Issues} impossible combinations.", issues.Count);
     }
 }
 
