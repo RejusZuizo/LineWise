@@ -19,6 +19,8 @@ public interface IDialogService
 
     /// <summary>Returns true when something was actually imported, so the caller redraws.</summary>
     Task<bool> ShowImportAsync();
+
+    Task ShowPeopleAsync();
 }
 
 /// <inheritdoc cref="IDialogService"/>
@@ -58,6 +60,19 @@ public sealed class DialogService : IDialogService
         }
 
         return viewModel.Committed;
+    }
+
+    public async Task ShowPeopleAsync()
+    {
+        var window = _services.GetRequiredService<PeopleWindow>();
+
+        if (Owner is { } owner)
+        {
+            await window.ShowDialog(owner).ConfigureAwait(true);
+            return;
+        }
+
+        window.Show();
     }
 
     private static Avalonia.Controls.Window? Owner =>

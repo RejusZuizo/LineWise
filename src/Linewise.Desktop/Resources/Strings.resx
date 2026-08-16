@@ -413,4 +413,60 @@
     <value>Menu</value>
     <comment>Reopens the collapsed navigation.</comment>
   </data>
+  <data name="People" xml:space="preserve">
+    <value>People and priorities</value>
+    <comment>Window title and sidebar item.</comment>
+  </data>
+  <data name="PeopleSearch" xml:space="preserve">
+    <value>Search people</value>
+    <comment>Watermark.</comment>
+  </data>
+  <data name="PeopleNone" xml:space="preserve">
+    <value>No preference</value>
+    <comment>The engine may place them anywhere.</comment>
+  </data>
+  <data name="PeoplePreferred" xml:space="preserve">
+    <value>Prefers</value>
+    <comment>A ranked wish.</comment>
+  </data>
+  <data name="PeopleMandatory" xml:space="preserve">
+    <value>Must work</value>
+    <comment>Broken only on overtime.</comment>
+  </data>
+  <data name="PeopleBlocked" xml:space="preserve">
+    <value>Never</value>
+    <comment>Absolute.</comment>
+  </data>
+  <data name="PeopleRank" xml:space="preserve">
+    <value>Choice</value>
+    <comment>Rank column heading. 1 is first choice.</comment>
+  </data>
+  <data name="PeopleCanLead" xml:space="preserve">
+    <value>Can lead</value>
+    <comment>Permitted to be the line leader.</comment>
+  </data>
+  <data name="PeopleCanAssist" xml:space="preserve">
+    <value>Can assist</value>
+    <comment>Permitted to be the operating assistant.</comment>
+  </data>
+  <data name="PeopleSaved" xml:space="preserve">
+    <value>Saved the rules for {0}.</value>
+    <comment>0 = person's name.</comment>
+  </data>
+  <data name="PeopleSummary" xml:space="preserve">
+    <value>{0} preferred · {1} required · {2} blocked</value>
+    <comment>0/1/2 = counts of each rule type.</comment>
+  </data>
+  <data name="PeopleTemporary" xml:space="preserve">
+    <value>agency</value>
+    <comment>Marks a temporary employee in the list.</comment>
+  </data>
+  <data name="PeopleNobody" xml:space="preserve">
+    <value>Nobody on file yet. Import a sheet first.</value>
+    <comment>Empty state.</comment>
+  </data>
+  <data name="SaveRules" xml:space="preserve">
+    <value>Save rules</value>
+    <comment>Button.</comment>
+  </data>
 </root>
