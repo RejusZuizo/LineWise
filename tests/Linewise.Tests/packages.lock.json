@@ -464,6 +464,7 @@
           "Avalonia": "[11.3.20, )",
           "Avalonia.Desktop": "[11.3.20, )",
           "Avalonia.Diagnostics": "[11.3.20, )",
+          "Avalonia.Fonts.Inter": "[11.3.20, )",
           "Avalonia.Themes.Fluent": "[11.3.20, )",
           "CommunityToolkit.Mvvm": "[8.4.2, )",
           "FluentAvaloniaUI": "[2.4.0, )",
@@ -526,6 +527,15 @@
           "Avalonia": "11.3.20",
           "Avalonia.Controls.ColorPicker": "11.3.20",
           "Avalonia.Themes.Simple": "11.3.20"
+        }
+      },
+      "Avalonia.Fonts.Inter": {
+        "type": "CentralTransitive",
+        "requested": "[11.3.20, )",
+        "resolved": "11.3.20",
+        "contentHash": "iYNav6Va0XAESt7mSTVHmIPY4/cUYmVmfGWF9keI21WxbHmyANutfzEwqD5lakFd7FSKIXrrgcV+Ydp+Z/lsMw==",
+        "dependencies": {
+          "Avalonia": "11.3.20"
         }
       },
       "Avalonia.Themes.Fluent": {

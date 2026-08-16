@@ -89,13 +89,15 @@ internal static class Program
 
     /// <summary>Used by the Avalonia designer as well as by <see cref="Main"/>.</summary>
     /// <remarks>
-    /// No embedded font. The design document's rule is the system font and no imported
-    /// webfonts, and on the machine this ships to that means the font every other
-    /// application on the manager's desktop is already using.
+    /// Inter, embedded in the application rather than fetched from anywhere. ADR 0013
+    /// records why this reverses the design document's system font rule: a roster grid is
+    /// dense numerals and short names at small sizes, and the system font is whatever
+    /// Windows happens to be set to.
     /// </remarks>
     public static AppBuilder BuildAvaloniaApp() =>
         AppBuilder.Configure<App>()
             .UsePlatformDetect()
+            .WithInterFont()
             .LogToTrace();
 
     private static string Version =>
