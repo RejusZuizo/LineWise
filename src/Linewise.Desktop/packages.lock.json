@@ -63,9 +63,9 @@
       },
       "FluentAvaloniaUI": {
         "type": "Direct",
-        "requested": "[2.4.0, )",
-        "resolved": "2.4.0",
-        "contentHash": "KWpXexfCgDcVNanzzR+QXQKk300Xd9rImAZkMIrCG3TdKZ+s9sdMW3JfvKJWpzS74Y3JSZkY67Ngeh5nbtEtEw==",
+        "requested": "[2.4.1, )",
+        "resolved": "2.4.1",
+        "contentHash": "UCkw7sgAFDKmQB+mniZMqabXdXNyfC8ZOOHfVme1/eP7SCQQ1y1FapJt23mNugoLiBUBo7Nd9dVizkhNJwY6yQ==",
         "dependencies": {
           "Avalonia": "11.2.5",
           "Avalonia.Controls.ColorPicker": "11.2.5",
@@ -423,7 +423,7 @@
       "linewise.application": {
         "type": "Project",
         "dependencies": {
-          "Linewise.Domain": "[0.5.0-alpha, )",
+          "Linewise.Domain": "[0.6.0-alpha, )",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "[8.0.2, )"
         }
       },
@@ -434,8 +434,8 @@
         "type": "Project",
         "dependencies": {
           "ClosedXML": "[0.104.2, )",
-          "Linewise.Application": "[0.5.0-alpha, )",
-          "Linewise.Domain": "[0.5.0-alpha, )",
+          "Linewise.Application": "[0.6.0-alpha, )",
+          "Linewise.Domain": "[0.6.0-alpha, )",
           "Microsoft.EntityFrameworkCore.Sqlite.Core": "[8.0.11, )",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "[8.0.2, )",
           "Microsoft.Extensions.Options": "[8.0.2, )",

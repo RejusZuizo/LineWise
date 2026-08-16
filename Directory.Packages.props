@@ -48,7 +48,7 @@
          document's "system font" rule deliberately, and embedding is what keeps it a
          reversal about typography rather than about making a network call. -->
     <PackageVersion Include="Avalonia.Fonts.Inter" Version="11.3.20" />
-    <PackageVersion Include="FluentAvaloniaUI" Version="2.4.0" />
+    <PackageVersion Include="FluentAvaloniaUI" Version="2.4.1" />
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
   </ItemGroup>
 
