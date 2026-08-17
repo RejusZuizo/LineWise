@@ -3,6 +3,7 @@ using Linewise.Application.Import;
 using Linewise.Application.Persistence;
 using Linewise.Application.Rostering;
 using Linewise.Domain.Entities;
+using Linewise.Domain.Enums;
 using Xunit;
 
 namespace Linewise.Tests.Persistence;
@@ -86,6 +87,53 @@ public sealed class ImportThenGenerateTests
 
         Assert.Equal(0, committed.TemporaryEmployeesAdded);
         Assert.Equal(People, committed.RowsLeftUnresolved);
+    }
+
+    /// <summary>
+    /// The Tuesday afternoon case. Somebody rings in sick, the manager marks them absent,
+    /// and then a corrected sheet arrives covering the same week.
+    /// </summary>
+    /// <remarks>
+    /// Without provenance on an availability record this is where the morning's work is
+    /// silently undone: the sheet predates the phone call and says the person is in.
+    /// </remarks>
+    [Fact]
+    public async Task A_re_import_keeps_what_the_manager_set_by_hand()
+    {
+        await using var database = await TemporaryDatabase.CreateAsync();
+
+        var parsed = await Parse(database, Sheet());
+        await Commit(database, parsed, addEveryoneAsTemporary: true);
+
+        var configuration = await database.InScopeAsync<IConfigurationRepository, RosterConfiguration>(
+            repository => repository.GetAsync());
+
+        var absentee = configuration.Employees[0].Id;
+
+        await database.InScopeAsync<IAvailabilityRepository>(repository =>
+            repository.SetManualAsync(absentee, Monday, AvailabilityStatus.Off));
+
+        var again = await Commit(database, await Parse(database, Sheet()), addEveryoneAsTemporary: false);
+
+        var availability = await database.InScopeAsync<IAvailabilityRepository, IReadOnlyList<Availability>>(
+            repository => repository.GetAsync(Monday, Monday.AddDays(7)));
+
+        var monday = availability.Single(record => record.EmployeeId == absentee && record.Date == Monday);
+
+        Assert.Equal(AvailabilityStatus.Off, monday.Status);
+        Assert.Equal(AvailabilitySource.Manual, monday.Source);
+
+        // Kept, and said out loud. The review screen names who and which day rather than
+        // reporting a count nobody can act on.
+        var kept = Assert.Single(
+            again.Warnings,
+            warning => warning.Code == WarningCode.ImportManualAvailabilityKept);
+
+        Assert.Equal(absentee, kept.EmployeeId);
+        Assert.Equal(Monday, kept.Date);
+
+        // And the record it did not write is not counted as one it did.
+        Assert.Equal(availability.Count - 1, again.AvailabilityRecordsWritten);
     }
 
     private static async Task<(AvailabilityImportResult Result, Guid TemplateId, byte[] File)> Parse(

@@ -190,6 +190,9 @@
   <data name="ImportEmployeeOnMoreThanOneRow" xml:space="preserve">
     <value>Appears on more than one row. The first was used.</value>
   </data>
+  <data name="ImportManualAvailabilityKept" xml:space="preserve">
+    <value>Set by hand, so the sheet did not overwrite it.</value>
+  </data>
   <data name="LineShortOfOperatingAssistants" xml:space="preserve">
     <value>{0} has {1} of the {2} operating assistants it asked for.</value>
     <comment>0 = line name, 1 = actual, 2 = required.</comment>

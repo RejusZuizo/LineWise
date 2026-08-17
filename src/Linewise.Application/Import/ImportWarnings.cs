@@ -51,6 +51,18 @@ public static class ImportWarnings
     public static RosterWarning RowsLeftUnresolved(int rowCount) =>
         WarningFactory.Create(WarningCode.ImportRowsLeftUnresolved, WarningSeverity.Notice, [rowCount]);
 
+    /// <summary>
+    /// A record the manager set by hand that this import left alone. One per record rather
+    /// than a count, so the review screen can name the person and the day.
+    /// </summary>
+    public static RosterWarning ManualAvailabilityKept(Guid employeeId, DateOnly date) =>
+        WarningFactory.Create(
+            WarningCode.ImportManualAvailabilityKept,
+            WarningSeverity.Notice,
+            [],
+            employeeId: employeeId,
+            date: date);
+
     public static RosterWarning EmployeeOnMoreThanOneRow(Guid employeeId) =>
         WarningFactory.Create(
             WarningCode.ImportEmployeeOnMoreThanOneRow,

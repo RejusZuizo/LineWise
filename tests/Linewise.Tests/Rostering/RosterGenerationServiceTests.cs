@@ -228,10 +228,17 @@ public sealed class RosterGenerationServiceTests
             return Task.FromResult<IReadOnlyList<Availability>>([]);
         }
 
-        public Task ReplaceAsync(
+        public Task<IReadOnlyList<Availability>> ReplaceImportedAsync(
             DateOnly fromInclusive,
             DateOnly toExclusive,
             IReadOnlyList<Availability> availabilities,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<Availability>>([]);
+
+        public Task SetManualAsync(
+            Guid employeeId,
+            DateOnly date,
+            AvailabilityStatus status,
             CancellationToken cancellationToken = default) =>
             Task.CompletedTask;
     }
