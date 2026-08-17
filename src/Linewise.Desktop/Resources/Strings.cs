@@ -96,6 +96,12 @@ public static class Strings
 
     public static string NavRosterView => Get(nameof(NavRosterView));
 
+    public static string ViewToday => Get(nameof(ViewToday));
+
+    public static string ViewWholeWeek => Get(nameof(ViewWholeWeek));
+
+    public static string DayHeading(DateOnly date) => Format(nameof(DayHeading), date);
+
     public static string DashboardHeading => Get(nameof(DashboardHeading));
 
     public static string DashboardSetupHeading => Get(nameof(DashboardSetupHeading));

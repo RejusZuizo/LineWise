@@ -97,7 +97,21 @@
             BorderThickness="1,1,1,0"
             CornerRadius="6,6,0,0"
             Padding="16,12">
-      <TextBlock Text="{Binding WeekLabel}" Classes="title" />
+      <DockPanel LastChildFill="False">
+        <TextBlock DockPanel.Dock="Left" Text="{Binding WeekLabel}" Classes="title" VerticalAlignment="Center" />
+
+        <!-- Today or the week. The same roster either way; only how much of it is on
+             screen changes, which is why the buttons live on the grid rather than in the
+             navigation beside things that load. -->
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6">
+          <Button Content="{x:Static res:Strings.ViewToday}"
+                  Classes="quiet"
+                  Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).ShowTodayCommand}" />
+          <Button Content="{x:Static res:Strings.ViewWholeWeek}"
+                  Classes="quiet"
+                  Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).ShowWholeWeekCommand}" />
+        </StackPanel>
+      </DockPanel>
     </Border>
 
     <Border Background="{DynamicResource LinewiseSurface}"

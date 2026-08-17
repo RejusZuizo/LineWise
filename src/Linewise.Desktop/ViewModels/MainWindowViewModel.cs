@@ -8,6 +8,7 @@ using Linewise.Application.Rostering;
 using Linewise.Desktop.Resources;
 using Linewise.Desktop.Services;
 using Linewise.Domain.Enums;
+using Linewise.Domain.Rostering;
 using Serilog;
 
 namespace Linewise.Desktop.ViewModels;
@@ -30,6 +31,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     private DateOnly _weekStart = MondayOf(DateOnly.FromDateTime(DateTime.Today));
 
+    // Kept so the grid can be rebuilt for a different date without going back to the
+    // database. Switching between today and the week is a change of view, not of data.
+    private RosterWeek? _loadedRoster;
+    private RosterConfiguration? _loadedConfiguration;
+
     [ObservableProperty]
     private RosterGridViewModel? _grid;
 
@@ -48,6 +54,13 @@ public sealed partial class MainWindowViewModel : ObservableObject
     /// </summary>
     [ObservableProperty]
     private bool _isShowingRoster;
+
+    /// <summary>
+    /// Today, or the whole week. Defaults to today: the grid is opened far more often to
+    /// answer "who is on Ovens this morning" than to plan seven days at once.
+    /// </summary>
+    [ObservableProperty]
+    private bool _isSingleDay = true;
 
     [ObservableProperty]
     private RosterSummaryViewModel? _summary;
@@ -167,6 +180,53 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [RelayCommand]
     private void ShowDashboard() => IsShowingRoster = false;
+
+    [RelayCommand]
+    private void ShowToday()
+    {
+        IsSingleDay = true;
+        Rebuild();
+    }
+
+    [RelayCommand]
+    private void ShowWholeWeek()
+    {
+        IsSingleDay = false;
+        Rebuild();
+    }
+
+    /// <summary>
+    /// Redraws the grid from what is already in hand. No database read: the roster on screen
+    /// is the same roster either way, and going back for it would make a view toggle look
+    /// like a reload.
+    /// </summary>
+    private void Rebuild()
+    {
+        if (_loadedRoster is null || _loadedConfiguration is null)
+        {
+            return;
+        }
+
+        Grid = new RosterGridViewModel(
+            _loadedRoster,
+            _loadedConfiguration.Lines,
+            _loadedConfiguration.Employees,
+            IsSingleDay ? DayInView() : null);
+
+        OnPropertyChanged(nameof(HasRoster));
+    }
+
+    /// <summary>
+    /// Today when today is in the week on screen, and the Monday of it otherwise. Opening
+    /// last week's roster and being shown an empty Saturday would be technically correct
+    /// and useless.
+    /// </summary>
+    private DateOnly DayInView()
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+
+        return today >= _weekStart && today < _weekStart.AddDays(7) ? today : _weekStart;
+    }
 
     [RelayCommand]
     private void ShowRoster() => IsShowingRoster = true;
@@ -396,7 +456,14 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 ConfiguredLines.Add(new SidebarLineViewModel(line));
             }
 
-            Grid = new RosterGridViewModel(stored.Roster, configuration.Lines, configuration.Employees);
+            _loadedRoster = stored.Roster;
+            _loadedConfiguration = configuration;
+
+            Grid = new RosterGridViewModel(
+                stored.Roster,
+                configuration.Lines,
+                configuration.Employees,
+                IsSingleDay ? DayInView() : null);
             Summary = new RosterSummaryViewModel(stored.Roster, weekAvailability, stored.Version);
 
             Dashboard = new DashboardViewModel(
@@ -488,6 +555,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Grid = null;
         Summary = null;
         Dashboard = null;
+        _loadedRoster = null;
+        _loadedConfiguration = null;
         Warnings.Clear();
         WarningGroups.Clear();
     }
