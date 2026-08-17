@@ -33,6 +33,22 @@ public sealed partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private RosterGridViewModel? _grid;
 
+    /// <summary>
+    /// What is set up and what state the week is in. The window opens on this rather than
+    /// on the grid, so a configured factory with no roster yet stops looking like a fresh
+    /// install.
+    /// </summary>
+    [ObservableProperty]
+    private DashboardViewModel? _dashboard;
+
+    /// <summary>
+    /// The grid is somewhere you go, not what you are dropped into. Somebody opening the
+    /// application on a Monday wants to know whether the sheet is in before they want to
+    /// read a hundred and forty names.
+    /// </summary>
+    [ObservableProperty]
+    private bool _isShowingRoster;
+
     [ObservableProperty]
     private RosterSummaryViewModel? _summary;
 
@@ -128,6 +144,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public bool HasWarnings => WarningGroups.Count > 0;
 
     /// <summary>
+    /// Nothing configured at all. The only state that earns a walkthrough — once a factory
+    /// exists the guidance goes away and does not come back.
+    /// </summary>
+    public bool IsFirstRun => Dashboard is null or { IsFirstRun: true };
+
+    /// <summary>
     /// Switches between the light and dark palettes.
     /// </summary>
     /// <remarks>
@@ -142,6 +164,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
     /// </remarks>
     [RelayCommand]
     private void ToggleTheme() => _theme?.Toggle();
+
+    [RelayCommand]
+    private void ShowDashboard() => IsShowingRoster = false;
+
+    [RelayCommand]
+    private void ShowRoster() => IsShowingRoster = true;
 
     [RelayCommand]
     private void ToggleNavigation() => IsNavigationVisible = !IsNavigationVisible;
@@ -328,21 +356,38 @@ public sealed partial class MainWindowViewModel : ObservableObject
             _weekStart = weekStart;
             var stored = await _rosters.GetLatestAsync(weekStart, cancellationToken).ConfigureAwait(true);
 
+            var configuration = await _configuration.GetAsync(cancellationToken).ConfigureAwait(true);
+
+            var weekAvailability = await _availability
+                .GetAsync(weekStart, weekStart.AddDays(7), cancellationToken)
+                .ConfigureAwait(true);
+
             if (stored is null)
             {
                 Clear();
 
-                // The sidebar still lists whatever lines exist. A first run with three lines
-                // and no roster is a different situation from a first run with nothing, and
-                // the window should say which one it is.
-                await LoadLinesAsync(cancellationToken).ConfigureAwait(true);
+                ConfiguredLines.Clear();
 
+                foreach (var line in configuration.Lines.OrderBy(line => line.DisplayOrder))
+                {
+                    ConfiguredLines.Add(new SidebarLineViewModel(line));
+                }
+
+                // The dashboard is built even with no roster. That is the whole point: the
+                // lines and the people are still there, and the screen has to say so instead
+                // of offering to walk somebody through a setup they finished weeks ago.
+                Dashboard = new DashboardViewModel(
+                    weekStart,
+                    configuration.Lines,
+                    configuration.Employees,
+                    weekAvailability,
+                    roster: null);
+
+                IsShowingRoster = false;
                 Status = Strings.NoRosterStored(weekStart);
                 Log.Information("No roster found for {WeekStart}.", weekStart);
                 return;
             }
-
-            var configuration = await _configuration.GetAsync(cancellationToken).ConfigureAwait(true);
 
             ConfiguredLines.Clear();
 
@@ -351,12 +396,15 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 ConfiguredLines.Add(new SidebarLineViewModel(line));
             }
 
-            var availability = await _availability
-                .GetAsync(weekStart, weekStart.AddDays(7), cancellationToken)
-                .ConfigureAwait(true);
-
             Grid = new RosterGridViewModel(stored.Roster, configuration.Lines, configuration.Employees);
-            Summary = new RosterSummaryViewModel(stored.Roster, availability, stored.Version);
+            Summary = new RosterSummaryViewModel(stored.Roster, weekAvailability, stored.Version);
+
+            Dashboard = new DashboardViewModel(
+                weekStart,
+                configuration.Lines,
+                configuration.Employees,
+                weekAvailability,
+                Summary);
 
             var lineNames = configuration.Lines.ToDictionary(line => line.Id, line => line.Name);
             var employeeNames = configuration.Employees.ToDictionary(e => e.Id, e => e.FullName);
@@ -439,6 +487,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     {
         Grid = null;
         Summary = null;
+        Dashboard = null;
         Warnings.Clear();
         WarningGroups.Clear();
     }
@@ -448,6 +497,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         OnPropertyChanged(nameof(HasRoster));
         OnPropertyChanged(nameof(HasWarnings));
         OnPropertyChanged(nameof(HasLines));
+        OnPropertyChanged(nameof(IsFirstRun));
         OnPropertyChanged(nameof(Title));
         PrintCommand.NotifyCanExecuteChanged();
     }

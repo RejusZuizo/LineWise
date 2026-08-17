@@ -55,6 +55,13 @@ public static class Strings
 
     public static string RoleLeader => Get(nameof(RoleLeader));
 
+    public static string RoleLineWorker => Get(nameof(RoleLineWorker));
+
+    public static string WorkforceHeading => Get(nameof(WorkforceHeading));
+
+    public static string CapabilityBreakdown(int leaders, int assistants, int workers) =>
+        Format(nameof(CapabilityBreakdown), leaders, assistants, workers);
+
     public static string RoleOperatingAssistant => Get(nameof(RoleOperatingAssistant));
 
     public static string OperatingAssistantsNeeded => Get(nameof(OperatingAssistantsNeeded));
@@ -84,6 +91,43 @@ public static class Strings
     public static string ToggleTheme => Get(nameof(ToggleTheme));
 
     public static string NavRoster => Get(nameof(NavRoster));
+
+    public static string NavDashboard => Get(nameof(NavDashboard));
+
+    public static string NavRosterView => Get(nameof(NavRosterView));
+
+    public static string DashboardHeading => Get(nameof(DashboardHeading));
+
+    public static string DashboardSetupHeading => Get(nameof(DashboardSetupHeading));
+
+    public static string DashboardNoAvailability => Get(nameof(DashboardNoAvailability));
+
+    public static string DashboardNoRoster => Get(nameof(DashboardNoRoster));
+
+    public static string DashboardSetupNote => Get(nameof(DashboardSetupNote));
+
+    public static string NextStepLines => Get(nameof(NextStepLines));
+
+    public static string NextStepPeople => Get(nameof(NextStepPeople));
+
+    public static string NextStepImport => Get(nameof(NextStepImport));
+
+    public static string NextStepGenerate => Get(nameof(NextStepGenerate));
+
+    public static string NextStepReview => Get(nameof(NextStepReview));
+
+    public static string OpenRoster => Get(nameof(OpenRoster));
+
+    public static string DashboardLines(int lines) => Format(nameof(DashboardLines), lines);
+
+    public static string DashboardPeople(int people, int agency) =>
+        Format(nameof(DashboardPeople), people, agency);
+
+    public static string DashboardAvailability(int people, int days) =>
+        Format(nameof(DashboardAvailability), people, days);
+
+    public static string DashboardRoster(int placed, int errors) =>
+        Format(nameof(DashboardRoster), placed, errors);
 
     public static string People => Get(nameof(People));
 

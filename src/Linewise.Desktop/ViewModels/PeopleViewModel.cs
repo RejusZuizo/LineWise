@@ -11,6 +11,18 @@ using Serilog;
 namespace Linewise.Desktop.ViewModels;
 
 /// <summary>
+/// The highest rank a person is permitted to hold. Ordered so a list sorts by it.
+/// </summary>
+public enum WorkerCapability
+{
+    LineLeader = 0,
+
+    OperatingAssistant = 1,
+
+    LineWorker = 2,
+}
+
+/// <summary>
 /// Who works where: ranked line preferences, and who may lead or assist on each line.
 /// </summary>
 /// <remarks>
@@ -97,13 +109,40 @@ public sealed partial class PeopleViewModel : ObservableObject
     {
         Visible.Clear();
 
-        foreach (var person in People.Where(person =>
-            string.IsNullOrWhiteSpace(Search)
-            || person.Name.Contains(Search.Trim(), StringComparison.CurrentCultureIgnoreCase)))
+        // Leaders first, then assistants, then line workers, alphabetical within each. A
+        // manager looking for cover for a line that has lost its leader reads the top of
+        // this list, which is the only reason to order it by anything but name.
+        foreach (var person in People
+            .Where(person => string.IsNullOrWhiteSpace(Search)
+                || person.Name.Contains(Search.Trim(), StringComparison.CurrentCultureIgnoreCase))
+            .OrderBy(person => (int)person.Capability)
+            .ThenBy(person => person.Name, StringComparer.CurrentCulture))
         {
             Visible.Add(person);
         }
+
+        LeaderCount = People.Count(person => person.Capability == WorkerCapability.LineLeader);
+        AssistantCount = People.Count(person => person.Capability == WorkerCapability.OperatingAssistant);
+        WorkerCount = People.Count(person => person.Capability == WorkerCapability.LineWorker);
+
+        OnPropertyChanged(nameof(LeaderCount));
+        OnPropertyChanged(nameof(AssistantCount));
+        OnPropertyChanged(nameof(WorkerCount));
+        OnPropertyChanged(nameof(CapabilityBreakdown));
     }
+
+    public int LeaderCount { get; private set; }
+
+    public int AssistantCount { get; private set; }
+
+    public int WorkerCount { get; private set; }
+
+    /// <summary>
+    /// How the workforce is made up. The number that matters is the leaders: a factory with
+    /// four lines and two people permitted to lead them cannot cover a sick call.
+    /// </summary>
+    public string CapabilityBreakdown =>
+        Strings.CapabilityBreakdown(LeaderCount, AssistantCount, WorkerCount);
 
     /// <summary>
     /// Saves the selected person's rules. Preferences are replaced wholesale rather than
@@ -145,6 +184,10 @@ public sealed partial class PeopleViewModel : ObservableObject
             person.ToAssistantEligibilities().Count);
 
         Status = Strings.PeopleSaved(person.Name);
+
+        // Permission changed, so where this person sits in the list changed with it.
+        ApplySearch();
+        Selected = person;
 
         // Checked on every save rather than only on demand. A contradiction entered thirty
         // seconds ago is one somebody can still explain; the same contradiction found at
@@ -224,6 +267,46 @@ public sealed partial class EmployeeViewModel : ObservableObject
     public bool IsTemporary { get; }
 
     public ObservableCollection<EmployeeLineRuleViewModel> Lines { get; }
+
+    /// <summary>
+    /// What this person is permitted to be, at their highest rank.
+    /// </summary>
+    /// <remarks>
+    /// A role in this product belongs to an assignment, not to a person: leadership is
+    /// chosen per day, which is why a leader still counts toward the line's headcount. What
+    /// belongs to the person is the permission, and that is what a list of people can
+    /// honestly be organised by.
+    /// <para>
+    /// Somebody who may lead is listed as a leader even if they are also permitted to
+    /// assist, because the highest thing they can be is the useful answer when a line is
+    /// short of one.
+    /// </para>
+    /// </remarks>
+    public WorkerCapability Capability =>
+        Lines.Any(line => line.CanLead) ? WorkerCapability.LineLeader
+        : Lines.Any(line => line.CanAssist) ? WorkerCapability.OperatingAssistant
+        : WorkerCapability.LineWorker;
+
+    public string CapabilityLabel => Capability switch
+    {
+        WorkerCapability.LineLeader => Strings.RoleLeader,
+        WorkerCapability.OperatingAssistant => Strings.RoleOperatingAssistant,
+        _ => Strings.RoleLineWorker,
+    };
+
+    /// <summary>Which lines they may lead, so the list answers "lead what" as well as "can lead".</summary>
+    public string CapabilityDetail
+    {
+        get
+        {
+            var leads = Lines.Where(line => line.CanLead).Select(line => line.LineName).ToList();
+            var assists = Lines.Where(line => line.CanAssist).Select(line => line.LineName).ToList();
+
+            return leads.Count > 0
+                ? string.Join(", ", leads)
+                : assists.Count > 0 ? string.Join(", ", assists) : string.Empty;
+        }
+    }
 
     /// <summary>A short answer for the list, so the rules are visible without selecting.</summary>
     public string Summary
@@ -310,28 +393,70 @@ public sealed partial class EmployeeLineRuleViewModel : ObservableObject
 
     public string AccentColour { get; }
 
-    public bool IsMandatory => Type == PreferenceType.Mandatory;
+    public bool IsMandatory
+    {
+        get => Type == PreferenceType.Mandatory;
+        set
+        {
+            if (value)
+            {
+                Type = PreferenceType.Mandatory;
+            }
+        }
+    }
 
-    public bool IsBlocked => Type == PreferenceType.Blocked;
+    public bool IsBlocked
+    {
+        get => Type == PreferenceType.Blocked;
+        set
+        {
+            if (value)
+            {
+                Type = PreferenceType.Blocked;
+            }
+        }
+    }
 
-    public bool IsPreferred => Type == PreferenceType.Preferred;
+    public bool IsPreferred
+    {
+        get => Type == PreferenceType.Preferred;
+        set
+        {
+            if (value)
+            {
+                Type = PreferenceType.Preferred;
+            }
+        }
+    }
 
     /// <summary>Rank only means anything for a wish or a requirement, never for a refusal.</summary>
     public bool IsRankRelevant => Type is PreferenceType.Preferred or PreferenceType.Mandatory;
 
-    [RelayCommand]
-    private void SetNone() => Type = null;
-
-    [RelayCommand]
-    private void SetPreferred() => Type = PreferenceType.Preferred;
-
-    [RelayCommand]
-    private void SetMandatory() => Type = PreferenceType.Mandatory;
-
-    [RelayCommand]
-    private void SetBlocked() => Type = PreferenceType.Blocked;
-
-    public bool IsNoPreference => Type is null;
+    /// <summary>
+    /// Settable, so a radio button drives the value through its own binding.
+    /// </summary>
+    /// <remarks>
+    /// These were get-only, with a command beside each radio button doing the actual work.
+    /// <c>IsChecked</c> is two way by default, so every click tried to write back to a
+    /// property that had no setter, and the state only changed because the command happened
+    /// to fire as well. The control and the value were kept in step by luck.
+    /// <para>
+    /// Only a true assignment does anything. A radio group unsets the previous member by
+    /// writing false to it, and taking that literally would clear the value that the
+    /// newly selected member has just set, in an order nobody controls.
+    /// </para>
+    /// </remarks>
+    public bool IsNoPreference
+    {
+        get => Type is null;
+        set
+        {
+            if (value)
+            {
+                Type = null;
+            }
+        }
+    }
 
     partial void OnTypeChanged(PreferenceType? value)
     {

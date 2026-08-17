@@ -481,4 +481,84 @@
     <value>IMPOSSIBLE COMBINATIONS</value>
     <comment>Heading over the validator's findings.</comment>
   </data>
+  <data name="NavDashboard" xml:space="preserve">
+    <value>Overview</value>
+    <comment>Sidebar item for the dashboard.</comment>
+  </data>
+  <data name="NavRosterView" xml:space="preserve">
+    <value>Roster grid</value>
+    <comment>Sidebar item for the week grid.</comment>
+  </data>
+  <data name="DashboardHeading" xml:space="preserve">
+    <value>THIS WEEK</value>
+    <comment>Heading on the dashboard.</comment>
+  </data>
+  <data name="DashboardSetupHeading" xml:space="preserve">
+    <value>YOUR FACTORY</value>
+    <comment>Heading over the saved configuration.</comment>
+  </data>
+  <data name="DashboardLines" xml:space="preserve">
+    <value>{0} production lines</value>
+    <comment>0 = count. Saved configuration, entered once.</comment>
+  </data>
+  <data name="DashboardPeople" xml:space="preserve">
+    <value>{0} people on file, {1} agency</value>
+    <comment>0 = active employees, 1 = temporary.</comment>
+  </data>
+  <data name="DashboardAvailability" xml:space="preserve">
+    <value>{0} people available across {1} days</value>
+    <comment>0 = people, 1 = days covered.</comment>
+  </data>
+  <data name="DashboardNoAvailability" xml:space="preserve">
+    <value>No sheet imported for this week yet</value>
+    <comment>Availability missing.</comment>
+  </data>
+  <data name="DashboardRoster" xml:space="preserve">
+    <value>{0} placed, {1} errors</value>
+    <comment>0 = assignments, 1 = errors.</comment>
+  </data>
+  <data name="DashboardNoRoster" xml:space="preserve">
+    <value>Not generated yet</value>
+    <comment>No roster for the week.</comment>
+  </data>
+  <data name="DashboardSetupNote" xml:space="preserve">
+    <value>Set up once. Lines and people are saved, so an ordinary week is import, generate, print.</value>
+    <comment>Reassurance that configuration persists.</comment>
+  </data>
+  <data name="NextStepLines" xml:space="preserve">
+    <value>Add your production lines to get started.</value>
+    <comment>Next action.</comment>
+  </data>
+  <data name="NextStepPeople" xml:space="preserve">
+    <value>Import a sheet to bring your people in.</value>
+    <comment>Next action.</comment>
+  </data>
+  <data name="NextStepImport" xml:space="preserve">
+    <value>Import this week's availability sheet.</value>
+    <comment>Next action.</comment>
+  </data>
+  <data name="NextStepGenerate" xml:space="preserve">
+    <value>Everything is ready. Generate this week's roster.</value>
+    <comment>Next action.</comment>
+  </data>
+  <data name="NextStepReview" xml:space="preserve">
+    <value>Roster generated. Review it, then print.</value>
+    <comment>Next action.</comment>
+  </data>
+  <data name="OpenRoster" xml:space="preserve">
+    <value>Open the roster</value>
+    <comment>Button on the dashboard.</comment>
+  </data>
+  <data name="RoleLineWorker" xml:space="preserve">
+    <value>Line worker</value>
+    <comment>Somebody permitted neither to lead nor to assist.</comment>
+  </data>
+  <data name="CapabilityBreakdown" xml:space="preserve">
+    <value>{0} can lead · {1} can assist · {2} line workers</value>
+    <comment>0/1/2 = counts.</comment>
+  </data>
+  <data name="WorkforceHeading" xml:space="preserve">
+    <value>WORKFORCE</value>
+    <comment>Heading over the people list.</comment>
+  </data>
 </root>
