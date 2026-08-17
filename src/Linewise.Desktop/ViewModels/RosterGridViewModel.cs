@@ -18,10 +18,16 @@ namespace Linewise.Desktop.ViewModels;
 /// </remarks>
 public sealed class RosterGridViewModel
 {
+    /// <param name="onlyDate">
+    /// One date, or null for the whole week. A single day is the view somebody wants at the
+    /// start of a shift: four lines, who is on each, and nothing else competing for the
+    /// space. The week is what the same data looks like when planning rather than running.
+    /// </param>
     public RosterGridViewModel(
         RosterWeek roster,
         IReadOnlyList<ProductionLine> lines,
-        IReadOnlyList<Employee> employees)
+        IReadOnlyList<Employee> employees,
+        DateOnly? onlyDate = null)
     {
         ArgumentNullException.ThrowIfNull(roster);
         ArgumentNullException.ThrowIfNull(lines);
@@ -34,8 +40,14 @@ public sealed class RosterGridViewModel
         // Every date the roster covers, in order. Taken from the roster rather than
         // assuming seven days from the start: a roster generated for a short week should
         // draw a short week rather than five empty columns.
+        IsSingleDay = onlyDate is not null;
+
         Dates = new ObservableCollection<DateOnly>(
-            roster.Days.Select(day => day.Date).Distinct().Order());
+            roster.Days
+                .Select(day => day.Date)
+                .Distinct()
+                .Where(date => onlyDate is null || date == onlyDate)
+                .Order());
 
         var assignments = roster.AllAssignments.ToList();
 
@@ -69,7 +81,15 @@ public sealed class RosterGridViewModel
 
     public int DayCount => Dates.Count;
 
-    public string WeekLabel => Strings.WeekBeginning(WeekStart);
+    public bool IsSingleDay { get; }
+
+    /// <summary>
+    /// Names what is on screen rather than always naming the week. A single day headed
+    /// "week beginning Monday" is a screen that lies about its own contents.
+    /// </summary>
+    public string WeekLabel => IsSingleDay && Dates.Count == 1
+        ? Strings.DayHeading(Dates[0])
+        : Strings.WeekBeginning(WeekStart);
 
     /// <summary>Nothing to draw. The window shows guidance instead of an empty grid.</summary>
     public bool IsEmpty => Rows.Count == 0 || Dates.Count == 0;

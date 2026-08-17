@@ -187,10 +187,51 @@ public sealed class RosterGridViewModelTests
         Assert.Equal(Monday, MainWindowViewModel.MondayOf(new DateOnly(year, month, day)));
     }
 
+    /// <summary>
+    /// One day rather than seven. The view somebody wants at the start of a shift, and the
+    /// reason the grid does not always have to be a week.
+    /// </summary>
+    [Fact]
+    public void A_single_day_shows_only_that_day()
+    {
+        var grid = Build(days: 5, assignments: [Assign(Ada, Ovens)], onlyDate: Monday.AddDays(2));
+
+        Assert.True(grid.IsSingleDay);
+        Assert.Equal([Monday.AddDays(2)], grid.Dates);
+        Assert.Single(grid.Rows[0].Cells);
+    }
+
+    [Fact]
+    public void A_single_day_keeps_the_people_who_are_on_that_day()
+    {
+        var grid = Build(
+            days: 3,
+            assignments: [Assign(Ada, Ovens), Assign(Bram, Ovens, dayOffset: 1)],
+            onlyDate: Monday.AddDays(1));
+
+        var cell = Assert.Single(grid.Rows[0].Cells);
+
+        Assert.Equal("Bram Invented", Assert.Single(cell.People).DisplayName);
+    }
+
+    /// <summary>
+    /// A single day headed "week beginning Monday" is a screen that lies about its contents.
+    /// </summary>
+    [Fact]
+    public void A_single_day_is_headed_with_that_day()
+    {
+        var week = Build(days: 5, assignments: []);
+        var day = Build(days: 5, assignments: [], onlyDate: Monday);
+
+        Assert.Contains("Week beginning", week.WeekLabel, StringComparison.Ordinal);
+        Assert.DoesNotContain("Week beginning", day.WeekLabel, StringComparison.Ordinal);
+    }
+
     private static RosterGridViewModel Build(
         IReadOnlyList<Assignment> assignments,
         IReadOnlyList<ProductionLine>? lines = null,
-        int days = 1)
+        int days = 1,
+        DateOnly? onlyDate = null)
     {
         lines ??= [Line(Ovens, "Ovens", order: 1)];
 
@@ -207,7 +248,7 @@ public sealed class RosterGridViewModelTests
                 .ToList(),
         };
 
-        return new RosterGridViewModel(roster, lines, Employees);
+        return new RosterGridViewModel(roster, lines, Employees, onlyDate);
     }
 
     private static ProductionLine Line(Guid id, string name, int order, int required = 3) =>

@@ -561,4 +561,16 @@
     <value>WORKFORCE</value>
     <comment>Heading over the people list.</comment>
   </data>
+  <data name="ViewToday" xml:space="preserve">
+    <value>Today</value>
+    <comment>Toggle showing one day.</comment>
+  </data>
+  <data name="ViewWholeWeek" xml:space="preserve">
+    <value>Whole week</value>
+    <comment>Toggle showing all seven days.</comment>
+  </data>
+  <data name="DayHeading" xml:space="preserve">
+    <value>{0:dddd d MMMM yyyy}</value>
+    <comment>0 = the date on screen when showing a single day.</comment>
+  </data>
 </root>
