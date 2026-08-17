@@ -141,23 +141,24 @@
 
                     <StackPanel Orientation="Horizontal" Spacing="10">
                       <!-- No opinion is a real answer and has to be selectable, or every
-                           person acquires a rule about every line. -->
+                           person acquires a rule about every line.
+
+                           GroupName is the line's identifier, so the four buttons on one
+                           row are a group and the rows do not interfere with each other.
+                           Bound two way to settable properties: the radio drives the value
+                           through its own binding rather than through a command beside it. -->
                       <RadioButton Content="{x:Static res:Strings.PeopleNone}"
-                                   GroupName="{Binding LineId}"
-                                   IsChecked="{Binding IsNoPreference}"
-                                   Command="{Binding SetNoneCommand}" />
+                                   GroupName="{Binding LineId, StringFormat='pref-{0}'}"
+                                   IsChecked="{Binding IsNoPreference, Mode=TwoWay}" />
                       <RadioButton Content="{x:Static res:Strings.PeoplePreferred}"
-                                   GroupName="{Binding LineId}"
-                                   IsChecked="{Binding IsPreferred}"
-                                   Command="{Binding SetPreferredCommand}" />
+                                   GroupName="{Binding LineId, StringFormat='pref-{0}'}"
+                                   IsChecked="{Binding IsPreferred, Mode=TwoWay}" />
                       <RadioButton Content="{x:Static res:Strings.PeopleMandatory}"
-                                   GroupName="{Binding LineId}"
-                                   IsChecked="{Binding IsMandatory}"
-                                   Command="{Binding SetMandatoryCommand}" />
+                                   GroupName="{Binding LineId, StringFormat='pref-{0}'}"
+                                   IsChecked="{Binding IsMandatory, Mode=TwoWay}" />
                       <RadioButton Content="{x:Static res:Strings.PeopleBlocked}"
-                                   GroupName="{Binding LineId}"
-                                   IsChecked="{Binding IsBlocked}"
-                                   Command="{Binding SetBlockedCommand}" />
+                                   GroupName="{Binding LineId, StringFormat='pref-{0}'}"
+                                   IsChecked="{Binding IsBlocked, Mode=TwoWay}" />
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" Spacing="14">

@@ -89,7 +89,16 @@
         <ScrollViewer>
           <StackPanel Margin="12,4,12,12" Spacing="4">
 
-            <TextBlock Text="{x:Static res:Strings.NavActions}" Classes="sectionHeading" Margin="4,6,0,2" />
+            <Button Content="{x:Static res:Strings.NavDashboard}"
+                    Classes="nav"
+                    Command="{Binding ShowDashboardCommand}" />
+
+            <Button Content="{x:Static res:Strings.NavRosterView}"
+                    Classes="nav"
+                    Command="{Binding ShowRosterCommand}"
+                    IsEnabled="{Binding HasRoster}" />
+
+            <TextBlock Text="{x:Static res:Strings.NavActions}" Classes="sectionHeading" Margin="4,12,0,2" />
 
             <Button Content="{x:Static res:Strings.GenerateRoster}"
                     Classes="primary nav"
@@ -211,6 +220,7 @@
     <Border DockPanel.Dock="Right"
             Width="340"
             IsVisible="{Binding AreWarningsVisible}"
+            IsEnabled="True"
             Background="{DynamicResource LinewiseSurface}"
             BorderBrush="{DynamicResource LinewiseBorder}"
             BorderThickness="1,0,0,0">
@@ -252,37 +262,89 @@
       </DockPanel>
     </Border>
 
-    <!-- Nothing stored yet. A first run has an empty database, which is normal rather than
-         a fault, so it says what to do next instead of drawing an empty grid. -->
-    <Border IsVisible="{Binding !HasRoster}" Padding="24">
-      <Border Classes="card"
-              Padding="32"
-              MaxWidth="520"
-              HorizontalAlignment="Center"
-              VerticalAlignment="Center">
-        <StackPanel Spacing="14">
-          <TextBlock Text="{x:Static res:Strings.ProductName}"
-                     FontSize="26"
-                     FontWeight="SemiBold"
-                     HorizontalAlignment="Center" />
-          <TextBlock Text="{Binding Status}"
-                     Classes="subtitle"
-                     HorizontalAlignment="Center"
-                     TextAlignment="Center"
-                     TextWrapping="Wrap" />
-          <Border Height="1" Background="{DynamicResource LinewiseBorderSubtle}" />
-          <TextBlock Text="{x:Static res:Strings.GettingStartedHeading}" Classes="sectionHeading" />
-          <StackPanel Spacing="6">
-            <TextBlock Text="{x:Static res:Strings.GettingStartedImport}" Classes="subtitle" TextWrapping="Wrap" />
+    <!--
+      The dashboard. What is set up, what is imported, and what state the week is in.
+      Shown instead of the grid, because somebody opening this on a Monday wants to know
+      whether the sheet is in before they want to read a hundred and forty names.
+    -->
+    <ScrollViewer IsVisible="{Binding !IsShowingRoster}">
+      <StackPanel Margin="24" Spacing="16" MaxWidth="820" HorizontalAlignment="Left">
+
+        <StackPanel Spacing="2">
+          <TextBlock Text="{x:Static res:Strings.DashboardHeading}" Classes="sectionHeading" />
+          <TextBlock Text="{Binding Dashboard.WeekLabel}" Classes="title" />
+        </StackPanel>
+
+        <!-- The one thing worth doing next. A dashboard listing everything equally is one
+             somebody has to read; this says what is missing. -->
+        <Border Classes="card" Padding="16">
+          <DockPanel LastChildFill="False">
+            <TextBlock DockPanel.Dock="Left"
+                       Text="{Binding Dashboard.NextStep}"
+                       FontSize="14"
+                       FontWeight="SemiBold"
+                       VerticalAlignment="Center"
+                       TextWrapping="Wrap" />
+            <Button DockPanel.Dock="Right"
+                    Content="{x:Static res:Strings.OpenRoster}"
+                    Classes="quiet"
+                    IsVisible="{Binding HasRoster}"
+                    Command="{Binding ShowRosterCommand}" />
+          </DockPanel>
+        </Border>
+
+        <UniformGrid Columns="2" >
+          <Border Classes="card" Padding="16" Margin="0,0,8,8">
+            <StackPanel Spacing="4">
+              <TextBlock Text="{x:Static res:Strings.NavLines}" Classes="sectionHeading" />
+              <TextBlock Text="{Binding Dashboard.LinesLabel}" FontSize="15" FontWeight="SemiBold" />
+            </StackPanel>
+          </Border>
+          <Border Classes="card" Padding="16" Margin="8,0,0,8">
+            <StackPanel Spacing="4">
+              <TextBlock Text="{x:Static res:Strings.WorkforceHeading}" Classes="sectionHeading" />
+              <TextBlock Text="{Binding Dashboard.PeopleLabel}" FontSize="15" FontWeight="SemiBold" />
+            </StackPanel>
+          </Border>
+          <Border Classes="card" Padding="16" Margin="0,8,8,0">
+            <StackPanel Spacing="4">
+              <TextBlock Text="{x:Static res:Strings.Import}" Classes="sectionHeading" />
+              <TextBlock Text="{Binding Dashboard.AvailabilityLabel}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" />
+            </StackPanel>
+          </Border>
+          <Border Classes="card" Padding="16" Margin="8,8,0,0">
+            <StackPanel Spacing="4">
+              <TextBlock Text="{x:Static res:Strings.NavRosterView}" Classes="sectionHeading" />
+              <TextBlock Text="{Binding Dashboard.RosterLabel}" FontSize="15" FontWeight="SemiBold" />
+              <TextBlock Text="{Binding Summary.WarningsLabel}"
+                         Classes="caption"
+                         IsVisible="{Binding HasRoster}" />
+            </StackPanel>
+          </Border>
+        </UniformGrid>
+
+        <!-- Said once, plainly, because the previous version of this screen implied the
+             opposite every week. -->
+        <TextBlock Text="{x:Static res:Strings.DashboardSetupNote}"
+                   Classes="subtitle"
+                   TextWrapping="Wrap" />
+
+        <!-- Guidance, only for a factory that does not exist yet. Once there are lines and
+             people it goes away and does not come back. -->
+        <Border Classes="card" Padding="20" IsVisible="{Binding IsFirstRun}">
+          <StackPanel Spacing="8">
+            <TextBlock Text="{x:Static res:Strings.GettingStartedHeading}" Classes="sectionHeading" />
             <TextBlock Text="{x:Static res:Strings.GettingStartedLines}" Classes="subtitle" TextWrapping="Wrap" />
+            <TextBlock Text="{x:Static res:Strings.GettingStartedImport}" Classes="subtitle" TextWrapping="Wrap" />
             <TextBlock Text="{x:Static res:Strings.GettingStartedGenerate}" Classes="subtitle" TextWrapping="Wrap" />
           </StackPanel>
-        </StackPanel>
-      </Border>
-    </Border>
+        </Border>
+
+      </StackPanel>
+    </ScrollViewer>
 
     <views:RosterGridView DataContext="{Binding Grid}"
-                          IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).HasRoster}" />
+                          IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).IsShowingRoster}" />
 
   </DockPanel>
 
