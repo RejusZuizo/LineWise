@@ -223,4 +223,23 @@ public sealed class LineEditorViewModelTests
 
         Assert.Equal("Two at the taper.", editable.ToLine().LayoutNotes);
     }
+
+    [Fact]
+    public void Typing_in_a_line_says_the_screen_is_ahead_of_the_database()
+    {
+        var editable = new EditableLineViewModel(new ProductionLine
+        {
+            Id = Guid.NewGuid(),
+            Name = "Ovens",
+            RequiredHeadcount = 4,
+        });
+
+        var edits = 0;
+        editable.Edited += (_, _) => edits++;
+
+        editable.RequiredHeadcount = 6;
+        editable.Description = "Par-baked goods.";
+
+        Assert.Equal(2, edits);
+    }
 }

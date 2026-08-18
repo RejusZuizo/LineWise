@@ -61,6 +61,19 @@
               Content="{x:Static res:Strings.SaveLines}"
               Command="{Binding SaveCommand}"
               IsEnabled="{Binding HasLines}" />
+
+      <!-- Beside the button, the same as the people screen. A message saying a save
+           happened is not an answer to "is what I am looking at saved", and it is the
+           second one somebody wants before they close the window. -->
+      <Border DockPanel.Dock="Right" Classes="severity" Margin="0,0,8,0"
+              IsVisible="{Binding IsSaved}">
+        <TextBlock Text="{x:Static res:Strings.SavedIndicator}" FontSize="11" FontWeight="SemiBold" />
+      </Border>
+
+      <Border DockPanel.Dock="Right" Classes="severity error" Margin="0,0,8,0"
+              IsVisible="{Binding HasUnsavedChanges}">
+        <TextBlock Text="{x:Static res:Strings.UnsavedIndicator}" FontSize="11" FontWeight="SemiBold" />
+      </Border>
     </DockPanel>
 
     <TextBlock Text="{x:Static res:Strings.NoLinesYet}"

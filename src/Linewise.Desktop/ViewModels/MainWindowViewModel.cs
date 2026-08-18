@@ -145,6 +145,12 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     /// </summary>
     public ObservableCollection<WarningGroupViewModel> WarningGroups { get; } = [];
 
+    /// <summary>
+    /// What the panel draws: errors under one heading, notices under another. Two questions
+    /// rather than one list — what stops a line running, and what is merely worth knowing.
+    /// </summary>
+    public ObservableCollection<WarningSectionViewModel> WarningSections { get; } = [];
+
     public ObservableCollection<SidebarLineViewModel> ConfiguredLines { get; } = [];
 
     /// <summary>
@@ -714,6 +720,18 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
                 WarningGroups.Add(new WarningGroupViewModel([.. group]));
             }
 
+            WarningSections.Clear();
+
+            foreach (var severity in (WarningSeverity[])[WarningSeverity.Error, WarningSeverity.Notice])
+            {
+                var groups = WarningGroups.Where(group => group.Severity == severity).ToList();
+
+                if (groups.Count > 0)
+                {
+                    WarningSections.Add(new WarningSectionViewModel(severity, groups));
+                }
+            }
+
             Status = Summary.WarningsLabel;
 
             // Counts, never names. The redaction policy covers structured logging of an
@@ -773,6 +791,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
         _loadedDemands = [];
         Warnings.Clear();
         WarningGroups.Clear();
+        WarningSections.Clear();
     }
 
     private void Notify()

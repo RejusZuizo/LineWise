@@ -323,6 +323,78 @@ public sealed class PeopleViewModelTests
         Assert.Equal(2, editor.Visible.Count);
     }
 
+    /// <summary>
+    /// A message saying a save happened is not an answer to "is what I am looking at
+    /// saved". Somebody who edits, saves, edits again and walks away needs the second one.
+    /// </summary>
+    [Fact]
+    public async Task Editing_says_the_screen_is_ahead_of_the_database()
+    {
+        var editor = await Loaded(leadersEligible: false);
+
+        // Freshly loaded is neither. Nothing has been done yet.
+        Assert.False(editor.HasUnsavedChanges);
+        Assert.False(editor.IsSaved);
+
+        editor.Selected!.AddWorkedCommand.Execute(Line(Ovens, "Ovens"));
+
+        Assert.True(editor.HasUnsavedChanges);
+        Assert.False(editor.IsSaved);
+    }
+
+    [Fact]
+    public async Task Saving_says_so_and_keeps_saying_so()
+    {
+        var editor = await Loaded(leadersEligible: false);
+
+        editor.Selected!.AddWorkedCommand.Execute(Line(Ovens, "Ovens"));
+        await editor.SaveCommand.ExecuteAsync(null);
+
+        Assert.True(editor.IsSaved);
+        Assert.False(editor.HasUnsavedChanges);
+
+        // And the next edit takes it back. A tick that stays on through the next change
+        // would be worse than no tick at all.
+        editor.Selected.Works[0].IsMandatory = true;
+
+        Assert.True(editor.HasUnsavedChanges);
+        Assert.False(editor.IsSaved);
+    }
+
+    /// <summary>
+    /// A different person is a different question, and neither answer carries over.
+    /// </summary>
+    [Fact]
+    public async Task Selecting_somebody_else_clears_the_indicator()
+    {
+        var editor = await Loaded(leadersEligible: false);
+
+        editor.Selected!.AddWorkedCommand.Execute(Line(Ovens, "Ovens"));
+        Assert.True(editor.HasUnsavedChanges);
+
+        editor.SelectedNode = editor.Groups[0].People[1];
+
+        Assert.False(editor.HasUnsavedChanges);
+        Assert.False(editor.IsSaved);
+    }
+
+    /// <summary>
+    /// Selecting forty people in a row must not leave forty handlers behind, each
+    /// announcing an edit to somebody nobody is looking at.
+    /// </summary>
+    [Fact]
+    public async Task Editing_somebody_no_longer_selected_says_nothing()
+    {
+        var editor = await Loaded(leadersEligible: false);
+
+        var first = editor.Selected!;
+        editor.SelectedNode = editor.Groups[0].People[1];
+
+        first.AddWorkedCommand.Execute(Line(Ovens, "Ovens"));
+
+        Assert.False(editor.HasUnsavedChanges);
+    }
+
     private static async Task<PeopleViewModel> Loaded(bool leadersEligible = true)
     {
         var configuration = new FakeConfiguration(

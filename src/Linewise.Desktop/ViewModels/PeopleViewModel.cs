@@ -55,6 +55,22 @@ public sealed partial class PeopleViewModel : ObservableObject
     [ObservableProperty]
     private string _status = string.Empty;
 
+    /// <summary>
+    /// What is on screen is not what is stored.
+    /// </summary>
+    /// <remarks>
+    /// A message in the status bar says a save happened; it does not say whether the thing
+    /// in front of you is saved now. Somebody who edits, saves, edits again and walks away
+    /// needs the second answer, and a message that scrolled past twenty seconds ago cannot
+    /// give it.
+    /// </remarks>
+    [ObservableProperty]
+    private bool _hasUnsavedChanges;
+
+    /// <summary>Saved, and nothing touched since. False before anything has been saved.</summary>
+    [ObservableProperty]
+    private bool _isSaved;
+
     [ObservableProperty]
     private string _search = string.Empty;
 
@@ -118,7 +134,37 @@ public sealed partial class PeopleViewModel : ObservableObject
 
     partial void OnSearchChanged(string value) => ApplySearch();
 
-    partial void OnSelectedChanged(EmployeeViewModel? value) => OnPropertyChanged(nameof(HasSelection));
+    private EmployeeViewModel? _watching;
+
+    partial void OnSelectedChanged(EmployeeViewModel? value)
+    {
+        // Only ever one subscription. Selecting forty people in a row must not leave forty
+        // handlers behind, each announcing an edit to somebody nobody is looking at.
+        if (_watching is not null)
+        {
+            _watching.Edited -= OnPersonEdited;
+        }
+
+        _watching = value;
+
+        if (_watching is not null)
+        {
+            _watching.Edited += OnPersonEdited;
+        }
+
+        // A different person is a different question. Neither saved nor unsaved applies
+        // until somebody does something.
+        HasUnsavedChanges = false;
+        IsSaved = false;
+
+        OnPropertyChanged(nameof(HasSelection));
+    }
+
+    private void OnPersonEdited(object? sender, EventArgs e)
+    {
+        HasUnsavedChanges = true;
+        IsSaved = false;
+    }
 
     /// <summary>
     /// A heading is a legitimate thing to click and is not a person. Ignoring it here is
@@ -241,6 +287,8 @@ public sealed partial class PeopleViewModel : ObservableObject
             person.ToAssistantEligibilities().Count);
 
         Status = Strings.PeopleSaved(person.Name);
+        HasUnsavedChanges = false;
+        IsSaved = true;
 
         // Permission changed, so which group this person belongs in changed with it.
         ApplySearch();
@@ -556,9 +604,17 @@ public sealed partial class EmployeeViewModel : ObservableObject
             .Select(row => new OperatingAssistantEligibility { EmployeeId = Id, LineId = row.LineId }),
     ];
 
+    /// <summary>
+    /// Raised whenever anything about this person's rules changes, so the screen can say
+    /// that what is on it is not what is stored.
+    /// </summary>
+    public event EventHandler? Edited;
+
     /// <summary>Everything derived from the two lists, told to redraw.</summary>
     internal void Changed()
     {
+        Edited?.Invoke(this, EventArgs.Empty);
+
         RefreshAddable();
 
         for (var index = 0; index < Works.Count; index++)
