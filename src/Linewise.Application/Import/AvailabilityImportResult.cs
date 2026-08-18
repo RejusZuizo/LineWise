@@ -20,6 +20,13 @@ public sealed record AvailabilityImportResult
 
     public IReadOnlyList<RosterWarning> Warnings { get; init; } = [];
 
+    /// <summary>
+    /// The layout worked out by reading the sheet, when the template did not fit it. Null
+    /// when the template was used, which is the ordinary case once a site has imported once.
+    /// Committing stores it, so the next sheet of the same shape needs no detecting.
+    /// </summary>
+    public DetectedLayout? DetectedLayout { get; init; }
+
     /// <summary>Rows tied to an employee, whether exactly or after forgiving a typo.</summary>
     public IEnumerable<ImportedRow> Matched =>
         Rows.Where(row => row.Match.Outcome is NameMatchOutcome.Exact or NameMatchOutcome.Fuzzy);

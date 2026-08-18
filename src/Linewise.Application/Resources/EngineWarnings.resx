@@ -194,6 +194,18 @@
   <data name="ImportEmployeeOnMoreThanOneRow" xml:space="preserve">
     <value>Appears on more than one row. The first was used.</value>
   </data>
+  <data name="ImportLayoutDetected" xml:space="preserve">
+    <value>This sheet is not laid out the way the template expects. Read it as: dates on row {0}, names in column {1}, {2} days found.</value>
+    <comment>0 = header row number, 1 = name column number, 2 = number of date columns.</comment>
+  </data>
+  <data name="ImportLayoutLearned" xml:space="preserve">
+    <value>The template has been updated to match this sheet: dates on row {0}, names in column {1}.</value>
+    <comment>0 = header row number, 1 = name column number.</comment>
+  </data>
+  <data name="ImportNamesLearned" xml:space="preserve">
+    <value>{0} spellings were kept against the people you matched them to, and will match on their own next time.</value>
+    <comment>0 = number of aliases learned.</comment>
+  </data>
   <data name="ImportManualAvailabilityKept" xml:space="preserve">
     <value>Set by hand, so the sheet did not overwrite it.</value>
   </data>

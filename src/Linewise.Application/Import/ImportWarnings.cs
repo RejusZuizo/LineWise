@@ -63,6 +63,37 @@ public static class ImportWarnings
             employeeId: employeeId,
             date: date);
 
+    /// <summary>
+    /// The layout was read off the sheet rather than taken from the template. Says what was
+    /// assumed, in the terms the operator would use to check it.
+    /// </summary>
+    public static RosterWarning LayoutDetected(int headerRow, int nameColumn, int dateColumns) =>
+        WarningFactory.Create(
+            WarningCode.ImportLayoutDetected,
+            WarningSeverity.Notice,
+            [headerRow, nameColumn, dateColumns]);
+
+    /// <summary>
+    /// The detected layout was written back onto the template. Said out loud, because it
+    /// changes what the next import will do and a silent configuration change is the kind
+    /// nobody can account for later.
+    /// </summary>
+    public static RosterWarning LayoutLearned(int headerRow, int nameColumn) =>
+        WarningFactory.Create(
+            WarningCode.ImportLayoutLearned,
+            WarningSeverity.Notice,
+            [headerRow, nameColumn]);
+
+    /// <summary>
+    /// Spellings kept against the people they were pointed at, so next week's sheet matches
+    /// them without asking.
+    /// </summary>
+    public static RosterWarning NamesLearned(int count) =>
+        WarningFactory.Create(
+            WarningCode.ImportNamesLearned,
+            WarningSeverity.Notice,
+            [count]);
+
     public static RosterWarning EmployeeOnMoreThanOneRow(Guid employeeId) =>
         WarningFactory.Create(
             WarningCode.ImportEmployeeOnMoreThanOneRow,
