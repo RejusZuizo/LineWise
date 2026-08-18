@@ -817,4 +817,44 @@
     <value>This week</value>
     <comment>Returns to the week containing today.</comment>
   </data>
+  <data name="Settings" xml:space="preserve">
+    <value>Settings</value>
+    <comment>Opens the panel holding how the window is arranged.</comment>
+  </data>
+  <data name="SettingsHeading" xml:space="preserve">
+    <value>APPEARANCE</value>
+    <comment>Heading inside the settings panel.</comment>
+  </data>
+  <data name="SettingsDarkTheme" xml:space="preserve">
+    <value>Dark theme</value>
+    <comment>Switches the palette. Light is the default, to match a sheet of paper.</comment>
+  </data>
+  <data name="SettingsShowWarnings" xml:space="preserve">
+    <value>Show warnings panel</value>
+    <comment>Whether the right hand panel is on screen.</comment>
+  </data>
+  <data name="SettingsShowSidebar" xml:space="preserve">
+    <value>Show sidebar</value>
+    <comment>Whether the left hand navigation is on screen.</comment>
+  </data>
+  <data name="HideWarnings" xml:space="preserve">
+    <value>Hide the warnings panel</value>
+    <comment>Tooltip on the collapse icon at the top of the warnings panel.</comment>
+  </data>
+  <data name="DashboardNeedsAttention" xml:space="preserve">
+    <value>Needs a decision</value>
+    <comment>Heading over the errors on the overview.</comment>
+  </data>
+  <data name="DashboardAllWell" xml:space="preserve">
+    <value>Every line has the people and the leader it needs this week.</value>
+    <comment>Shown on the overview when a roster exists and raises no errors.</comment>
+  </data>
+  <data name="DashboardMoreProblemsOne" xml:space="preserve">
+    <value>and one more</value>
+    <comment>Shown under the errors listed on the overview.</comment>
+  </data>
+  <data name="DashboardMoreProblemsMany" xml:space="preserve">
+    <value>and {0} more</value>
+    <comment>0 = how many errors are not listed. Singular is a separate entry.</comment>
+  </data>
 </root>

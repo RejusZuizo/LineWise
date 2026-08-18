@@ -209,6 +209,26 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     [RelayCommand]
     private void ToggleTheme() => _theme?.Toggle();
 
+    /// <summary>
+    /// Which palette is on, as a switch rather than a button that flips something.
+    /// </summary>
+    /// <remarks>
+    /// A settings panel says what the state is; a button in a list only says what pressing
+    /// it would do. The theme service holds the truth either way.
+    /// </remarks>
+    public bool IsDarkTheme
+    {
+        get => _theme?.IsDark ?? false;
+        set
+        {
+            if (_theme is not null && value != _theme.IsDark)
+            {
+                _theme.Toggle();
+                OnPropertyChanged();
+            }
+        }
+    }
+
     [RelayCommand]
     private void ShowDashboard() => IsShowingRoster = false;
 
@@ -756,13 +776,6 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
                 _loadedDemands);
             Summary = new RosterSummaryViewModel(stored.Roster, weekAvailability, stored.Version);
 
-            Dashboard = new DashboardViewModel(
-                weekStart,
-                configuration.Lines,
-                configuration.Employees,
-                weekAvailability,
-                Summary);
-
             var lineNames = configuration.Lines.ToDictionary(line => line.Id, line => line.Name);
             var employeeNames = configuration.Employees.ToDictionary(e => e.Id, e => e.FullName);
 
@@ -791,6 +804,18 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
             {
                 WarningGroups.Add(new WarningGroupViewModel([.. group]));
             }
+
+            // Built after the warnings, not before. The overview leads with what needs
+            // deciding, and it cannot do that until there is something to lead with.
+            Dashboard = new DashboardViewModel(
+                weekStart,
+                configuration.Lines,
+                configuration.Employees,
+                weekAvailability,
+                Summary)
+            {
+                Problems = [.. WarningGroups.Where(group => group.IsError)],
+            };
 
             WarningSections.Clear();
 

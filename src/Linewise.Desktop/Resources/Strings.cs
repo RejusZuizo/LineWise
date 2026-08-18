@@ -98,6 +98,25 @@ public static class Strings
 
     public static string ToggleTheme => Get(nameof(ToggleTheme));
 
+    public static string Settings => Get(nameof(Settings));
+
+    public static string DashboardMoreProblems(int more) =>
+        more == 1 ? Get("DashboardMoreProblemsOne") : Format("DashboardMoreProblemsMany", more);
+
+    public static string DashboardNeedsAttention => Get(nameof(DashboardNeedsAttention));
+
+    public static string DashboardAllWell => Get(nameof(DashboardAllWell));
+
+    public static string SettingsHeading => Get(nameof(SettingsHeading));
+
+    public static string SettingsDarkTheme => Get(nameof(SettingsDarkTheme));
+
+    public static string SettingsShowWarnings => Get(nameof(SettingsShowWarnings));
+
+    public static string SettingsShowSidebar => Get(nameof(SettingsShowSidebar));
+
+    public static string HideWarnings => Get(nameof(HideWarnings));
+
     public static string NavRoster => Get(nameof(NavRoster));
 
     public static string NavDashboard => Get(nameof(NavDashboard));

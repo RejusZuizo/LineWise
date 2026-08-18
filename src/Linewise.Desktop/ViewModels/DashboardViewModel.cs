@@ -64,6 +64,32 @@ public sealed class DashboardViewModel
     public RosterSummaryViewModel? Roster { get; }
 
     /// <summary>
+    /// The errors, already grouped by kind and day, worst first.
+    /// </summary>
+    /// <remarks>
+    /// This screen was a readout: five true statements about how many of everything there
+    /// is. None of them told the manager what to do next, which is the only question worth
+    /// opening an overview to answer.
+    /// </remarks>
+    public IReadOnlyList<WarningGroupViewModel> Problems { get; init; } = [];
+
+    /// <summary>The few worth putting on the front page. The rest are one click away.</summary>
+    public IReadOnlyList<WarningGroupViewModel> TopProblems => [.. Problems.Take(4)];
+
+    public bool HasProblems => Problems.Count > 0;
+
+    public bool HasMoreProblems => Problems.Count > TopProblems.Count;
+
+    public string MoreProblemsLabel => Strings.DashboardMoreProblems(Problems.Count - TopProblems.Count);
+
+    /// <summary>
+    /// Nothing wrong, and a roster to say so about. Worth stating plainly: a week with no
+    /// errors is the outcome, and a screen that only ever speaks up about problems leaves
+    /// somebody wondering whether it looked.
+    /// </summary>
+    public bool IsAllWell => HasRoster && !HasProblems;
+
+    /// <summary>
     /// Nothing has been set up at all. The only state that deserves to be walked through,
     /// and the reason the guidance stops appearing once a factory exists.
     /// </summary>

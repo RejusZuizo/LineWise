@@ -133,6 +133,38 @@
       <Setter Property="FontSize" Value="13" />
     </Style>
 
+    <!--
+      A navigation button that is also the primary action. Both classes were already being
+      applied to Generate, and nav wins on background because it is declared second, so the
+      accent was being painted over with Transparent and the one button somebody presses
+      every Monday looked like a label.
+
+      Declared after both so it settles the argument rather than joining it.
+    -->
+    <Style Selector="Button.nav.primary">
+      <Setter Property="Background" Value="{DynamicResource LinewiseAccent}" />
+      <Setter Property="Foreground" Value="{DynamicResource LinewiseAccentInk}" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="Padding" Value="10,9" />
+    </Style>
+
+    <Style Selector="Button.nav.primary /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource LinewiseAccent}" />
+      <Setter Property="Foreground" Value="{DynamicResource LinewiseAccentInk}" />
+      <Setter Property="CornerRadius" Value="{StaticResource RadiusSm}" />
+    </Style>
+
+    <!-- A square, quiet button for an icon. Used by the two panel collapses. -->
+    <Style Selector="Button.icon">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="6,2" />
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="MinWidth" Value="0" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
     <Style Selector="Button.nav:pointerover /template/ ContentPresenter">
       <Setter Property="Background" Value="{DynamicResource LinewiseSurfaceSunken}" />
     </Style>

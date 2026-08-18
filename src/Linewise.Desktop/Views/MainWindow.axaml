@@ -60,30 +60,63 @@
             BorderThickness="0,0,1,0">
       <DockPanel LastChildFill="True">
 
-        <StackPanel DockPanel.Dock="Top" Margin="16,16,16,8" Spacing="2">
-          <TextBlock Text="{x:Static res:Strings.ProductName}"
-                     FontSize="17"
-                     FontWeight="Bold" />
-          <TextBlock Text="{Binding Summary.StatusLabel}"
-                     Classes="caption"
-                     IsVisible="{Binding HasRoster}" />
-        </StackPanel>
-
-        <!-- Appearance sits at the bottom, away from the things that change the roster. -->
-        <StackPanel DockPanel.Dock="Bottom" Margin="12,8,12,14" Spacing="6">
-          <TextBlock Text="{x:Static res:Strings.NavAppearance}"
-                     Classes="sectionHeading"
-                     Margin="4,0,0,0" />
-          <Button Content="{x:Static res:Strings.ToggleTheme}"
-                  Classes="nav"
-                  Command="{Binding ToggleThemeCommand}" />
-          <Button Content="{x:Static res:Strings.ShowWarnings}"
-                  Classes="nav"
-                  Command="{Binding ToggleWarningsCommand}" />
-          <Button Content="{x:Static res:Strings.HideNavigation}"
-                  Classes="nav"
+        <DockPanel DockPanel.Dock="Top" Margin="16,14,10,8" LastChildFill="True">
+          <!-- An icon rather than a row in the list. Collapsing a panel is a thing you do
+               to the panel, so it lives on the panel rather than among the places you can
+               navigate to. -->
+          <Button DockPanel.Dock="Right"
+                  Classes="icon"
+                  Content="⟨"
+                  VerticalAlignment="Top"
+                  ToolTip.Tip="{x:Static res:Strings.HideNavigation}"
                   Command="{Binding ToggleNavigationCommand}" />
-          <TextBlock Text="{Binding Version}" Classes="caption" Margin="4,4,0,0" TextWrapping="Wrap" />
+          <StackPanel Spacing="2">
+            <TextBlock Text="{x:Static res:Strings.ProductName}"
+                       FontSize="17"
+                       FontWeight="Bold" />
+            <TextBlock Text="{Binding Summary.StatusLabel}"
+                       Classes="caption"
+                       IsVisible="{Binding HasRoster}" />
+          </StackPanel>
+        </DockPanel>
+
+        <!--
+          One settings button rather than three toggles. Light or dark, whether the warnings
+          panel is shown and whether this sidebar is are all the same kind of thing — how the
+          window is arranged — and none of them belonged in a list beside the places you can
+          navigate to.
+
+          A flyout rather than a window: it dismisses by clicking away, so the one thing that
+          opens over the roster cannot strand anybody.
+        -->
+        <StackPanel DockPanel.Dock="Bottom" Margin="12,8,12,14" Spacing="6">
+          <Button Classes="nav" HorizontalAlignment="Stretch">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <TextBlock Text="⚙" FontSize="14" VerticalAlignment="Center" />
+              <TextBlock Text="{x:Static res:Strings.Settings}" VerticalAlignment="Center" />
+            </StackPanel>
+            <Button.Flyout>
+              <Flyout Placement="RightEdgeAlignedBottom">
+                <StackPanel MinWidth="220" Spacing="2">
+                  <TextBlock Text="{x:Static res:Strings.SettingsHeading}"
+                             Classes="sectionHeading"
+                             Margin="4,2,0,6" />
+
+                  <ToggleSwitch Content="{x:Static res:Strings.SettingsDarkTheme}"
+                                IsChecked="{Binding IsDarkTheme, Mode=TwoWay}" />
+                  <ToggleSwitch Content="{x:Static res:Strings.SettingsShowWarnings}"
+                                IsChecked="{Binding AreWarningsVisible, Mode=TwoWay}" />
+                  <ToggleSwitch Content="{x:Static res:Strings.SettingsShowSidebar}"
+                                IsChecked="{Binding IsNavigationVisible, Mode=TwoWay}" />
+
+                  <TextBlock Text="{Binding Version}"
+                             Classes="caption"
+                             Margin="4,8,0,0"
+                             TextWrapping="Wrap" />
+                </StackPanel>
+              </Flyout>
+            </Button.Flyout>
+          </Button>
         </StackPanel>
 
         <ScrollViewer>
@@ -192,9 +225,10 @@
             BorderBrush="{DynamicResource LinewiseBorder}"
             BorderThickness="0,0,1,0"
             Padding="6,10">
-      <Button Content="{x:Static res:Strings.ShowNavigation}"
-              Classes="quiet"
+      <Button Content="⟩"
+              Classes="icon"
               VerticalAlignment="Top"
+              ToolTip.Tip="{x:Static res:Strings.ShowNavigation}"
               Command="{Binding ToggleNavigationCommand}" />
     </Border>
 
@@ -236,10 +270,20 @@
             BorderBrush="{DynamicResource LinewiseBorder}"
             BorderThickness="1,0,0,0">
       <DockPanel LastChildFill="True">
-        <StackPanel DockPanel.Dock="Top" Spacing="2" Margin="16,14,16,8">
-          <TextBlock Text="{x:Static res:Strings.WarningsHeading}" Classes="sectionHeading" />
-          <TextBlock Text="{Binding Summary.WarningsLabel}" FontSize="14" FontWeight="SemiBold" />
-        </StackPanel>
+        <DockPanel DockPanel.Dock="Top" Margin="16,14,10,8" LastChildFill="True">
+          <!-- The same icon the sidebar carries, on the other side. Both panels are
+               collapsed the same way, from the panel itself. -->
+          <Button DockPanel.Dock="Right"
+                  Classes="icon"
+                  Content="⟩"
+                  VerticalAlignment="Top"
+                  ToolTip.Tip="{x:Static res:Strings.HideWarnings}"
+                  Command="{Binding ToggleWarningsCommand}" />
+          <StackPanel Spacing="2">
+            <TextBlock Text="{x:Static res:Strings.WarningsHeading}" Classes="sectionHeading" />
+            <TextBlock Text="{Binding Summary.WarningsLabel}" FontSize="14" FontWeight="SemiBold" />
+          </StackPanel>
+        </DockPanel>
 
         <ScrollViewer>
           <ItemsControl ItemsSource="{Binding WarningSections}" Margin="12,0,12,12">
@@ -326,6 +370,67 @@
                     Content="{x:Static res:Strings.OpenRoster}"
                     Classes="quiet"
                     IsVisible="{Binding HasRoster}"
+                    Command="{Binding ShowRosterCommand}" />
+          </DockPanel>
+        </Border>
+
+        <!--
+          What needs deciding, before how many of everything there is. This screen was five
+          true statements about counts, none of which told the manager what to do next,
+          which is the only question worth opening an overview to answer.
+        -->
+        <Border Classes="card"
+                Padding="16"
+                IsVisible="{Binding Dashboard.HasProblems}"
+                BorderBrush="{DynamicResource LinewiseBorderStrong}"
+                BorderThickness="1">
+          <StackPanel Spacing="8">
+            <DockPanel LastChildFill="False">
+              <TextBlock DockPanel.Dock="Left"
+                         Text="{x:Static res:Strings.DashboardNeedsAttention}"
+                         Classes="sectionHeading"
+                         VerticalAlignment="Center" />
+              <Button DockPanel.Dock="Right"
+                      Content="{x:Static res:Strings.OpenRoster}"
+                      Classes="primary"
+                      IsVisible="{Binding HasRoster}"
+                      Command="{Binding ShowRosterCommand}" />
+            </DockPanel>
+
+            <ItemsControl ItemsSource="{Binding Dashboard.TopProblems}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:WarningGroupViewModel">
+                  <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,2">
+                    <TextBlock Text="{Binding Context}"
+                               Classes="caption"
+                               MinWidth="150"
+                               VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Message}"
+                               FontSize="12.5"
+                               TextWrapping="Wrap" />
+                  </StackPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <TextBlock Text="{Binding Dashboard.MoreProblemsLabel}"
+                       Classes="caption"
+                       IsVisible="{Binding Dashboard.HasMoreProblems}" />
+          </StackPanel>
+        </Border>
+
+        <!-- A week with nothing wrong is the outcome, and saying so is better than a screen
+             that only ever speaks up about problems. -->
+        <Border Classes="card" Padding="16" IsVisible="{Binding Dashboard.IsAllWell}">
+          <DockPanel LastChildFill="False">
+            <TextBlock DockPanel.Dock="Left"
+                       Text="{x:Static res:Strings.DashboardAllWell}"
+                       FontSize="14"
+                       VerticalAlignment="Center"
+                       TextWrapping="Wrap" />
+            <Button DockPanel.Dock="Right"
+                    Content="{x:Static res:Strings.OpenRoster}"
+                    Classes="quiet"
                     Command="{Binding ShowRosterCommand}" />
           </DockPanel>
         </Border>
