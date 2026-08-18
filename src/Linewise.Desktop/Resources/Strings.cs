@@ -84,6 +84,14 @@ public static class Strings
 
     public static string HeadcountNeeded => Get(nameof(HeadcountNeeded));
 
+    public static string LineDescription => Get(nameof(LineDescription));
+
+    public static string EditThisLine => Get(nameof(EditThisLine));
+
+    public static string LineLayoutNotes => Get(nameof(LineLayoutNotes));
+
+    public static string LineLayoutNotesHint => Get(nameof(LineLayoutNotesHint));
+
     public static string DisplayOrder => Get(nameof(DisplayOrder));
 
     public static string Close => Get(nameof(Close));
