@@ -23,6 +23,7 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<IAssignmentEngine, AssignmentEngine>();
         services.TryAddSingleton<IRosterRuleValidator, RosterRuleValidator>();
         services.TryAddSingleton<IAvailabilityImportBuilder, AvailabilityImportBuilder>();
+        services.TryAddSingleton<IImportLayoutDetector, ImportLayoutDetector>();
 
         // Scoped, because these reach repositories that share a database context.
         services.TryAddScoped<IAvailabilityImportService, AvailabilityImportService>();

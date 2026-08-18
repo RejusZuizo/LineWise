@@ -11,6 +11,7 @@ public sealed class AvailabilityImportService : IAvailabilityImportService
 {
     private readonly IAvailabilitySheetReader _reader;
     private readonly IAvailabilityImportBuilder _builder;
+    private readonly IImportLayoutDetector _detector;
     private readonly IImportRepository _imports;
     private readonly IConfigurationRepository _configuration;
     private readonly IAvailabilityRepository _availability;
@@ -21,6 +22,7 @@ public sealed class AvailabilityImportService : IAvailabilityImportService
     public AvailabilityImportService(
         IAvailabilitySheetReader reader,
         IAvailabilityImportBuilder builder,
+        IImportLayoutDetector detector,
         IImportRepository imports,
         IConfigurationRepository configuration,
         IAvailabilityRepository availability,
@@ -30,6 +32,7 @@ public sealed class AvailabilityImportService : IAvailabilityImportService
     {
         ArgumentNullException.ThrowIfNull(reader);
         ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(detector);
         ArgumentNullException.ThrowIfNull(imports);
         ArgumentNullException.ThrowIfNull(configuration);
         ArgumentNullException.ThrowIfNull(availability);
@@ -39,6 +42,7 @@ public sealed class AvailabilityImportService : IAvailabilityImportService
 
         _reader = reader;
         _builder = builder;
+        _detector = detector;
         _imports = imports;
         _configuration = configuration;
         _availability = availability;
@@ -73,6 +77,36 @@ public sealed class AvailabilityImportService : IAvailabilityImportService
         var configuration = await _configuration.GetAsync(cancellationToken).ConfigureAwait(false);
         var result = _builder.Build(read.Sheet, template, configuration.Employees);
 
+        // The template is tried first and wins whenever it works, so a layout somebody
+        // configured is never quietly overruled. Detection is the rescue for the sheet the
+        // template does not fit, which on a first run is every sheet. ADR 0017.
+        if (result.Rows.Count == 0)
+        {
+            var detected = _detector.Detect(read.Sheet);
+
+            if (detected.Found)
+            {
+                var rescued = _builder.Build(read.Sheet, detected.ApplyTo(template), configuration.Employees);
+
+                if (rescued.Rows.Count > 0)
+                {
+                    return rescued with
+                    {
+                        Warnings =
+                        [
+                            .. read.Warnings,
+                            ImportWarnings.LayoutDetected(
+                                detected.HeaderRowIndex,
+                                detected.NameColumnIndex,
+                                detected.DateColumnCount),
+                            .. rescued.Warnings,
+                        ],
+                        DetectedLayout = detected,
+                    };
+                }
+            }
+        }
+
         // Nothing is written. This is the whole point of parsing as its own step.
         return result with { Warnings = [.. read.Warnings, .. result.Warnings] };
     }
@@ -86,6 +120,7 @@ public sealed class AvailabilityImportService : IAvailabilityImportService
         var warnings = new List<RosterWarning>();
         var resolutions = request.Resolutions.ToDictionary(resolution => resolution.RowIndex);
         var temporariesAdded = 0;
+        var aliasesLearned = 0;
 
         var rows = new List<ImportedRow>();
 
@@ -116,6 +151,15 @@ public sealed class AvailabilityImportService : IAvailabilityImportService
 
             if (resolution.EmployeeId is { } employeeId)
             {
+                // Remembered. Pointing an unfamiliar spelling at somebody is a fact about
+                // that person, not about this week's sheet, and the matcher already reads
+                // aliases — so the same spelling matches by itself next week rather than
+                // being handed back to the operator every Monday.
+                aliasesLearned += await RememberAliasAsync(employeeId, row.SheetName, cancellationToken)
+                    .ConfigureAwait(false)
+                    ? 1
+                    : 0;
+
                 rows.Add(row with { Match = new NameMatch(NameMatchOutcome.Exact, employeeId, [employeeId], 0) });
                 continue;
             }
@@ -159,6 +203,11 @@ public sealed class AvailabilityImportService : IAvailabilityImportService
             warnings.Add(ImportWarnings.ManualAvailabilityKept(record.EmployeeId, record.Date));
         }
 
+        if (aliasesLearned > 0)
+        {
+            warnings.Add(ImportWarnings.NamesLearned(aliasesLearned));
+        }
+
         var manual = kept.Select(record => (record.EmployeeId, record.Date)).ToHashSet();
 
         // What went in, not what was offered. Reporting the sheet's row count as records
@@ -166,6 +215,28 @@ public sealed class AvailabilityImportService : IAvailabilityImportService
         // corrected, which is the number they most want to be right.
         var written = availabilities.Count(
             availability => !manual.Contains((availability.EmployeeId, availability.Date)));
+
+        // What was worked out by reading the sheet is written back onto the template, so the
+        // next sheet of the same shape is parsed rather than detected. This is the whole of
+        // "it adapts": the guess is made once and then it is configuration like any other,
+        // visible and editable rather than repeated silently every week.
+        if (request.Parsed.DetectedLayout is { Found: true } detected)
+        {
+            var template = await _imports
+                .GetTemplateAsync(request.TemplateId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (template is not null)
+            {
+                await _imports
+                    .SaveTemplateAsync(detected.ApplyTo(template), cancellationToken)
+                    .ConfigureAwait(false);
+
+                warnings.Add(ImportWarnings.LayoutLearned(
+                    detected.HeaderRowIndex,
+                    detected.NameColumnIndex));
+            }
+        }
 
         var import = new CommittedImport
         {
@@ -194,5 +265,45 @@ public sealed class AvailabilityImportService : IAvailabilityImportService
             temporariesAdded,
             unresolved,
             warnings);
+    }
+
+    /// <summary>
+    /// Adds the spelling from the sheet to that employee's aliases, unless they already have
+    /// it or it is simply their name.
+    /// </summary>
+    /// <returns>Whether anything was actually learned.</returns>
+    /// <remarks>
+    /// The alias list is personal data like the name itself, and this only ever adds a
+    /// spelling of a name the sheet already carried. Nothing new about the person is
+    /// recorded — the same string is simply kept rather than thrown away and asked for again.
+    /// </remarks>
+    private async Task<bool> RememberAliasAsync(
+        Guid employeeId,
+        string sheetName,
+        CancellationToken cancellationToken)
+    {
+        var spelling = sheetName.Trim();
+
+        if (string.IsNullOrEmpty(spelling))
+        {
+            return false;
+        }
+
+        var configuration = await _configuration.GetAsync(cancellationToken).ConfigureAwait(false);
+        var employee = configuration.Employees.FirstOrDefault(person => person.Id == employeeId);
+
+        if (employee is null
+            || string.Equals(employee.FullName, spelling, StringComparison.CurrentCultureIgnoreCase)
+            || employee.Aliases.Any(alias =>
+                string.Equals(alias, spelling, StringComparison.CurrentCultureIgnoreCase)))
+        {
+            return false;
+        }
+
+        await _configuration
+            .SaveEmployeeAsync(employee with { Aliases = [.. employee.Aliases, spelling] }, cancellationToken)
+            .ConfigureAwait(false);
+
+        return true;
     }
 }

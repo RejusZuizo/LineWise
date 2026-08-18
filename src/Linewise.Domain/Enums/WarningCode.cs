@@ -142,4 +142,24 @@ public enum WarningCode
     /// knowing.
     /// </summary>
     ImportManualAvailabilityKept = 213,
+
+    /// <summary>
+    /// The sheet did not match the template it was parsed against, so the layout was worked
+    /// out by reading it. Not a failure — it is how a sheet nobody has described gets
+    /// imported — but the operator is told what was assumed rather than left to infer it
+    /// from the review screen.
+    /// </summary>
+    ImportLayoutDetected = 214,
+
+    /// <summary>
+    /// The detected layout was saved onto the template, so the next sheet of this shape is
+    /// parsed rather than worked out again.
+    /// </summary>
+    ImportLayoutLearned = 215,
+
+    /// <summary>
+    /// Spellings the operator tied to somebody were kept as aliases, so the same spelling
+    /// matches by itself next time.
+    /// </summary>
+    ImportNamesLearned = 216,
 }
