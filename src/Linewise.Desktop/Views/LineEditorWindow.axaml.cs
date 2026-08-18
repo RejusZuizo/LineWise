@@ -13,6 +13,7 @@ public sealed partial class LineEditorWindow : Window
     {
         _viewModel = viewModel;
         InitializeComponent();
+        this.CloseOnEscape();
         DataContext = viewModel;
     }
 
