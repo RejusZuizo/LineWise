@@ -30,6 +30,18 @@ public sealed partial class LineEditorViewModel : ObservableObject
     [ObservableProperty]
     private string _status = string.Empty;
 
+    /// <summary>
+    /// What is on screen is not what is stored. The same answer the people screen gives,
+    /// for the same reason: a message saying a save happened is not an answer to "is the
+    /// thing in front of me saved".
+    /// </summary>
+    [ObservableProperty]
+    private bool _hasUnsavedChanges;
+
+    /// <summary>Saved, and nothing touched since.</summary>
+    [ObservableProperty]
+    private bool _isSaved;
+
     public LineEditorViewModel(IConfigurationRepository configuration) => _configuration = configuration;
 
     /// <summary>For the Avalonia designer, which cannot resolve from the container.</summary>
@@ -73,8 +85,12 @@ public sealed partial class LineEditorViewModel : ObservableObject
 
         foreach (var line in configuration.Lines.OrderBy(line => line.DisplayOrder))
         {
-            Lines.Add(new EditableLineViewModel(line));
+            Lines.Add(Watch(new EditableLineViewModel(line)));
         }
+
+        // Freshly loaded is neither saved nor unsaved. Nothing has been done yet.
+        HasUnsavedChanges = false;
+        IsSaved = false;
 
         OnPropertyChanged(nameof(HasLines));
     }
@@ -109,7 +125,7 @@ public sealed partial class LineEditorViewModel : ObservableObject
         // container — which destroys whichever text box was being edited and takes the
         // caret with it. The database already holds this line; there is nothing to read
         // back that is not already here.
-        Lines.Add(new EditableLineViewModel(line));
+        Lines.Add(Watch(new EditableLineViewModel(line)));
 
         NewLineName = string.Empty;
         Status = Strings.LineAdded(line.Name);
@@ -131,7 +147,24 @@ public sealed partial class LineEditorViewModel : ObservableObject
         }
 
         Status = Strings.LinesSaved(Lines.Count);
+        HasUnsavedChanges = false;
+        IsSaved = true;
+
         Log.Information("Saved {Count} lines.", Lines.Count);
+    }
+
+    /// <summary>
+    /// Listens to a row, so typing in it says the screen is ahead of the database.
+    /// </summary>
+    private EditableLineViewModel Watch(EditableLineViewModel line)
+    {
+        line.Edited += (_, _) =>
+        {
+            HasUnsavedChanges = true;
+            IsSaved = false;
+        };
+
+        return line;
     }
 }
 
@@ -181,6 +214,16 @@ public sealed partial class EditableLineViewModel : ObservableObject
     }
 
     public string AccentColour => _original.AccentColour;
+
+    /// <summary>Raised whenever a field on this row changes.</summary>
+    public event EventHandler? Edited;
+
+    protected override void OnPropertyChanged(System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        base.OnPropertyChanged(e);
+
+        Edited?.Invoke(this, EventArgs.Empty);
+    }
 
     /// <summary>
     /// Carries the untouched fields through. Editing a name must not silently drop the

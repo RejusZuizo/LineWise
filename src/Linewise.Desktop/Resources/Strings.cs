@@ -207,6 +207,10 @@ public static class Strings
 
     public static string SaveRules => Get(nameof(SaveRules));
 
+    public static string SavedIndicator => Get(nameof(SavedIndicator));
+
+    public static string UnsavedIndicator => Get(nameof(UnsavedIndicator));
+
     public static string CheckRules => Get(nameof(CheckRules));
 
     public static string RulesPossible => Get(nameof(RulesPossible));
@@ -228,6 +232,9 @@ public static class Strings
         Format(nameof(WarningGrouped), count, first);
 
     public static string WarningCount(int count) => Format(nameof(WarningCount), count);
+
+    public static string WarningRows(int rows) =>
+        rows == 1 ? Get("WarningRowsOne") : Format("WarningRowsMany", rows);
 
     public static string NavSetUp => Get(nameof(NavSetUp));
 

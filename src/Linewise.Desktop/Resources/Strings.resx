@@ -781,4 +781,20 @@
     <value>Could not place them. Nothing was altered.</value>
     <comment>Shown instead of a stack trace.</comment>
   </data>
+  <data name="WarningRowsOne" xml:space="preserve">
+    <value>1 kind</value>
+    <comment>How many kinds of warning a section holds.</comment>
+  </data>
+  <data name="WarningRowsMany" xml:space="preserve">
+    <value>{0} kinds</value>
+    <comment>0 = number of grouped rows. Singular is a separate entry.</comment>
+  </data>
+  <data name="SavedIndicator" xml:space="preserve">
+    <value>✓ Saved</value>
+    <comment>Shown beside the save button once what is on screen matches what is stored.</comment>
+  </data>
+  <data name="UnsavedIndicator" xml:space="preserve">
+    <value>Not saved yet</value>
+    <comment>Shown beside the save button when the screen holds changes that are not stored.</comment>
+  </data>
 </root>
