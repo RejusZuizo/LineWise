@@ -905,4 +905,32 @@
     <value>Generate again</value>
     <comment>Confirms rebuilding an existing roster.</comment>
   </data>
+  <data name="PublishRoster" xml:space="preserve">
+    <value>Publish</value>
+    <comment>Marks the week as the version that goes on the wall.</comment>
+  </data>
+  <data name="PublishExplains" xml:space="preserve">
+    <value>Gives the week a version number, so the sheet on the wall can be told apart from an older copy. Printing is separate.</value>
+    <comment>Explains what publishing does before somebody does it.</comment>
+  </data>
+  <data name="Published" xml:space="preserve">
+    <value>Published as version {0}. Print the sheet when you are ready.</value>
+    <comment>0 = version number. Shown the first time a week is published.</comment>
+  </data>
+  <data name="PublishedWithSlip" xml:space="preserve">
+    <value>Published as version {0}. Print the sheet, or an amendment slip for what changed.</value>
+    <comment>0 = version number. Shown when an earlier published version exists to compare against.</comment>
+  </data>
+  <data name="CouldNotPublish" xml:space="preserve">
+    <value>Could not publish the roster. See the log for details.</value>
+    <comment>Shown instead of a stack trace.</comment>
+  </data>
+  <data name="PrintAmendment" xml:space="preserve">
+    <value>Amendment slip</value>
+    <comment>Prints one page of what changed, to pin beside a roster already on the wall.</comment>
+  </data>
+  <data name="PrintPerLine" xml:space="preserve">
+    <value>Per-line sheets</value>
+    <comment>Prints one page per line, to pin at that line.</comment>
+  </data>
 </root>

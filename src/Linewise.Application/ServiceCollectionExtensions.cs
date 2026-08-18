@@ -1,4 +1,5 @@
 using Linewise.Application.Import;
+using Linewise.Application.Printing;
 using Linewise.Application.Rostering;
 using Linewise.Application.Validation;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,6 +34,7 @@ public static class ServiceCollectionExtensions
         services.TryAddScoped<ILineDayService, LineDayService>();
         services.TryAddScoped<IReplacementFinder, ReplacementFinder>();
         services.TryAddScoped<IGapFiller, GapFiller>();
+        services.TryAddScoped<IPublishingService, PublishingService>();
 
         return services;
     }

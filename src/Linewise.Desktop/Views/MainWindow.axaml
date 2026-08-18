@@ -210,6 +210,45 @@
                     Command="{Binding PrintCommand}"
                     IsEnabled="{Binding !IsBusy}" />
 
+            <!-- One page per line, to pin at that line. Carries the layout notes, which is
+                 where they were always meant to be read. -->
+            <Button Content="{x:Static res:Strings.PrintPerLine}"
+                    Classes="nav"
+                    Command="{Binding PrintPerLineCommand}"
+                    IsEnabled="{Binding !IsBusy}" />
+
+            <!--
+              Publishing is separate from printing on purpose: a week can be published and
+              printed twice, or published and not printed at all, and neither is a mistake.
+
+              It says what it does first, because a version number is a thing somebody
+              downstream relies on and pressing this by accident should not be easy.
+            -->
+            <Button Classes="nav" HorizontalAlignment="Stretch" IsEnabled="{Binding !IsBusy}">
+              <TextBlock Text="{x:Static res:Strings.PublishRoster}" />
+              <Button.Flyout>
+                <Flyout Placement="RightEdgeAlignedTop">
+                  <StackPanel MinWidth="280" MaxWidth="300" Spacing="8">
+                    <TextBlock Text="{x:Static res:Strings.PublishExplains}"
+                               Classes="caption"
+                               TextWrapping="Wrap" />
+                    <Button Content="{x:Static res:Strings.PublishRoster}"
+                            Classes="primary"
+                            HorizontalAlignment="Right"
+                            Command="{Binding PublishCommand}" />
+                  </StackPanel>
+                </Flyout>
+              </Button.Flyout>
+            </Button>
+
+            <!-- Only once there is an earlier published sheet to describe the changes from.
+                 A week published for the first time has nothing to amend. -->
+            <Button Content="{x:Static res:Strings.PrintAmendment}"
+                    Classes="nav"
+                    IsVisible="{Binding CanPrintAmendment}"
+                    Command="{Binding PrintAmendmentCommand}"
+                    IsEnabled="{Binding !IsBusy}" />
+
             <TextBlock Text="{x:Static res:Strings.NavSetUp}" Classes="sectionHeading" Margin="4,12,0,2" />
 
             <Button Content="{x:Static res:Strings.People}"

@@ -28,6 +28,17 @@ public interface IRosterRepository
     /// <summary>The most recent version for a week, draft or published, or null if none.</summary>
     Task<StoredRoster?> GetLatestAsync(DateOnly weekStart, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// The most recently published version for a week, or null if the week has never been
+    /// published.
+    /// </summary>
+    /// <remarks>
+    /// What the amendment slip is measured against. A slip says what changed since the sheet
+    /// that is on the wall, and the sheet on the wall is the last one published — not the
+    /// last one saved, which is every keystroke of the draft.
+    /// </remarks>
+    Task<StoredRoster?> GetPublishedAsync(DateOnly weekStart, CancellationToken cancellationToken = default);
+
     /// <summary>Every version of a week, newest first.</summary>
     Task<IReadOnlyList<RosterVersion>> GetVersionsAsync(
         DateOnly weekStart,

@@ -115,13 +115,29 @@ public sealed class SqliteRosterRepository : IRosterRepository
         return published;
     }
 
-    public async Task<StoredRoster?> GetLatestAsync(
+    public Task<StoredRoster?> GetLatestAsync(
         DateOnly weekStart,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        ReadAsync(weekStart, publishedOnly: false, cancellationToken);
+
+    public Task<StoredRoster?> GetPublishedAsync(
+        DateOnly weekStart,
+        CancellationToken cancellationToken = default) =>
+        ReadAsync(weekStart, publishedOnly: true, cancellationToken);
+
+    /// <param name="publishedOnly">
+    /// The sheet on the wall rather than the newest one. A draft is saved on every
+    /// keystroke, so the latest version is almost never the one somebody printed.
+    /// </param>
+    private async Task<StoredRoster?> ReadAsync(
+        DateOnly weekStart,
+        bool publishedOnly,
+        CancellationToken cancellationToken)
     {
         var version = await _context.RosterVersions
             .AsNoTracking()
             .Where(candidate => candidate.WeekStart == weekStart)
+            .Where(candidate => !publishedOnly || candidate.Status == RosterStatus.Published)
             .OrderByDescending(candidate => candidate.VersionNumber)
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);

@@ -196,6 +196,12 @@ public sealed class RosterGenerationServiceTests
                     },
                     Existing));
 
+        /// <summary>Never published. Generation does not care, and nothing here reads it.</summary>
+        public Task<StoredRoster?> GetPublishedAsync(
+            DateOnly weekStart,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult<StoredRoster?>(null);
+
         public Task<IReadOnlyList<RosterVersion>> GetVersionsAsync(
             DateOnly weekStart,
             CancellationToken cancellationToken = default) =>
