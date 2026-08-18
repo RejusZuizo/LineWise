@@ -23,13 +23,18 @@ public enum WorkerCapability
 }
 
 /// <summary>
-/// Who works where: ranked line preferences, and who may lead or assist on each line.
+/// Who works where: the lines a person works in priority order, and who may lead or assist
+/// on each of them.
 /// </summary>
 /// <remarks>
-/// The engine has honoured every one of these rules since phase 1 and there has never been
-/// a way to enter them. Until now the only preferences in the product were the ones a test
-/// constructed, which meant the engine's most interesting behaviour was unreachable from
-/// the application.
+/// Sixty people in one flat list is a wall of names. They are grouped by what each person is
+/// permitted to be, because "who can lead Ovens" is the question this screen is opened to
+/// answer and a leader is what a short line most often needs.
+/// <para>
+/// Priority is the order of a list rather than a number somebody types. A rank that is
+/// derived from position cannot be duplicated, cannot skip, and cannot disagree with what is
+/// on screen.
+/// </para>
 /// </remarks>
 public sealed partial class PeopleViewModel : ObservableObject
 {
@@ -38,6 +43,14 @@ public sealed partial class PeopleViewModel : ObservableObject
 
     [ObservableProperty]
     private EmployeeViewModel? _selected;
+
+    /// <summary>
+    /// Whatever the tree has selected, which may be a group heading rather than a person.
+    /// Selecting a heading collapses or expands it and leaves the person on screen alone,
+    /// because losing the rules you were editing by clicking a heading would be its own bug.
+    /// </summary>
+    [ObservableProperty]
+    private object? _selectedNode;
 
     [ObservableProperty]
     private string _status = string.Empty;
@@ -58,7 +71,13 @@ public sealed partial class PeopleViewModel : ObservableObject
 
     public ObservableCollection<EmployeeViewModel> People { get; } = [];
 
+    /// <summary>Everybody matching the search, flat. What the groups are built from.</summary>
     public ObservableCollection<EmployeeViewModel> Visible { get; } = [];
+
+    /// <summary>
+    /// The list as it is drawn: one collapsible group per capability, in rank order.
+    /// </summary>
+    public ObservableCollection<PeopleGroupViewModel> Groups { get; } = [];
 
     /// <summary>
     /// Combinations of rules no roster could satisfy. Two people both required on a one
@@ -102,6 +121,18 @@ public sealed partial class PeopleViewModel : ObservableObject
     partial void OnSelectedChanged(EmployeeViewModel? value) => OnPropertyChanged(nameof(HasSelection));
 
     /// <summary>
+    /// A heading is a legitimate thing to click and is not a person. Ignoring it here is
+    /// what keeps the editor on the right of the screen from emptying itself.
+    /// </summary>
+    partial void OnSelectedNodeChanged(object? value)
+    {
+        if (value is EmployeeViewModel person)
+        {
+            Selected = person;
+        }
+    }
+
+    /// <summary>
     /// Filtering rather than paging. A hundred and fifty people is a long list and a short
     /// search, and somebody looking for one person knows their name.
     /// </summary>
@@ -109,9 +140,6 @@ public sealed partial class PeopleViewModel : ObservableObject
     {
         Visible.Clear();
 
-        // Leaders first, then assistants, then line workers, alphabetical within each. A
-        // manager looking for cover for a line that has lost its leader reads the top of
-        // this list, which is the only reason to order it by anything but name.
         foreach (var person in People
             .Where(person => string.IsNullOrWhiteSpace(Search)
                 || person.Name.Contains(Search.Trim(), StringComparison.CurrentCultureIgnoreCase))
@@ -121,6 +149,8 @@ public sealed partial class PeopleViewModel : ObservableObject
             Visible.Add(person);
         }
 
+        BuildGroups();
+
         LeaderCount = People.Count(person => person.Capability == WorkerCapability.LineLeader);
         AssistantCount = People.Count(person => person.Capability == WorkerCapability.OperatingAssistant);
         WorkerCount = People.Count(person => person.Capability == WorkerCapability.LineWorker);
@@ -129,6 +159,33 @@ public sealed partial class PeopleViewModel : ObservableObject
         OnPropertyChanged(nameof(AssistantCount));
         OnPropertyChanged(nameof(WorkerCount));
         OnPropertyChanged(nameof(CapabilityBreakdown));
+    }
+
+    /// <summary>
+    /// One group per capability, and an empty one is not drawn.
+    /// </summary>
+    /// <remarks>
+    /// Agency and temporary staff are a badge on the row rather than a fourth group. A
+    /// temporary worker who is permitted to lead is exactly who a manager is hunting for
+    /// when a line has lost its leader, and a Temporary group would have taken them out of
+    /// the Line leaders group to say something the badge already says.
+    /// </remarks>
+    private void BuildGroups()
+    {
+        Groups.Clear();
+
+        foreach (var capability in (WorkerCapability[])[
+            WorkerCapability.LineLeader,
+            WorkerCapability.OperatingAssistant,
+            WorkerCapability.LineWorker])
+        {
+            var members = Visible.Where(person => person.Capability == capability).ToList();
+
+            if (members.Count > 0)
+            {
+                Groups.Add(new PeopleGroupViewModel(capability, members));
+            }
+        }
     }
 
     public int LeaderCount { get; private set; }
@@ -185,7 +242,7 @@ public sealed partial class PeopleViewModel : ObservableObject
 
         Status = Strings.PeopleSaved(person.Name);
 
-        // Permission changed, so where this person sits in the list changed with it.
+        // Permission changed, so which group this person belongs in changed with it.
         ApplySearch();
         Selected = person;
 
@@ -232,9 +289,39 @@ public sealed partial class PeopleViewModel : ObservableObject
     }
 }
 
-/// <summary>One person, and their rule for every line.</summary>
+/// <summary>One heading in the people list, and everybody under it.</summary>
+public sealed class PeopleGroupViewModel
+{
+    public PeopleGroupViewModel(WorkerCapability capability, IReadOnlyList<EmployeeViewModel> people)
+    {
+        ArgumentNullException.ThrowIfNull(people);
+
+        Capability = capability;
+        People = new ObservableCollection<EmployeeViewModel>(people);
+    }
+
+    public WorkerCapability Capability { get; }
+
+    public ObservableCollection<EmployeeViewModel> People { get; }
+
+    public int Count => People.Count;
+
+    /// <summary>Singular and plural are separate resources, never an "s" added in code.</summary>
+    public string Title => Capability switch
+    {
+        WorkerCapability.LineLeader => Strings.GroupLineLeaders,
+        WorkerCapability.OperatingAssistant => Strings.GroupOperatingAssistants,
+        _ => Strings.GroupLineWorkers,
+    };
+
+    public string CountLabel => Strings.GroupCount(Count);
+}
+
+/// <summary>One person, the lines they work in order, and the lines they never work.</summary>
 public sealed partial class EmployeeViewModel : ObservableObject
 {
+    private readonly IReadOnlyList<ProductionLine> _allLines;
+
     public EmployeeViewModel(Employee employee, Application.Rostering.RosterConfiguration configuration)
     {
         ArgumentNullException.ThrowIfNull(employee);
@@ -244,20 +331,50 @@ public sealed partial class EmployeeViewModel : ObservableObject
         Name = employee.FullName;
         IsTemporary = employee.IsTemporary;
 
-        // A row per line, whether or not a rule exists for it. The alternative is a list
-        // that only shows the lines somebody has already had an opinion about, which is
-        // the shape that makes an unset preference invisible.
-        Lines = new ObservableCollection<EmployeeLineRuleViewModel>(
-            configuration.Lines
-                .OrderBy(line => line.DisplayOrder)
-                .Select(line => new EmployeeLineRuleViewModel(
-                    line,
-                    configuration.Preferences.FirstOrDefault(preference =>
-                        preference.EmployeeId == employee.Id && preference.LineId == line.Id),
-                    configuration.LeaderEligibilities.Any(eligibility =>
-                        eligibility.EmployeeId == employee.Id && eligibility.LineId == line.Id),
-                    configuration.OperatingAssistantEligibilities.Any(eligibility =>
-                        eligibility.EmployeeId == employee.Id && eligibility.LineId == line.Id))));
+        _allLines = [.. configuration.Lines.OrderBy(line => line.DisplayOrder)];
+
+        var preferences = configuration.Preferences
+            .Where(preference => preference.EmployeeId == employee.Id)
+            .ToList();
+
+        bool CanLead(Guid lineId) => configuration.LeaderEligibilities
+            .Any(eligibility => eligibility.EmployeeId == employee.Id && eligibility.LineId == lineId);
+
+        bool CanAssist(Guid lineId) => configuration.OperatingAssistantEligibilities
+            .Any(eligibility => eligibility.EmployeeId == employee.Id && eligibility.LineId == lineId);
+
+        Blocked = new ObservableCollection<EmployeeLineRuleViewModel>(
+            _allLines
+                .Where(line => preferences.Any(preference =>
+                    preference.LineId == line.Id && preference.Type == PreferenceType.Blocked))
+                .Select(line => new EmployeeLineRuleViewModel(this, line, false, false, false)));
+
+        // A line belongs in the worked list if there is a preference for it, and also if
+        // this person is merely permitted to lead or assist on it. The second case is what
+        // carries the old screen's data across: eligibility used to be settable on a line
+        // nobody had an opinion about, and dropping those rows would quietly take away
+        // permissions somebody had already granted.
+        var worked = _allLines
+            .Where(line => Blocked.All(blocked => blocked.LineId != line.Id))
+            .Where(line => preferences.Any(preference => preference.LineId == line.Id)
+                || CanLead(line.Id)
+                || CanAssist(line.Id))
+            .OrderBy(line => preferences.FirstOrDefault(preference => preference.LineId == line.Id)?.Rank
+                ?? int.MaxValue)
+            .ThenBy(line => line.DisplayOrder)
+            .ToList();
+
+        Works = new ObservableCollection<EmployeeLineRuleViewModel>(
+            worked.Select(line => new EmployeeLineRuleViewModel(
+                this,
+                line,
+                preferences.Any(preference =>
+                    preference.LineId == line.Id && preference.Type == PreferenceType.Mandatory),
+                CanLead(line.Id),
+                CanAssist(line.Id))));
+
+        Addable = [];
+        Changed();
     }
 
     public Guid Id { get; }
@@ -266,7 +383,27 @@ public sealed partial class EmployeeViewModel : ObservableObject
 
     public bool IsTemporary { get; }
 
-    public ObservableCollection<EmployeeLineRuleViewModel> Lines { get; }
+    /// <summary>
+    /// The lines this person works, best first. Position is the priority: the first entry is
+    /// their first choice, and nothing anywhere stores a rank the screen could disagree with.
+    /// </summary>
+    public ObservableCollection<EmployeeLineRuleViewModel> Works { get; }
+
+    /// <summary>
+    /// Lines they are never put on. Kept apart from the ordered list rather than being a
+    /// fourth state within it, because a refusal has no priority and ordering one would be
+    /// meaningless.
+    /// </summary>
+    public ObservableCollection<EmployeeLineRuleViewModel> Blocked { get; }
+
+    /// <summary>Lines in neither list, offered by the two add buttons.</summary>
+    public ObservableCollection<ProductionLine> Addable { get; }
+
+    public bool HasWorks => Works.Count > 0;
+
+    public bool HasBlocked => Blocked.Count > 0;
+
+    public bool HasAddable => Addable.Count > 0;
 
     /// <summary>
     /// What this person is permitted to be, at their highest rank.
@@ -283,8 +420,8 @@ public sealed partial class EmployeeViewModel : ObservableObject
     /// </para>
     /// </remarks>
     public WorkerCapability Capability =>
-        Lines.Any(line => line.CanLead) ? WorkerCapability.LineLeader
-        : Lines.Any(line => line.CanAssist) ? WorkerCapability.OperatingAssistant
+        Works.Any(line => line.CanLead) ? WorkerCapability.LineLeader
+        : Works.Any(line => line.CanAssist) ? WorkerCapability.OperatingAssistant
         : WorkerCapability.LineWorker;
 
     public string CapabilityLabel => Capability switch
@@ -299,8 +436,8 @@ public sealed partial class EmployeeViewModel : ObservableObject
     {
         get
         {
-            var leads = Lines.Where(line => line.CanLead).Select(line => line.LineName).ToList();
-            var assists = Lines.Where(line => line.CanAssist).Select(line => line.LineName).ToList();
+            var leads = Works.Where(line => line.CanLead).Select(line => line.LineName).ToList();
+            var assists = Works.Where(line => line.CanAssist).Select(line => line.LineName).ToList();
 
             return leads.Count > 0
                 ? string.Join(", ", leads)
@@ -313,55 +450,168 @@ public sealed partial class EmployeeViewModel : ObservableObject
     {
         get
         {
-            var mandatory = Lines.Count(line => line.IsMandatory);
-            var blocked = Lines.Count(line => line.IsBlocked);
-            var preferred = Lines.Count(line => line.IsPreferred);
+            var mandatory = Works.Count(line => line.IsMandatory);
 
-            return Strings.PeopleSummary(preferred, mandatory, blocked);
+            return Strings.PeopleSummary(Works.Count - mandatory, mandatory, Blocked.Count);
         }
     }
 
+    /// <summary>
+    /// Adds a line to the end of the worked list. The end rather than the top: a line just
+    /// added is the one they have least call on, and promoting it is a drag away.
+    /// </summary>
+    [RelayCommand]
+    public void AddWorked(ProductionLine? line)
+    {
+        if (line is null || Works.Any(row => row.LineId == line.Id))
+        {
+            return;
+        }
+
+        Works.Add(new EmployeeLineRuleViewModel(this, line, false, false, false));
+        Changed();
+    }
+
+    [RelayCommand]
+    public void AddBlocked(ProductionLine? line)
+    {
+        if (line is null || Blocked.Any(row => row.LineId == line.Id))
+        {
+            return;
+        }
+
+        Blocked.Add(new EmployeeLineRuleViewModel(this, line, false, false, false));
+        Changed();
+    }
+
+    /// <summary>Takes a line out of whichever list holds it, and offers it again.</summary>
+    public void Remove(EmployeeLineRuleViewModel row)
+    {
+        ArgumentNullException.ThrowIfNull(row);
+
+        Works.Remove(row);
+        Blocked.Remove(row);
+        Changed();
+    }
+
+    /// <summary>
+    /// Moves a worked line to a new position. The one operation drag and the two buttons
+    /// both go through, so a mouse and a keyboard cannot produce different orders.
+    /// </summary>
+    public void Move(EmployeeLineRuleViewModel row, int to)
+    {
+        ArgumentNullException.ThrowIfNull(row);
+
+        var from = Works.IndexOf(row);
+
+        if (from < 0 || to < 0 || to >= Works.Count || from == to)
+        {
+            return;
+        }
+
+        Works.Move(from, to);
+        Changed();
+    }
+
+    public void MoveUp(EmployeeLineRuleViewModel row) => Move(row, Works.IndexOf(row) - 1);
+
+    public void MoveDown(EmployeeLineRuleViewModel row) => Move(row, Works.IndexOf(row) + 1);
+
+    /// <summary>
+    /// Rank is the position in the list, counted from one. Nothing stores it, so it cannot
+    /// be duplicated, cannot skip a number, and cannot disagree with what is on screen.
+    /// </summary>
     public IReadOnlyList<LinePreference> ToPreferences() =>
     [
-        .. Lines
-            .Where(line => line.Type is not null)
-            .Select(line => new LinePreference
-            {
-                EmployeeId = Id,
-                LineId = line.LineId,
-                Rank = line.Rank,
-                Type = line.Type!.Value,
-            }),
+        .. Works.Select((row, index) => new LinePreference
+        {
+            EmployeeId = Id,
+            LineId = row.LineId,
+            Rank = index + 1,
+            Type = row.IsMandatory ? PreferenceType.Mandatory : PreferenceType.Preferred,
+        }),
+
+        // A refusal has no rank. Zero rather than one, so nothing reads it as a first choice
+        // if the ordering rules are ever changed underneath it.
+        .. Blocked.Select(row => new LinePreference
+        {
+            EmployeeId = Id,
+            LineId = row.LineId,
+            Rank = 0,
+            Type = PreferenceType.Blocked,
+        }),
     ];
 
     public IReadOnlyList<LeaderEligibility> ToLeaderEligibilities() =>
     [
-        .. Lines
-            .Where(line => line.CanLead)
-            .Select(line => new LeaderEligibility { EmployeeId = Id, LineId = line.LineId }),
+        .. Works
+            .Where(row => row.CanLead)
+            .Select(row => new LeaderEligibility { EmployeeId = Id, LineId = row.LineId }),
     ];
 
     public IReadOnlyList<OperatingAssistantEligibility> ToAssistantEligibilities() =>
     [
-        .. Lines
-            .Where(line => line.CanAssist)
-            .Select(line => new OperatingAssistantEligibility { EmployeeId = Id, LineId = line.LineId }),
+        .. Works
+            .Where(row => row.CanAssist)
+            .Select(row => new OperatingAssistantEligibility { EmployeeId = Id, LineId = row.LineId }),
     ];
+
+    /// <summary>Everything derived from the two lists, told to redraw.</summary>
+    internal void Changed()
+    {
+        RefreshAddable();
+
+        for (var index = 0; index < Works.Count; index++)
+        {
+            Works[index].SetPosition(index + 1, index == 0, index == Works.Count - 1);
+        }
+
+        OnPropertyChanged(nameof(HasWorks));
+        OnPropertyChanged(nameof(HasBlocked));
+        OnPropertyChanged(nameof(HasAddable));
+        OnPropertyChanged(nameof(Capability));
+        OnPropertyChanged(nameof(CapabilityLabel));
+        OnPropertyChanged(nameof(CapabilityDetail));
+        OnPropertyChanged(nameof(Summary));
+    }
+
+    private void RefreshAddable()
+    {
+        Addable.Clear();
+
+        foreach (var line in _allLines
+            .Where(line => Works.All(row => row.LineId != line.Id))
+            .Where(line => Blocked.All(row => row.LineId != line.Id)))
+        {
+            Addable.Add(line);
+        }
+    }
 }
 
-/// <summary>What one person's rule is for one line.</summary>
-public sealed partial class EmployeeLineRuleViewModel : ObservableObject
+/// <summary>
+/// A row that knows where it sits in a list and can be told to sit somewhere else.
+/// </summary>
+/// <remarks>
+/// Exists so the drag behaviour in the view can reorder a list without knowing what the
+/// list holds or who owns it. The row already knows both.
+/// </remarks>
+public interface IReorderableRow
 {
+    void MoveTo(int index);
+}
+
+/// <summary>One line in a person's list, worked or refused.</summary>
+public sealed partial class EmployeeLineRuleViewModel : ObservableObject, IReorderableRow
+{
+    private readonly EmployeeViewModel _owner;
+
     /// <summary>
-    /// Null means no opinion, which is not the same as "preferred at rank zero". The engine
-    /// treats an absent preference as freedom to place somebody anywhere, and that has to be
-    /// expressible on the screen or every person acquires an opinion about every line.
+    /// They must be on this line, not merely prefer it. A flag on the row rather than a
+    /// separate list: a requirement still has a priority relative to the rest, and the
+    /// engine may still break it when somebody is on overtime.
     /// </summary>
     [ObservableProperty]
-    private PreferenceType? _type;
-
-    [ObservableProperty]
-    private int _rank = 1;
+    private bool _isMandatory;
 
     [ObservableProperty]
     private bool _canLead;
@@ -369,20 +619,31 @@ public sealed partial class EmployeeLineRuleViewModel : ObservableObject
     [ObservableProperty]
     private bool _canAssist;
 
+    [ObservableProperty]
+    private int _position;
+
+    [ObservableProperty]
+    private bool _isFirst;
+
+    [ObservableProperty]
+    private bool _isLast;
+
     public EmployeeLineRuleViewModel(
+        EmployeeViewModel owner,
         ProductionLine line,
-        LinePreference? preference,
+        bool isMandatory,
         bool canLead,
         bool canAssist)
     {
+        ArgumentNullException.ThrowIfNull(owner);
         ArgumentNullException.ThrowIfNull(line);
 
+        _owner = owner;
         LineId = line.Id;
         LineName = line.Name;
         AccentColour = line.AccentColour;
 
-        _type = preference?.Type;
-        _rank = preference?.Rank ?? 1;
+        _isMandatory = isMandatory;
         _canLead = canLead;
         _canAssist = canAssist;
     }
@@ -393,85 +654,33 @@ public sealed partial class EmployeeLineRuleViewModel : ObservableObject
 
     public string AccentColour { get; }
 
-    public bool IsMandatory
+    /// <summary>Reads "1st choice". The number is derived, never entered.</summary>
+    public string PositionLabel => Strings.PeopleChoice(Position);
+
+    /// <summary>Where a drag drops this row. The same path the arrows take.</summary>
+    public void MoveTo(int index) => _owner.Move(this, index);
+
+    [RelayCommand]
+    private void MoveUp() => _owner.MoveUp(this);
+
+    [RelayCommand]
+    private void MoveDown() => _owner.MoveDown(this);
+
+    [RelayCommand]
+    private void Remove() => _owner.Remove(this);
+
+    internal void SetPosition(int position, bool isFirst, bool isLast)
     {
-        get => Type == PreferenceType.Mandatory;
-        set
-        {
-            if (value)
-            {
-                Type = PreferenceType.Mandatory;
-            }
-        }
+        Position = position;
+        IsFirst = isFirst;
+        IsLast = isLast;
+
+        OnPropertyChanged(nameof(PositionLabel));
     }
 
-    public bool IsBlocked
-    {
-        get => Type == PreferenceType.Blocked;
-        set
-        {
-            if (value)
-            {
-                Type = PreferenceType.Blocked;
-            }
-        }
-    }
+    partial void OnIsMandatoryChanged(bool value) => _owner.Changed();
 
-    public bool IsPreferred
-    {
-        get => Type == PreferenceType.Preferred;
-        set
-        {
-            if (value)
-            {
-                Type = PreferenceType.Preferred;
-            }
-        }
-    }
+    partial void OnCanLeadChanged(bool value) => _owner.Changed();
 
-    /// <summary>Rank only means anything for a wish or a requirement, never for a refusal.</summary>
-    public bool IsRankRelevant => Type is PreferenceType.Preferred or PreferenceType.Mandatory;
-
-    /// <summary>
-    /// Settable, so a radio button drives the value through its own binding.
-    /// </summary>
-    /// <remarks>
-    /// These were get-only, with a command beside each radio button doing the actual work.
-    /// <c>IsChecked</c> is two way by default, so every click tried to write back to a
-    /// property that had no setter, and the state only changed because the command happened
-    /// to fire as well. The control and the value were kept in step by luck.
-    /// <para>
-    /// Only a true assignment does anything. A radio group unsets the previous member by
-    /// writing false to it, and taking that literally would clear the value that the
-    /// newly selected member has just set, in an order nobody controls.
-    /// </para>
-    /// </remarks>
-    public bool IsNoPreference
-    {
-        get => Type is null;
-        set
-        {
-            if (value)
-            {
-                Type = null;
-            }
-        }
-    }
-
-    partial void OnTypeChanged(PreferenceType? value)
-    {
-        OnPropertyChanged(nameof(IsMandatory));
-        OnPropertyChanged(nameof(IsBlocked));
-        OnPropertyChanged(nameof(IsPreferred));
-        OnPropertyChanged(nameof(IsRankRelevant));
-        OnPropertyChanged(nameof(IsNoPreference));
-
-        // Being blocked from a line and being allowed to run it are contradictory, and the
-        // validator would report it. Better to make it unrepresentable here.
-        if (value == PreferenceType.Blocked)
-        {
-            CanLead = false;
-            CanAssist = false;
-        }
-    }
+    partial void OnCanAssistChanged(bool value) => _owner.Changed();
 }
