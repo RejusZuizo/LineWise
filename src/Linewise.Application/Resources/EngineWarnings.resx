@@ -88,6 +88,10 @@
     <value>A required placement on {0} was set aside, which overtime permits.</value>
     <comment>0 = line name.</comment>
   </data>
+  <data name="LockedAssignmentOnAClosedLine" xml:space="preserve">
+    <value>Locked onto {0}, which is closed that day.</value>
+    <comment>0 = line name.</comment>
+  </data>
   <data name="LockedAssignmentConflictsWithAvailability" xml:space="preserve">
     <value>Locked onto {0} while marked as not available that day.</value>
     <comment>0 = line name.</comment>

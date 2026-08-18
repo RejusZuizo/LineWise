@@ -312,5 +312,8 @@ public sealed class RosterGenerationServiceTests
             IReadOnlyList<LineDemand> demands,
             CancellationToken cancellationToken = default) =>
             Task.CompletedTask;
+
+        public Task SetAsync(LineDemand demand, CancellationToken cancellationToken = default) =>
+            Task.CompletedTask;
     }
 }

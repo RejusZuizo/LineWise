@@ -20,6 +20,7 @@ internal sealed class GenerationContext
     private readonly Dictionary<(DateOnly Date, Guid ShiftId), List<Assignment>> _lockedAssignments = new();
     private readonly Dictionary<DateOnly, HashSet<Guid>> _assignedByDate = new();
     private readonly Dictionary<(Guid LineId, DateOnly Date), int> _demand = new();
+    private readonly HashSet<(Guid LineId, DateOnly Date)> _closed = [];
 
     public GenerationContext(AssignmentRequest request)
     {
@@ -66,6 +67,11 @@ internal sealed class GenerationContext
         foreach (var demand in request.Demands)
         {
             _demand[(demand.LineId, demand.Date)] = demand.RequiredHeadcount;
+
+            if (demand.IsClosed)
+            {
+                _closed.Add((demand.LineId, demand.Date));
+            }
         }
 
         foreach (var assignment in request.LockedAssignments.Where(assignment => assignment.IsLocked))
@@ -131,14 +137,23 @@ internal sealed class GenerationContext
     /// is one, and the line's standard headcount otherwise.
     /// </summary>
     public int HeadcountFor(ProductionLine line, DateOnly date) =>
-        _demand.TryGetValue((line.Id, date), out var demand) ? demand : line.RequiredHeadcount;
+        IsClosed(line, date) ? 0
+        : _demand.TryGetValue((line.Id, date), out var demand) ? demand
+        : line.RequiredHeadcount;
+
+    /// <summary>
+    /// The line is not running on this date. It takes nobody and is warned about for
+    /// nothing: a line that is not running is not short of people, and its usual crew are
+    /// free for the lines that are running.
+    /// </summary>
+    public bool IsClosed(ProductionLine line, DateOnly date) => _closed.Contains((line.Id, date));
 
     /// <summary>
     /// Whether this line is running above its usual complement, which is the manager saying
     /// it has more product to get out. This is what overtime is routed toward.
     /// </summary>
     public bool IsRunningHot(ProductionLine line, DateOnly date) =>
-        HeadcountFor(line, date) > line.RequiredHeadcount;
+        !IsClosed(line, date) && HeadcountFor(line, date) > line.RequiredHeadcount;
 
     public AvailabilityStatus StatusOn(Guid employeeId, DateOnly date) =>
         _availability.GetValueOrDefault((employeeId, date), AvailabilityStatus.Off);

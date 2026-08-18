@@ -625,4 +625,28 @@
     <value>{0} absent</value>
     <comment>0 = number absent. Singular is a separate entry.</comment>
   </data>
+  <data name="CellClosed" xml:space="preserve">
+    <value>Closed</value>
+    <comment>Shown in a cell for a line that is not running that day.</comment>
+  </data>
+  <data name="CloseLine" xml:space="preserve">
+    <value>Close this line today</value>
+    <comment>Turns off a line for one day.</comment>
+  </data>
+  <data name="ReopenLine" xml:space="preserve">
+    <value>Reopen this line</value>
+    <comment>Puts a closed line back into service for that day.</comment>
+  </data>
+  <data name="CouldNotCloseLine" xml:space="preserve">
+    <value>Could not change whether the line is running. Nothing was altered.</value>
+    <comment>Shown instead of a stack trace.</comment>
+  </data>
+  <data name="LineClosedFor" xml:space="preserve">
+    <value>Line closed for {0:d MMMM}. Generate again to move its people.</value>
+    <comment>0 = the date closed.</comment>
+  </data>
+  <data name="LineReopenedFor" xml:space="preserve">
+    <value>Line reopened for {0:d MMMM}. Generate again to staff it.</value>
+    <comment>0 = the date reopened.</comment>
+  </data>
 </root>
