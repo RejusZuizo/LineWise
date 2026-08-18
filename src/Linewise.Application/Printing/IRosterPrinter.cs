@@ -43,6 +43,18 @@ public sealed record PrintRequest
 
     public required IReadOnlyList<Shift> Shifts { get; init; }
 
+    /// <summary>
+    /// Who is actually in. Somebody marked absent keeps their assignment so the screen can
+    /// grey the name, and the sheet on the wall must not be the one place that fact fails
+    /// to reach: a name on a wall is read as somebody who will be standing there.
+    /// </summary>
+    /// <remarks>
+    /// Empty means nobody is known to be absent, which is what every caller written before
+    /// this passed and is the safe direction. Reading silence as absence here would print a
+    /// sheet with nobody on it.
+    /// </remarks>
+    public IReadOnlyList<Availability> Availabilities { get; init; } = [];
+
     public required PrintSettings Settings { get; init; }
 }
 

@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Linewise.Application.Rostering;
 using Linewise.Desktop.Resources;
 using Linewise.Domain.Entities;
 using Linewise.Domain.Rostering;
@@ -23,15 +24,27 @@ public sealed class RosterGridViewModel
     /// start of a shift: four lines, who is on each, and nothing else competing for the
     /// space. The week is what the same data looks like when planning rather than running.
     /// </param>
+    /// <param name="attendance">
+    /// Who is actually in. Absence is derived rather than carried on the assignment, so the
+    /// grid, the counts and the printed sheet all answer it the same way. ADR 0015.
+    /// </param>
+    /// <param name="editor">
+    /// What a chip may ask the shell to do. Null in a test or a designer preview, where the
+    /// grid still draws and its menu items simply do nothing.
+    /// </param>
     public RosterGridViewModel(
         RosterWeek roster,
         IReadOnlyList<ProductionLine> lines,
         IReadOnlyList<Employee> employees,
-        DateOnly? onlyDate = null)
+        DateOnly? onlyDate = null,
+        Attendance? attendance = null,
+        IRosterEditor? editor = null)
     {
         ArgumentNullException.ThrowIfNull(roster);
         ArgumentNullException.ThrowIfNull(lines);
         ArgumentNullException.ThrowIfNull(employees);
+
+        var present = attendance ?? Attendance.Everybody;
 
         WeekStart = roster.WeekStart;
 
@@ -63,7 +76,9 @@ public sealed class RosterGridViewModel
                             .Where(a => a.LineId == line.Id && a.Date == date)
                             .Select(a => new PersonChipViewModel(
                                 a,
-                                names.TryGetValue(a.EmployeeId, out var name) ? name : UnknownEmployee)),
+                                names.TryGetValue(a.EmployeeId, out var name) ? name : UnknownEmployee,
+                                present.IsAbsent(a),
+                                editor)),
                         line.RequiredHeadcount)))));
     }
 

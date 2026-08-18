@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:Linewise.Desktop.ViewModels"
              xmlns:res="using:Linewise.Desktop.Resources"
+             xmlns:enums="using:Linewise.Domain.Enums"
              mc:Ignorable="d"
              d:DesignWidth="1280" d:DesignHeight="720"
              x:Class="Linewise.Desktop.Views.RosterGridView"
@@ -69,6 +70,31 @@
 
     <Style Selector="Border.chip.assistant TextBlock">
       <Setter Property="Foreground" Value="{DynamicResource LinewiseAssistantInk}" />
+    </Style>
+
+    <!--
+      Absent. Last, so it wins over a rank: somebody who is not coming in is not the line
+      leader today, whatever the roster says, and the chip has to read that way at a
+      glance.
+
+      Three channels, none of them colour on its own: the word ABSENT, a strikethrough
+      through the name, and a hollow chip where every other chip is filled. Any one of them
+      surviving is enough to tell the two states apart.
+    -->
+    <Style Selector="Border.chip.absent">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="{DynamicResource LinewiseInkFaint}" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+
+    <Style Selector="Border.chip.absent TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource LinewiseInkFaint}" />
+      <Setter Property="TextDecorations" Value="Strikethrough" />
+    </Style>
+
+    <!-- The word itself is not struck through. A label nobody can read is not a label. -->
+    <Style Selector="Border.chip.absent TextBlock.absentMark">
+      <Setter Property="TextDecorations" Value="{x:Null}" />
     </Style>
 
     <Style Selector="Border.headcount">
@@ -197,12 +223,23 @@
                             <!-- The count sits at the bottom, in the same place in every
                                  cell, so a row can be scanned for shortfalls without
                                  reading any names. -->
-                            <Border DockPanel.Dock="Bottom"
-                                    Classes="headcount"
-                                    Classes.short="{Binding IsShort}"
-                                    Margin="0,6,0,0">
-                              <TextBlock Text="{Binding Headcount}" FontSize="10.5" />
-                            </Border>
+                            <StackPanel DockPanel.Dock="Bottom"
+                                        Orientation="Horizontal"
+                                        Spacing="5"
+                                        Margin="0,6,0,0">
+                              <Border Classes="headcount" Classes.short="{Binding IsShort}">
+                                <TextBlock Text="{Binding Headcount}" FontSize="10.5" />
+                              </Border>
+
+                              <!-- Beside the count, not instead of it. "5 of 6" and "1
+                                   absent" are two different facts and the manager acts on
+                                   both. -->
+                              <TextBlock Text="{Binding AbsentLabel}"
+                                         Classes="caption"
+                                         FontSize="10"
+                                         IsVisible="{Binding HasAbsences}"
+                                         VerticalAlignment="Center" />
+                            </StackPanel>
 
                             <ItemsControl ItemsSource="{Binding People}">
                               <ItemsControl.ItemTemplate>
@@ -210,8 +247,39 @@
                                   <Border Classes="chip"
                                           Classes.leader="{Binding IsLeader}"
                                           Classes.assistant="{Binding IsOperatingAssistant}"
+                                          Classes.absent="{Binding IsAbsent}"
                                           Margin="0,0,0,3"
                                           ToolTip.Tip="{Binding Explanation}">
+
+                                    <!-- Right click, because the grid is read far more
+                                         often than it is edited and a row of buttons on
+                                         every chip would cost the density the whole layout
+                                         is built around.
+
+                                         The menu inherits this chip as its data context,
+                                         so its commands are the chip's own. Reaching up
+                                         the tree for the window's would mean binding into
+                                         a popup, which works until it silently does not. -->
+                                    <Border.ContextMenu>
+                                      <ContextMenu>
+                                        <MenuItem Header="{x:Static res:Strings.MarkAbsent}"
+                                                  IsVisible="{Binding !IsAbsent}">
+                                          <MenuItem Header="{x:Static res:Strings.AbsenceNotInToday}"
+                                                    Command="{Binding MarkAbsentCommand}"
+                                                    CommandParameter="{x:Static enums:AbsenceReason.NotInToday}" />
+                                          <MenuItem Header="{x:Static res:Strings.AbsenceHoliday}"
+                                                    Command="{Binding MarkAbsentCommand}"
+                                                    CommandParameter="{x:Static enums:AbsenceReason.Holiday}" />
+                                          <MenuItem Header="{x:Static res:Strings.AbsenceSentHome}"
+                                                    Command="{Binding MarkAbsentCommand}"
+                                                    CommandParameter="{x:Static enums:AbsenceReason.SentHome}" />
+                                        </MenuItem>
+                                        <MenuItem Header="{x:Static res:Strings.MarkBackIn}"
+                                                  IsVisible="{Binding IsAbsent}"
+                                                  Command="{Binding ClearAbsenceCommand}" />
+                                      </ContextMenu>
+                                    </Border.ContextMenu>
+
                                     <StackPanel Orientation="Horizontal" Spacing="5" >
                                       <!-- Wrapped, not trimmed. A truncated name is worse
                                            than a taller row: the roster exists to tell
@@ -225,6 +293,12 @@
                                                  FontSize="9.5"
                                                  FontWeight="Bold"
                                                  IsVisible="{Binding IsRanked}"
+                                                 VerticalAlignment="Center" />
+                                      <TextBlock Text="{Binding AbsenceLabel}"
+                                                 Classes="absentMark"
+                                                 FontSize="9.5"
+                                                 FontWeight="Bold"
+                                                 IsVisible="{Binding IsAbsent}"
                                                  VerticalAlignment="Center" />
                                       <TextBlock Text="{x:Static res:Strings.ChipEdited}"
                                                  Classes="caption"

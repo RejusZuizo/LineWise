@@ -1,5 +1,6 @@
 using System.Globalization;
 using Linewise.Application.Printing;
+using Linewise.Application.Rostering;
 using Linewise.Domain.Entities;
 using Linewise.Domain.Enums;
 using Linewise.Domain.Rostering;
@@ -20,6 +21,7 @@ public sealed class QuestPdfRosterPrinter : IRosterPrinter
         cancellationToken.ThrowIfCancellationRequested();
 
         var names = new NameBook(request);
+        var present = new Attendance(request.Availabilities);
 
         return Task.FromResult(Document.Create(document =>
         {
@@ -30,7 +32,7 @@ public sealed class QuestPdfRosterPrinter : IRosterPrinter
                 document.Page(page =>
                 {
                     Frame(page, request, names.ShiftTitle(day));
-                    page.Content().Element(content => FullSheetBody(content, request, names, day));
+                    page.Content().Element(content => FullSheetBody(content, request, names, day, present));
                 });
             }
         }).GeneratePdf());
@@ -44,6 +46,7 @@ public sealed class QuestPdfRosterPrinter : IRosterPrinter
         cancellationToken.ThrowIfCancellationRequested();
 
         var names = new NameBook(request);
+        var present = new Attendance(request.Availabilities);
 
         return Task.FromResult(Document.Create(document =>
         {
@@ -54,7 +57,7 @@ public sealed class QuestPdfRosterPrinter : IRosterPrinter
                 document.Page(page =>
                 {
                     Frame(page, request, line.Name);
-                    page.Content().Element(content => PerLineBody(content, request, names, line));
+                    page.Content().Element(content => PerLineBody(content, request, names, line, present));
                 });
             }
         }).GeneratePdf());
@@ -165,7 +168,12 @@ public sealed class QuestPdfRosterPrinter : IRosterPrinter
             }));
     }
 
-    private static void FullSheetBody(IContainer container, PrintRequest request, NameBook names, RosterDay day)
+    private static void FullSheetBody(
+        IContainer container,
+        PrintRequest request,
+        NameBook names,
+        RosterDay day,
+        Attendance present)
     {
         var settings = request.Settings;
 
@@ -173,8 +181,13 @@ public sealed class QuestPdfRosterPrinter : IRosterPrinter
         {
             foreach (var line in request.Lines.OrderBy(line => line.DisplayOrder))
             {
+                // Somebody marked absent is left out entirely rather than struck through.
+                // The wall sheet answers "who is on this line", and a name on it that is
+                // not going to be there answers it wrongly. What changed since the last
+                // print belongs on the amendment slip.
                 var onLine = day.Assignments
                     .Where(assignment => assignment.LineId == line.Id)
+                    .Where(assignment => !present.IsAbsent(assignment))
                     .OrderByDescending(assignment => assignment.Role == AssignmentRole.LineLeader)
                     .ThenBy(assignment => names.Of(assignment.EmployeeId), StringComparer.CurrentCulture)
                     .ToList();
@@ -203,7 +216,12 @@ public sealed class QuestPdfRosterPrinter : IRosterPrinter
         });
     }
 
-    private static void PerLineBody(IContainer container, PrintRequest request, NameBook names, ProductionLine line)
+    private static void PerLineBody(
+        IContainer container,
+        PrintRequest request,
+        NameBook names,
+        ProductionLine line,
+        Attendance present)
     {
         var settings = request.Settings;
 
@@ -213,6 +231,7 @@ public sealed class QuestPdfRosterPrinter : IRosterPrinter
             {
                 var onLine = day.Assignments
                     .Where(assignment => assignment.LineId == line.Id)
+                    .Where(assignment => !present.IsAbsent(assignment))
                     .OrderByDescending(assignment => assignment.Role == AssignmentRole.LineLeader)
                     .ThenBy(assignment => names.Of(assignment.EmployeeId), StringComparer.CurrentCulture)
                     .ToList();

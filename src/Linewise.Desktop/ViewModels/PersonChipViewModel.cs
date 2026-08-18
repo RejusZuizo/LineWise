@@ -1,3 +1,4 @@
+using CommunityToolkit.Mvvm.Input;
 using Linewise.Desktop.Resources;
 using Linewise.Domain.Entities;
 using Linewise.Domain.Enums;
@@ -16,19 +17,51 @@ namespace Linewise.Desktop.ViewModels;
 /// </remarks>
 public sealed class PersonChipViewModel
 {
-    public PersonChipViewModel(Assignment assignment, string displayName)
+    public PersonChipViewModel(
+        Assignment assignment,
+        string displayName,
+        bool isAbsent = false,
+        IRosterEditor? editor = null)
     {
         ArgumentNullException.ThrowIfNull(assignment);
 
+        MarkAbsentCommand = new AsyncRelayCommand<AbsenceReason?>(
+            reason => editor is null || reason is null
+                ? Task.CompletedTask
+                : editor.MarkAbsentAsync(this, reason.Value));
+
+        ClearAbsenceCommand = new AsyncRelayCommand(
+            () => editor is null ? Task.CompletedTask : editor.ClearAbsenceAsync(this));
+
         DisplayName = displayName;
+        EmployeeId = assignment.EmployeeId;
+        Date = assignment.Date;
+        LineId = assignment.LineId;
         IsLeader = assignment.Role == AssignmentRole.LineLeader;
         IsOperatingAssistant = assignment.Role == AssignmentRole.OperatingAssistant;
         IsManual = assignment.Source == AssignmentSource.Manual;
         IsLocked = assignment.IsLocked;
+        IsAbsent = isAbsent;
         Explanation = assignment.Explanation.ToString();
     }
 
+    /// <summary>
+    /// Takes this person out of the day. The reason arrives as the command parameter, so
+    /// the whole picker is four menu items bound to one command.
+    /// </summary>
+    public IAsyncRelayCommand<AbsenceReason?> MarkAbsentCommand { get; }
+
+    /// <summary>Puts them back, for somebody who rang in and then turned up.</summary>
+    public IAsyncRelayCommand ClearAbsenceCommand { get; }
+
     public string DisplayName { get; }
+
+    /// <summary>Who and when, so a command on the chip knows what it is acting on.</summary>
+    public Guid EmployeeId { get; }
+
+    public DateOnly Date { get; }
+
+    public Guid LineId { get; }
 
     public bool IsLeader { get; }
 
@@ -58,6 +91,20 @@ public sealed class PersonChipViewModel
     public bool IsManual { get; }
 
     public bool IsLocked { get; }
+
+    /// <summary>
+    /// Marked absent for this day. The name stays on the line rather than disappearing,
+    /// because "who should have been on Ovens this morning" is a question the manager asks
+    /// all day and a missing chip cannot answer it.
+    /// </summary>
+    public bool IsAbsent { get; }
+
+    /// <summary>
+    /// The word, for the same reason the leader has one. Absence is greyed, struck through
+    /// and labelled: three channels, because a chip that is only a paler shade of the
+    /// chip beside it is a chip that gets read as present.
+    /// </summary>
+    public string AbsenceLabel => IsAbsent ? Strings.RoleAbsent : string.Empty;
 
     /// <summary>
     /// Which rule placed this person and at what preference rank. The engine has recorded

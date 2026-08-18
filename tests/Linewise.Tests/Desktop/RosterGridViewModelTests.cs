@@ -1,3 +1,4 @@
+using Linewise.Application.Rostering;
 using Linewise.Desktop.ViewModels;
 using Linewise.Domain.Entities;
 using Linewise.Domain.Enums;
@@ -227,11 +228,184 @@ public sealed class RosterGridViewModelTests
         Assert.DoesNotContain("Week beginning", day.WeekLabel, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// The point of marking somebody absent rather than removing them: the manager can
+    /// still see who should have been there.
+    /// </summary>
+    [Fact]
+    public void An_absent_person_keeps_their_place_in_the_cell()
+    {
+        var grid = Build(
+            assignments: [Assign(Ada, Ovens), Assign(Bram, Ovens)],
+            availability: [Away(Ada)]);
+
+        var cell = grid.Rows[0].Cells[0];
+
+        Assert.Equal(2, cell.People.Count);
+        Assert.True(cell.People.Single(person => person.DisplayName == "Ada Fictional").IsAbsent);
+        Assert.False(cell.People.Single(person => person.DisplayName == "Bram Invented").IsAbsent);
+    }
+
+    /// <summary>
+    /// A word as well as the styling, the same rule the leader mark follows. Roughly eight
+    /// percent of men could not read a chip distinguished only by being paler.
+    /// </summary>
+    [Fact]
+    public void An_absent_person_is_marked_with_a_word()
+    {
+        var grid = Build(assignments: [Assign(Ada, Ovens)], availability: [Away(Ada)]);
+
+        var chip = grid.Rows[0].Cells[0].People[0];
+
+        Assert.NotEmpty(chip.AbsenceLabel);
+        Assert.Empty(Build(assignments: [Assign(Ada, Ovens)]).Rows[0].Cells[0].People[0].AbsenceLabel);
+    }
+
+    /// <summary>
+    /// The number is the reason for doing any of this: a cell that still reads "3 of 3"
+    /// after somebody rings in has told the manager nothing.
+    /// </summary>
+    [Fact]
+    public void An_absent_person_does_not_count_towards_the_headcount()
+    {
+        var grid = Build(
+            assignments: [Assign(Ada, Ovens), Assign(Bram, Ovens), Assign(Cleo, Ovens)],
+            availability: [Away(Ada)]);
+
+        var cell = grid.Rows[0].Cells[0];
+
+        Assert.Equal(2, cell.Assigned);
+        Assert.Equal(1, cell.Absent);
+        Assert.True(cell.IsShort);
+        Assert.True(cell.HasAbsences);
+    }
+
+    [Fact]
+    public void An_absent_leader_leaves_the_line_without_one()
+    {
+        var grid = Build(
+            assignments: [Assign(Ada, Ovens, AssignmentRole.LineLeader), Assign(Bram, Ovens)],
+            availability: [Away(Ada)]);
+
+        // A name on a sheet is not somebody standing on the line, and this is the first
+        // thing a manager needs to know when the call is from whoever runs it.
+        Assert.True(grid.Rows[0].Cells[0].HasNoLeader);
+    }
+
+    /// <summary>
+    /// The engine treats a person with no availability record as off, because silence
+    /// cannot be read as a promise to turn up. Here the opposite applies: the roster has
+    /// already placed them, and nothing has overturned it.
+    /// </summary>
+    [Fact]
+    public void A_person_with_no_availability_record_is_not_absent()
+    {
+        var grid = Build(
+            assignments: [Assign(Ada, Ovens), Assign(Bram, Ovens)],
+            availability: [Away(Bram)]);
+
+        var cell = grid.Rows[0].Cells[0];
+
+        // Ada is on no availability record at all. Greying her out would empty the grid of
+        // every week whose sheet was never imported.
+        Assert.False(cell.People.Single(person => person.DisplayName == "Ada Fictional").IsAbsent);
+        Assert.Equal(1, cell.Assigned);
+    }
+
+    [Fact]
+    public void An_absence_on_another_day_does_not_grey_this_one()
+    {
+        var grid = Build(
+            days: 2,
+            assignments: [Assign(Ada, Ovens), Assign(Ada, Ovens, dayOffset: 1)],
+            availability: [Away(Ada, dayOffset: 1)]);
+
+        Assert.False(grid.Rows[0].Cells[0].People[0].IsAbsent);
+        Assert.True(grid.Rows[0].Cells[1].People[0].IsAbsent);
+    }
+
+    /// <summary>
+    /// The chip carries its own commands rather than reaching up the tree for the window's,
+    /// because a context menu opens in a popup outside the visual tree. This is the half of
+    /// that arrangement a test can hold: the menu item's command reaches the shell, carrying
+    /// the right person, the right day and the reason that was clicked.
+    /// </summary>
+    [Fact]
+    public async Task A_chip_asks_the_shell_to_mark_that_person_absent()
+    {
+        var editor = new RecordingEditor();
+
+        var grid = Build(
+            days: 2,
+            assignments: [Assign(Ada, Ovens), Assign(Bram, Ovens, dayOffset: 1)],
+            editor: editor);
+
+        var chip = grid.Rows[0].Cells[1].People[0];
+
+        await chip.MarkAbsentCommand.ExecuteAsync(AbsenceReason.SentHome);
+
+        Assert.Equal(Bram, editor.MarkedAbsent?.EmployeeId);
+        Assert.Equal(Monday.AddDays(1), editor.MarkedAbsent?.Date);
+        Assert.Equal(AbsenceReason.SentHome, editor.Reason);
+    }
+
+    [Fact]
+    public async Task A_chip_asks_the_shell_to_put_somebody_back()
+    {
+        var editor = new RecordingEditor();
+
+        var grid = Build(
+            assignments: [Assign(Ada, Ovens)],
+            availability: [Away(Ada)],
+            editor: editor);
+
+        await grid.Rows[0].Cells[0].People[0].ClearAbsenceCommand.ExecuteAsync(null);
+
+        Assert.Equal(Ada, editor.Cleared?.EmployeeId);
+    }
+
+    /// <summary>
+    /// A grid built without a shell still draws. The designer and every other test in this
+    /// file construct one that way, and a menu item that throws rather than doing nothing
+    /// would make the preview useless.
+    /// </summary>
+    [Fact]
+    public async Task A_grid_with_no_shell_behind_it_still_has_working_chips()
+    {
+        var grid = Build(assignments: [Assign(Ada, Ovens)]);
+
+        await grid.Rows[0].Cells[0].People[0].MarkAbsentCommand.ExecuteAsync(AbsenceReason.NotInToday);
+    }
+
+    private sealed class RecordingEditor : IRosterEditor
+    {
+        public PersonChipViewModel? MarkedAbsent { get; private set; }
+
+        public PersonChipViewModel? Cleared { get; private set; }
+
+        public AbsenceReason? Reason { get; private set; }
+
+        public Task MarkAbsentAsync(PersonChipViewModel chip, AbsenceReason reason)
+        {
+            MarkedAbsent = chip;
+            Reason = reason;
+            return Task.CompletedTask;
+        }
+
+        public Task ClearAbsenceAsync(PersonChipViewModel chip)
+        {
+            Cleared = chip;
+            return Task.CompletedTask;
+        }
+    }
+
     private static RosterGridViewModel Build(
         IReadOnlyList<Assignment> assignments,
         IReadOnlyList<ProductionLine>? lines = null,
         int days = 1,
-        DateOnly? onlyDate = null)
+        DateOnly? onlyDate = null,
+        IReadOnlyList<Availability>? availability = null,
+        IRosterEditor? editor = null)
     {
         lines ??= [Line(Ovens, "Ovens", order: 1)];
 
@@ -248,8 +422,22 @@ public sealed class RosterGridViewModelTests
                 .ToList(),
         };
 
-        return new RosterGridViewModel(roster, lines, Employees, onlyDate);
+        return new RosterGridViewModel(
+            roster,
+            lines,
+            Employees,
+            onlyDate,
+            availability is null ? null : new Attendance(availability),
+            editor);
     }
+
+    private static Availability Away(Guid employeeId, int dayOffset = 0) => new()
+    {
+        EmployeeId = employeeId,
+        Date = Monday.AddDays(dayOffset),
+        Status = AvailabilityStatus.Off,
+        Source = AvailabilitySource.Manual,
+    };
 
     private static ProductionLine Line(Guid id, string name, int order, int required = 3) =>
         new() { Id = id, Name = name, DisplayOrder = order, RequiredHeadcount = required };
