@@ -157,6 +157,46 @@ public static class Strings
 
     public static string PeopleNobody => Get(nameof(PeopleNobody));
 
+    public static string GroupLineLeaders => Get(nameof(GroupLineLeaders));
+
+    public static string GroupOperatingAssistants => Get(nameof(GroupOperatingAssistants));
+
+    public static string GroupLineWorkers => Get(nameof(GroupLineWorkers));
+
+    public static string GroupCount(int people) =>
+        people == 1 ? Get("GroupCountOne") : Format("GroupCountMany", people);
+
+    /// <summary>
+    /// The first choice is the one that decides most rosters, so it is named rather than
+    /// numbered. Everything below it is a number, which is what it is.
+    /// </summary>
+    public static string PeopleChoice(int position) =>
+        position == 1 ? Get("PeopleChoiceFirst") : Format("PeopleChoiceOther", position);
+
+    public static string PeopleWorksHeading => Get(nameof(PeopleWorksHeading));
+
+    public static string PeopleWorksNone => Get(nameof(PeopleWorksNone));
+
+    public static string PeopleBlockedHeading => Get(nameof(PeopleBlockedHeading));
+
+    public static string PeopleBlockedNone => Get(nameof(PeopleBlockedNone));
+
+    public static string PeopleAddWorked => Get(nameof(PeopleAddWorked));
+
+    public static string PeopleAddBlocked => Get(nameof(PeopleAddBlocked));
+
+    public static string PeopleMoveUp => Get(nameof(PeopleMoveUp));
+
+    public static string PeopleMoveDown => Get(nameof(PeopleMoveDown));
+
+    public static string PeopleRemoveLine => Get(nameof(PeopleRemoveLine));
+
+    public static string PeopleMustWork => Get(nameof(PeopleMustWork));
+
+    public static string PeopleDragHint => Get(nameof(PeopleDragHint));
+
+    public static string PeopleDragHandle => Get(nameof(PeopleDragHandle));
+
     public static string SaveRules => Get(nameof(SaveRules));
 
     public static string CheckRules => Get(nameof(CheckRules));
