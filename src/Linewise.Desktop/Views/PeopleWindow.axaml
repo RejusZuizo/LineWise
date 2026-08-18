@@ -179,20 +179,28 @@
                       Classes="quiet"
                       IsEnabled="{Binding Selected.HasAddable}">
                 <Button.Flyout>
-                  <MenuFlyout ItemsSource="{Binding Selected.Addable}">
-                    <MenuFlyout.ItemTemplate>
-                      <DataTemplate DataType="entities:ProductionLine">
-                        <TextBlock Text="{Binding Name}" />
-                      </DataTemplate>
-                    </MenuFlyout.ItemTemplate>
-                    <MenuFlyout.ItemContainerTheme>
-                      <ControlTheme TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
-                        <Setter Property="Command"
-                                Value="{Binding $parent[Window].((vm:PeopleViewModel)DataContext).Selected.AddWorkedCommand}" />
-                        <Setter Property="CommandParameter" Value="{Binding}" />
-                      </ControlTheme>
-                    </MenuFlyout.ItemContainerTheme>
-                  </MenuFlyout>
+                  <!-- A list of buttons rather than a MenuFlyout. A MenuFlyout puts the item
+                       itself in MenuItem.Header and never applies the item template to it,
+                       so a record renders through ToString() and the operator is shown an
+                       identifier and every other property alongside the name. -->
+                  <Flyout Placement="BottomEdgeAlignedRight">
+                    <ItemsControl ItemsSource="{Binding Selected.Addable}" MinWidth="180">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="entities:ProductionLine">
+                          <Button Classes="quiet"
+                                  HorizontalAlignment="Stretch"
+                                  HorizontalContentAlignment="Left"
+                                  Command="{Binding $parent[Window].((vm:PeopleViewModel)DataContext).Selected.AddWorkedCommand}"
+                                  CommandParameter="{Binding}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                              <Border Width="3" CornerRadius="2" Background="{Binding AccentColour}" />
+                              <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                            </StackPanel>
+                          </Button>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </Flyout>
                 </Button.Flyout>
               </Button>
             </DockPanel>
@@ -288,20 +296,28 @@
                       Classes="quiet"
                       IsEnabled="{Binding Selected.HasAddable}">
                 <Button.Flyout>
-                  <MenuFlyout ItemsSource="{Binding Selected.Addable}">
-                    <MenuFlyout.ItemTemplate>
-                      <DataTemplate DataType="entities:ProductionLine">
-                        <TextBlock Text="{Binding Name}" />
-                      </DataTemplate>
-                    </MenuFlyout.ItemTemplate>
-                    <MenuFlyout.ItemContainerTheme>
-                      <ControlTheme TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
-                        <Setter Property="Command"
-                                Value="{Binding $parent[Window].((vm:PeopleViewModel)DataContext).Selected.AddBlockedCommand}" />
-                        <Setter Property="CommandParameter" Value="{Binding}" />
-                      </ControlTheme>
-                    </MenuFlyout.ItemContainerTheme>
-                  </MenuFlyout>
+                  <!-- A list of buttons rather than a MenuFlyout. A MenuFlyout puts the item
+                       itself in MenuItem.Header and never applies the item template to it,
+                       so a record renders through ToString() and the operator is shown an
+                       identifier and every other property alongside the name. -->
+                  <Flyout Placement="BottomEdgeAlignedRight">
+                    <ItemsControl ItemsSource="{Binding Selected.Addable}" MinWidth="180">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="entities:ProductionLine">
+                          <Button Classes="quiet"
+                                  HorizontalAlignment="Stretch"
+                                  HorizontalContentAlignment="Left"
+                                  Command="{Binding $parent[Window].((vm:PeopleViewModel)DataContext).Selected.AddBlockedCommand}"
+                                  CommandParameter="{Binding}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                              <Border Width="3" CornerRadius="2" Background="{Binding AccentColour}" />
+                              <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
+                            </StackPanel>
+                          </Button>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </Flyout>
                 </Button.Flyout>
               </Button>
             </DockPanel>
