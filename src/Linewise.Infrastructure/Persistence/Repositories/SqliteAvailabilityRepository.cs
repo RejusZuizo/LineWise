@@ -56,6 +56,11 @@ public sealed class SqliteAvailabilityRepository : IAvailabilityRepository
             .ExecuteDeleteAsync(cancellationToken)
             .ConfigureAwait(false);
 
+        _context.Forget<Availability>(availability =>
+            availability.Date >= fromInclusive
+            && availability.Date < toExclusive
+            && availability.Source == AvailabilitySource.Imported);
+
         var manual = kept
             .Select(availability => (availability.EmployeeId, availability.Date))
             .ToHashSet();

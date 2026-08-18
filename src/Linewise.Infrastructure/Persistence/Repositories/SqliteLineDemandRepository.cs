@@ -41,6 +41,9 @@ public sealed class SqliteLineDemandRepository : ILineDemandRepository
             .ExecuteDeleteAsync(cancellationToken)
             .ConfigureAwait(false);
 
+        _context.Forget<LineDemand>(demand =>
+            demand.Date >= fromInclusive && demand.Date < toExclusive);
+
         _context.LineDemands.AddRange(
             demands.Where(demand => demand.Date >= fromInclusive && demand.Date < toExclusive));
 
