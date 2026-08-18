@@ -19,4 +19,7 @@ public interface IRosterEditor
     Task MarkAbsentAsync(PersonChipViewModel chip, AbsenceReason reason);
 
     Task ClearAbsenceAsync(PersonChipViewModel chip);
+
+    /// <summary>Shuts a line for one day, or puts it back into service.</summary>
+    Task SetLineClosedAsync(Guid lineId, DateOnly date, bool closed);
 }

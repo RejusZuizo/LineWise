@@ -97,6 +97,17 @@
       <Setter Property="TextDecorations" Value="{x:Null}" />
     </Style>
 
+    <!-- A closed line. Hatched by being sunken and faint, and labelled in words, because a
+         cell that merely went empty would read as a line nobody could be found for. -->
+    <Style Selector="Border.cell.closed">
+      <Setter Property="Background" Value="{DynamicResource LinewiseSurfaceSunken}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource LinewiseBorder}" />
+    </Style>
+
+    <Style Selector="Border.cell.closed TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource LinewiseInkFaint}" />
+    </Style>
+
     <Style Selector="Border.headcount">
       <Setter Property="Background" Value="{DynamicResource LinewiseChip}" />
       <Setter Property="CornerRadius" Value="{StaticResource RadiusSm}" />
@@ -217,7 +228,9 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                       <DataTemplate x:DataType="vm:RosterCellViewModel">
-                        <Border Classes="cell" Classes.short="{Binding IsShort}">
+                        <Border Classes="cell"
+                                Classes.short="{Binding IsShort}"
+                                Classes.closed="{Binding IsClosed}">
                           <DockPanel LastChildFill="True">
 
                             <!-- The count sits at the bottom, in the same place in every
@@ -239,6 +252,16 @@
                                          FontSize="10"
                                          IsVisible="{Binding HasAbsences}"
                                          VerticalAlignment="Center" />
+
+                              <!-- A button rather than a right click. The context menu on a
+                                   chip is still unproven on this machine, and shutting a
+                                   line is not something to hide behind a gesture nobody can
+                                   confirm works. -->
+                              <Button Content="{Binding ToggleClosedLabel}"
+                                      Classes="quiet"
+                                      FontSize="9.5"
+                                      Padding="5,0"
+                                      Command="{Binding ToggleClosedCommand}" />
                             </StackPanel>
 
                             <ItemsControl ItemsSource="{Binding People}">

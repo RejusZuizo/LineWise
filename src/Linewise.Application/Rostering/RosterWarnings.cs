@@ -50,6 +50,15 @@ internal static class RosterWarnings
             employeeId: employeeId,
             date: date);
 
+    public static RosterWarning LockedAssignmentOnAClosedLine(ProductionLine line, Guid employeeId, DateOnly date) =>
+        Build(
+            WarningCode.LockedAssignmentOnAClosedLine,
+            WarningSeverity.Notice,
+            [line.Name],
+            lineId: line.Id,
+            employeeId: employeeId,
+            date: date);
+
     public static RosterWarning LockedAssignmentConflictsWithAvailability(ProductionLine line, Guid employeeId, DateOnly date) =>
         Build(
             WarningCode.LockedAssignmentConflictsWithAvailability,

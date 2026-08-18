@@ -38,13 +38,19 @@ public sealed class RosterGridViewModel
         IReadOnlyList<Employee> employees,
         DateOnly? onlyDate = null,
         Attendance? attendance = null,
-        IRosterEditor? editor = null)
+        IRosterEditor? editor = null,
+        IReadOnlyList<LineDemand>? demands = null)
     {
         ArgumentNullException.ThrowIfNull(roster);
         ArgumentNullException.ThrowIfNull(lines);
         ArgumentNullException.ThrowIfNull(employees);
 
         var present = attendance ?? Attendance.Everybody;
+
+        var closed = (demands ?? [])
+            .Where(demand => demand.IsClosed)
+            .Select(demand => (demand.LineId, demand.Date))
+            .ToHashSet();
 
         WeekStart = roster.WeekStart;
 
@@ -79,7 +85,10 @@ public sealed class RosterGridViewModel
                                 names.TryGetValue(a.EmployeeId, out var name) ? name : UnknownEmployee,
                                 present.IsAbsent(a),
                                 editor)),
-                        line.RequiredHeadcount)))));
+                        line.RequiredHeadcount,
+                        line.Id,
+                        closed.Contains((line.Id, date)),
+                        editor)))));
     }
 
     /// <summary>

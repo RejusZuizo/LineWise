@@ -46,4 +46,26 @@ public sealed class SqliteLineDemandRepository : ILineDemandRepository
 
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
+
+    public async Task SetAsync(LineDemand demand, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(demand);
+
+        var existing = await _context.LineDemands
+            .FirstOrDefaultAsync(
+                row => row.LineId == demand.LineId && row.Date == demand.Date,
+                cancellationToken)
+            .ConfigureAwait(false);
+
+        // The record is keyed on line and date and is immutable, so changing one means
+        // removing it and writing the replacement. ADR 0005.
+        if (existing is not null)
+        {
+            _context.LineDemands.Remove(existing);
+            await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        _context.LineDemands.Add(demand);
+        await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+    }
 }

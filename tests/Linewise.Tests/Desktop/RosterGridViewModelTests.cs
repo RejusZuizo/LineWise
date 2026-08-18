@@ -397,7 +397,88 @@ public sealed class RosterGridViewModelTests
             Cleared = chip;
             return Task.CompletedTask;
         }
+
+        public (Guid LineId, DateOnly Date, bool Closed)? Closure { get; private set; }
+
+        public Task SetLineClosedAsync(Guid lineId, DateOnly date, bool closed)
+        {
+            Closure = (lineId, date, closed);
+            return Task.CompletedTask;
+        }
     }
+
+    /// <summary>
+    /// A line that is not running is not short of people, and a cell that merely went empty
+    /// would read as one nobody could be found for.
+    /// </summary>
+    [Fact]
+    public void A_closed_line_says_so_and_is_not_reported_as_short()
+    {
+        var grid = Build(
+            assignments: [],
+            lines: [Line(Ovens, "Ovens", order: 1, required: 3)],
+            demands: [Closed(Ovens)]);
+
+        var cell = grid.Rows[0].Cells[0];
+
+        Assert.True(cell.IsClosed);
+        Assert.False(cell.IsShort);
+        Assert.False(cell.HasNoLeader);
+        Assert.Equal("Closed", cell.Headcount);
+    }
+
+    [Fact]
+    public void An_open_line_is_unaffected_by_another_line_being_closed()
+    {
+        var grid = Build(
+            assignments: [],
+            lines: [Line(Ovens, "Ovens", order: 1, required: 3), Line(Packing, "Packing", order: 2, required: 3)],
+            demands: [Closed(Ovens)]);
+
+        Assert.True(grid.Rows[0].Cells[0].IsClosed);
+        Assert.False(grid.Rows[1].Cells[0].IsClosed);
+        Assert.True(grid.Rows[1].Cells[0].IsShort);
+    }
+
+    [Fact]
+    public async Task Closing_a_cell_asks_the_shell_for_that_line_and_day()
+    {
+        var editor = new RecordingEditor();
+
+        var grid = Build(
+            assignments: [],
+            lines: [Line(Ovens, "Ovens", order: 1)],
+            editor: editor);
+
+        await grid.Rows[0].Cells[0].ToggleClosedCommand.ExecuteAsync(null);
+
+        Assert.Equal((Ovens, Monday, true), editor.Closure);
+    }
+
+    /// <summary>The same button reopens it, so one control carries both directions.</summary>
+    [Fact]
+    public async Task Reopening_a_closed_cell_asks_for_the_opposite()
+    {
+        var editor = new RecordingEditor();
+
+        var grid = Build(
+            assignments: [],
+            lines: [Line(Ovens, "Ovens", order: 1)],
+            demands: [Closed(Ovens)],
+            editor: editor);
+
+        await grid.Rows[0].Cells[0].ToggleClosedCommand.ExecuteAsync(null);
+
+        Assert.Equal((Ovens, Monday, false), editor.Closure);
+    }
+
+    private static LineDemand Closed(Guid lineId, int dayOffset = 0) => new()
+    {
+        LineId = lineId,
+        Date = Monday.AddDays(dayOffset),
+        RequiredHeadcount = 3,
+        IsClosed = true,
+    };
 
     private static RosterGridViewModel Build(
         IReadOnlyList<Assignment> assignments,
@@ -405,7 +486,8 @@ public sealed class RosterGridViewModelTests
         int days = 1,
         DateOnly? onlyDate = null,
         IReadOnlyList<Availability>? availability = null,
-        IRosterEditor? editor = null)
+        IRosterEditor? editor = null,
+        IReadOnlyList<LineDemand>? demands = null)
     {
         lines ??= [Line(Ovens, "Ovens", order: 1)];
 
@@ -428,7 +510,8 @@ public sealed class RosterGridViewModelTests
             Employees,
             onlyDate,
             availability is null ? null : new Attendance(availability),
-            editor);
+            editor,
+            demands);
     }
 
     private static Availability Away(Guid employeeId, int dayOffset = 0) => new()
