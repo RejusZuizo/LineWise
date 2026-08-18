@@ -690,7 +690,25 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     /// application on that machine, which is what the operator already knows how to drive.
     /// </remarks>
     [RelayCommand(CanExecute = nameof(HasRoster))]
-    private async Task PrintAsync(CancellationToken cancellationToken)
+    private Task PrintAsync(CancellationToken cancellationToken) =>
+        PrintDocumentAsync(
+            (printer, request) => printer.PrintFullSheetAsync(request, cancellationToken),
+            $"linewise-{_weekStart:yyyy-MM-dd}.pdf",
+            cancellationToken);
+
+    /// <summary>
+    /// Builds what every layout needs, renders one, and hands it to whatever prints a PDF
+    /// on this machine.
+    /// </summary>
+    /// <remarks>
+    /// Three layouts, one path. The full sheet, the per-line sheets and the amendment slip
+    /// all want the same week assembled the same way, and three copies of that assembly is
+    /// three chances for one of them to forget who is absent.
+    /// </remarks>
+    private async Task PrintDocumentAsync(
+        Func<IRosterPrinter, PrintRequest, Task<byte[]>> render,
+        string fileName,
+        CancellationToken cancellationToken)
     {
         if (_scopes is null)
         {
@@ -701,49 +719,43 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
 
         try
         {
-            // One scope for the whole print. The roster, the configuration, the shifts and
-            // the availability are one question — what goes on this sheet — and reading them
-            // through separate contexts would let the answer change halfway through.
+            // One scope for the whole print. What goes on this sheet is one question, and
+            // reading it through several contexts would let the answer change halfway.
             var document = await InScopeAsync(async services =>
             {
-                var rosters = services.GetRequiredService<IRosterRepository>();
-                var configuration = services.GetRequiredService<IConfigurationRepository>();
-
-                var stored = await rosters.GetLatestAsync(_weekStart, cancellationToken).ConfigureAwait(true);
+                var stored = await services.GetRequiredService<IRosterRepository>()
+                    .GetLatestAsync(_weekStart, cancellationToken)
+                    .ConfigureAwait(true);
 
                 if (stored is null)
                 {
                     return null;
                 }
 
+                var configuration = services.GetRequiredService<IConfigurationRepository>();
                 var rules = await configuration.GetAsync(cancellationToken).ConfigureAwait(true);
 
-                var shifts = await services.GetRequiredService<IShiftRepository>()
-                    .GetAsync(_weekStart, _weekStart.AddDays(7), cancellationToken)
+                var request = new PrintRequest
+                {
+                    Roster = stored.Roster,
+                    Version = stored.Version,
+                    Lines = rules.Lines,
+                    Employees = rules.Employees,
+                    Shifts = await services.GetRequiredService<IShiftRepository>()
+                        .GetAsync(_weekStart, _weekStart.AddDays(7), cancellationToken)
+                        .ConfigureAwait(true),
+
+                    // So the sheet on the wall does not name somebody who rang in at seven.
+                    Availabilities = await services.GetRequiredService<IAvailabilityRepository>()
+                        .GetAsync(_weekStart, _weekStart.AddDays(7), cancellationToken)
+                        .ConfigureAwait(true),
+                    Settings = await configuration
+                        .GetPrintSettingsAsync(cancellationToken)
+                        .ConfigureAwait(true),
+                };
+
+                return await render(services.GetRequiredService<IRosterPrinter>(), request)
                     .ConfigureAwait(true);
-
-                var settings = await configuration
-                    .GetPrintSettingsAsync(cancellationToken)
-                    .ConfigureAwait(true);
-
-                var availability = await services.GetRequiredService<IAvailabilityRepository>()
-                    .GetAsync(_weekStart, _weekStart.AddDays(7), cancellationToken)
-                    .ConfigureAwait(true);
-
-                return await services.GetRequiredService<IRosterPrinter>().PrintFullSheetAsync(
-                    new PrintRequest
-                    {
-                        Roster = stored.Roster,
-                        Version = stored.Version,
-                        Lines = rules.Lines,
-                        Employees = rules.Employees,
-                        Shifts = shifts,
-
-                        // So the sheet on the wall does not name somebody who rang in at seven.
-                        Availabilities = availability,
-                        Settings = settings,
-                    },
-                    cancellationToken).ConfigureAwait(true);
             }).ConfigureAwait(true);
 
             if (document is null)
@@ -752,10 +764,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
                 return;
             }
 
-            await InScopeAsync(services => services.GetRequiredService<IDocumentLauncher>().PrintAsync(
-                document,
-                $"linewise-{_weekStart:yyyy-MM-dd}.pdf",
-                cancellationToken)).ConfigureAwait(true);
+            await InScopeAsync(services => services.GetRequiredService<IDocumentLauncher>()
+                .PrintAsync(document, fileName, cancellationToken)).ConfigureAwait(true);
 
             Status = Strings.SentToPrinter;
         }
@@ -769,6 +779,95 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
             IsBusy = false;
         }
     }
+
+    /// <summary>
+    /// Publishes the week, then offers the sheet or the slip.
+    /// </summary>
+    /// <remarks>
+    /// Publishing increments the version and stamps who did it and when, so a sheet on a
+    /// wall can be told apart from the one somebody printed on Tuesday. It is deliberately
+    /// separate from printing: a week can be published and printed twice, or published and
+    /// not printed at all, and neither is a mistake.
+    /// </remarks>
+    [RelayCommand(CanExecute = nameof(HasRoster))]
+    private async Task PublishAsync(CancellationToken cancellationToken)
+    {
+        if (_scopes is null)
+        {
+            return;
+        }
+
+        IsBusy = true;
+
+        try
+        {
+            var result = await InScopeAsync(services =>
+                services.GetRequiredService<IPublishingService>()
+                    .PublishAsync(_weekStart, cancellationToken)).ConfigureAwait(true);
+
+            _previouslyPublished = result.PreviouslyPublished;
+
+            Log.Information(
+                "Published {WeekStart} as version {Version}.",
+                _weekStart,
+                result.Version.VersionNumber);
+
+            await LoadAsync(_weekStart, cancellationToken).ConfigureAwait(true);
+
+            Status = result.CanAmend
+                ? Strings.PublishedWithSlip(result.Version.VersionNumber)
+                : Strings.Published(result.Version.VersionNumber);
+        }
+        catch (Exception exception)
+        {
+            Log.Error(exception, "Could not publish the roster.");
+            Status = Strings.CouldNotPublish;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    /// <summary>
+    /// What was on the wall before the last publish, kept so a slip can be printed after it.
+    /// </summary>
+    private RosterWeek? _previouslyPublished;
+
+    /// <summary>
+    /// There is an earlier published sheet for a slip to describe the changes from. A week
+    /// published for the first time has nothing to amend, and the full sheet is the only
+    /// honest answer.
+    /// </summary>
+    public bool CanPrintAmendment => _previouslyPublished is not null;
+
+    /// <summary>
+    /// One page saying only what changed, to pin beside a roster already on the wall.
+    /// </summary>
+    /// <remarks>
+    /// RosterDiff has computed these changes since phase 4 and nothing has ever called it.
+    /// Reprinting the whole sheet every time somebody rings in sick is how a wall ends up
+    /// with four versions of Tuesday on it.
+    /// </remarks>
+    [RelayCommand(CanExecute = nameof(CanPrintAmendment))]
+    private Task PrintAmendmentAsync(CancellationToken cancellationToken) =>
+        PrintDocumentAsync(
+            (printer, request) => printer.PrintAmendmentSlipAsync(
+                new AmendmentRequest(request, _previouslyPublished!),
+                cancellationToken),
+            $"linewise-amendment-{_weekStart:yyyy-MM-dd}.pdf",
+            cancellationToken);
+
+    /// <summary>
+    /// One page per line, to pin at that line. Carries the line's layout notes, which is
+    /// where they were always meant to be read.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(HasRoster))]
+    private Task PrintPerLineAsync(CancellationToken cancellationToken) =>
+        PrintDocumentAsync(
+            (printer, request) => printer.PrintPerLineSheetsAsync(request, cancellationToken),
+            $"linewise-lines-{_weekStart:yyyy-MM-dd}.pdf",
+            cancellationToken);
 
     /// <summary>
     /// Loads the week containing <paramref name="anyDateInWeek"/>. Nothing is generated
@@ -990,6 +1089,10 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
         OnPropertyChanged(nameof(IsFirstRun));
         OnPropertyChanged(nameof(Title));
         PrintCommand.NotifyCanExecuteChanged();
+        PrintPerLineCommand.NotifyCanExecuteChanged();
+        PublishCommand.NotifyCanExecuteChanged();
+        OnPropertyChanged(nameof(CanPrintAmendment));
+        PrintAmendmentCommand.NotifyCanExecuteChanged();
     }
 
     /// <summary>

@@ -11,6 +11,63 @@ to.
 
 Nothing yet.
 
+## [0.7.0] - 2026-08-18
+
+Editing and last minute changes. Phase 6.
+
+### Added
+
+- Mark somebody absent for a day. Their name greys out rather than disappearing,
+  because "who should have been on Ovens this morning" is a question the manager
+  asks all day. The reason list is operational — not in today, holiday, sent home —
+  and never medical: a reason for an absence would put health data in an audit
+  chain that has no delete path.
+- A ranked replacement for a vacated place. Availability, required skills and
+  preference for that line decide the order; somebody standing about comes before
+  somebody already on a line, and taking that person names the line it would leave
+  short. Never alphabetical.
+- Close a line for a day. A line that is not running is not short of people, and
+  stops being reported as though it were. ADR 0016.
+- Publish a week, and print the amendment slip that says what changed since the
+  sheet on the wall. Both had been written since phase 4 with nothing able to call
+  them.
+- Per-line sheets, one page per line, carrying that line's layout notes.
+- Any week. The roster was fixed to whichever week contained today, which made the
+  tool unusable for planning the next one.
+- The people screen grouped by what each person is permitted to be, with line
+  priorities added and dragged into order rather than numbered. Rank is now the
+  position in a list, so it cannot be duplicated or skipped.
+- Lines carry a description and layout notes, and are edited by clicking one.
+- Print settings — company name, paper size, orientation, type size, line colours
+  on paper — which had been honoured by the printer since phase 4 and could only be
+  changed by editing the database.
+- Import works the sheet's layout out by reading it when the template does not fit,
+  and writes back what it worked out. Names matched by hand are remembered as
+  aliases. ADR 0017.
+- Availability records say whether the sheet or the manager set them, so marking
+  somebody absent survives a re-import. ADR 0014.
+- Warnings folded into two collapsible sections, errors open and notices shut.
+- An overview that leads with what needs deciding rather than with counts.
+
+### Fixed
+
+- A screen could not be saved twice. Every replace in the persistence layer deletes
+  through the database and then inserts the same keys, and the change tracker was
+  never told about the delete — so the second save of anything collided with what
+  the first had left behind.
+- One database context served the whole run of the application. The main window is
+  a singleton and held scoped repositories, which is what made the above a
+  certainty rather than a race. Every operation now opens its own scope, and the
+  container refuses to build if a singleton ever holds a scoped service again.
+- The main window was dead for two merges. A missing registration made the
+  container quietly choose the parameterless designer constructor, leaving every
+  dependency null and every command a silent no-op. A test now asserts which
+  constructor ran, not merely that one did.
+- Dialogs could not be dismissed with the keyboard, and blocked the roster behind
+  them. Escape closes them and they no longer take the application hostage.
+- The generate button was rendered transparent by a stylesheet declared after the
+  one that gave it its accent.
+
 ## [0.5.0] - 2026-08-16
 
 Desktop application. Phase 5.

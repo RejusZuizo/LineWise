@@ -43,6 +43,20 @@ public static class Strings
 
     public static string SentToPrinter => Get(nameof(SentToPrinter));
 
+    public static string PublishRoster => Get(nameof(PublishRoster));
+
+    public static string CouldNotPublish => Get(nameof(CouldNotPublish));
+
+    public static string PrintAmendment => Get(nameof(PrintAmendment));
+
+    public static string PrintPerLine => Get(nameof(PrintPerLine));
+
+    public static string PublishExplains => Get(nameof(PublishExplains));
+
+    public static string Published(int version) => Format(nameof(Published), version);
+
+    public static string PublishedWithSlip(int version) => Format(nameof(PublishedWithSlip), version);
+
     public static string StatusDraft => Get(nameof(StatusDraft));
 
     public static string NoWarnings => Get(nameof(NoWarnings));
