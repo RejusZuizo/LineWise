@@ -7,6 +7,7 @@ using Linewise.Application.Printing;
 using Linewise.Application.Rostering;
 using Linewise.Desktop.Resources;
 using Linewise.Desktop.Services;
+using Linewise.Domain.Entities;
 using Linewise.Domain.Enums;
 using Linewise.Domain.Rostering;
 using Serilog;
@@ -29,6 +30,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     private readonly IDialogService? _dialogs;
     private readonly IThemeService? _theme;
     private readonly IAbsenceService? _absences;
+    private readonly ILineDayService? _lineDays;
+    private readonly ILineDemandRepository? _demands;
 
     private DateOnly _weekStart = MondayOf(DateOnly.FromDateTime(DateTime.Today));
 
@@ -41,6 +44,10 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     // rereading availability to switch between today and the week would make a view toggle
     // look like a reload.
     private Attendance _attendance = Attendance.Everybody;
+
+    // Which lines are shut on which days. Kept beside the roster for the same reason
+    // attendance is: switching between today and the week must not look like a reload.
+    private IReadOnlyList<LineDemand> _loadedDemands = [];
 
     [ObservableProperty]
     private RosterGridViewModel? _grid;
@@ -95,7 +102,9 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
         IShiftRepository shifts,
         IDialogService dialogs,
         IThemeService theme,
-        IAbsenceService absences)
+        IAbsenceService absences,
+        ILineDayService lineDays,
+        ILineDemandRepository demands)
     {
         _rosters = rosters;
         _configuration = configuration;
@@ -107,6 +116,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
         _dialogs = dialogs;
         _theme = theme;
         _absences = absences;
+        _lineDays = lineDays;
+        _demands = demands;
     }
 
     /// <summary>For the Avalonia designer, which cannot resolve from the container.</summary>
@@ -221,7 +232,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
             _loadedConfiguration.Employees,
             IsSingleDay ? DayInView() : null,
             _attendance,
-            this);
+            this,
+            _loadedDemands);
 
         OnPropertyChanged(nameof(HasRoster));
     }
@@ -388,6 +400,51 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     }
 
     /// <summary>
+    /// Shuts a line for a day, or puts it back into service.
+    /// </summary>
+    /// <remarks>
+    /// Written and redrawn immediately, but nobody is moved. The people who were on the line
+    /// stay where the last generate put them until somebody presses generate again, which is
+    /// the same rule every other rule change follows: editing a rule does not rewrite a week
+    /// that has already been published.
+    /// </remarks>
+    public async Task SetLineClosedAsync(Guid lineId, DateOnly date, bool closed)
+    {
+        if (_lineDays is null)
+        {
+            return;
+        }
+
+        IsBusy = true;
+
+        try
+        {
+            if (closed)
+            {
+                await _lineDays.CloseAsync(lineId, date).ConfigureAwait(true);
+            }
+            else
+            {
+                await _lineDays.ReopenAsync(lineId, date).ConfigureAwait(true);
+            }
+
+            Log.Information("Line {LineId} {State} for {Date}.", lineId, closed ? "closed" : "reopened", date);
+
+            await LoadAsync(_weekStart).ConfigureAwait(true);
+            Status = closed ? Strings.LineClosedFor(date) : Strings.LineReopenedFor(date);
+        }
+        catch (Exception exception)
+        {
+            Log.Error(exception, "Could not change whether a line is running.");
+            Status = Strings.CouldNotCloseLine;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    /// <summary>
     /// Builds a roster for the week on screen and stores it as the draft, then redraws.
     /// </summary>
     /// <remarks>
@@ -506,7 +563,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     /// </summary>
     public async Task LoadAsync(DateOnly anyDateInWeek, CancellationToken cancellationToken = default)
     {
-        if (_rosters is null || _configuration is null || _availability is null)
+        if (_rosters is null || _configuration is null || _availability is null || _demands is null)
         {
             return;
         }
@@ -522,6 +579,10 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
             var configuration = await _configuration.GetAsync(cancellationToken).ConfigureAwait(true);
 
             var weekAvailability = await _availability
+                .GetAsync(weekStart, weekStart.AddDays(7), cancellationToken)
+                .ConfigureAwait(true);
+
+            _loadedDemands = await _demands
                 .GetAsync(weekStart, weekStart.AddDays(7), cancellationToken)
                 .ConfigureAwait(true);
 
@@ -569,7 +630,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
                 configuration.Employees,
                 IsSingleDay ? DayInView() : null,
                 _attendance,
-                this);
+                this,
+                _loadedDemands);
             Summary = new RosterSummaryViewModel(stored.Roster, weekAvailability, stored.Version);
 
             Dashboard = new DashboardViewModel(
@@ -664,6 +726,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
         _loadedRoster = null;
         _loadedConfiguration = null;
         _attendance = Attendance.Everybody;
+        _loadedDemands = [];
         Warnings.Clear();
         WarningGroups.Clear();
     }

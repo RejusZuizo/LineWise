@@ -106,6 +106,7 @@ internal sealed class LineDemandConfiguration : IEntityTypeConfiguration<LineDem
         builder.HasKey(demand => new { demand.LineId, demand.Date });
 
         builder.Property(demand => demand.RequiredHeadcount);
+        builder.Property(demand => demand.IsClosed);
         builder.HasIndex(demand => demand.Date);
 
         builder.HasOne<ProductionLine>()

@@ -104,6 +104,14 @@ public sealed class AssignmentEngine : IAssignmentEngine
             {
                 warnings.Add(RosterWarnings.LockedAssignmentViolatesEligibility(line, locked.EmployeeId, shift.Date));
             }
+
+            // Kept, and said out loud, the same as the other two. Closing a line and locking
+            // somebody onto it are both the manager's decisions and only one of them can
+            // have been the one they meant.
+            if (context.IsClosed(line, shift.Date))
+            {
+                warnings.Add(RosterWarnings.LockedAssignmentOnAClosedLine(line, locked.EmployeeId, shift.Date));
+            }
         }
 
         // Rule 2. Anyone whose status today is not Working or Overtime is out of scope.
@@ -116,7 +124,8 @@ public sealed class AssignmentEngine : IAssignmentEngine
         {
             var line = context.LineById(preference.LineId);
 
-            if (line is null || !context.CanBeRostered(preference.EmployeeId, shift.Date))
+            if (line is null || context.IsClosed(line, shift.Date)
+                || !context.CanBeRostered(preference.EmployeeId, shift.Date))
             {
                 continue;
             }
@@ -152,7 +161,7 @@ public sealed class AssignmentEngine : IAssignmentEngine
 
         // Rule 4. One leader per line, preferring whoever has led least recently. A leader
         // counts toward the line headcount like anybody else.
-        foreach (var line in context.Lines)
+        foreach (var line in context.Lines.Where(line => !context.IsClosed(line, shift.Date)))
         {
             if (placements[line.Id].Exists(assignment => assignment.Role == AssignmentRole.LineLeader))
             {
@@ -202,7 +211,7 @@ public sealed class AssignmentEngine : IAssignmentEngine
         //
         // A line asks for a number rather than exactly one, and asking for none is the
         // ordinary case, so this loop does nothing at all for a site that does not use them.
-        foreach (var line in context.Lines)
+        foreach (var line in context.Lines.Where(line => !context.IsClosed(line, shift.Date)))
         {
             var wanted = line.RequiredOperatingAssistants;
 
@@ -284,7 +293,7 @@ public sealed class AssignmentEngine : IAssignmentEngine
         // choice, and so on. Never employee by employee, which starves whoever sorts last.
         for (var rank = 1; rank <= context.HighestPreferenceRank; rank++)
         {
-            foreach (var line in context.Lines)
+            foreach (var line in context.Lines.Where(line => !context.IsClosed(line, shift.Date)))
             {
                 var room = context.HeadcountFor(line, shift.Date) - placements[line.Id].Count;
 
@@ -313,7 +322,7 @@ public sealed class AssignmentEngine : IAssignmentEngine
         }
 
         // Rule 9. Whatever is still empty gets filled from whoever is still free.
-        foreach (var line in context.Lines)
+        foreach (var line in context.Lines.Where(line => !context.IsClosed(line, shift.Date)))
         {
             var room = context.HeadcountFor(line, shift.Date) - placements[line.Id].Count;
 
@@ -339,7 +348,11 @@ public sealed class AssignmentEngine : IAssignmentEngine
         }
 
         // Rule 10. Say what is wrong with the result rather than refusing to produce one.
-        foreach (var line in context.Lines)
+        //
+        // A closed line is skipped entirely. It is not short of people, it has no leader
+        // because it needs none, and saying so on a day the line is not running would bury
+        // the lines that are.
+        foreach (var line in context.Lines.Where(line => !context.IsClosed(line, shift.Date)))
         {
             var onLine = placements[line.Id];
             var wanted = context.HeadcountFor(line, shift.Date);

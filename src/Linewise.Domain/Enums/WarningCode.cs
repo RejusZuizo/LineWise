@@ -44,6 +44,13 @@ public enum WarningCode
     /// <summary>The line asked for operating assistants and got fewer than it wanted.</summary>
     LineShortOfOperatingAssistants = 10,
 
+    /// <summary>
+    /// A locked assignment holds somebody on a line that is closed that day. The lock is
+    /// kept, because a lock is the manager overruling the engine, but the two decisions
+    /// contradict each other and only one of them can have been meant.
+    /// </summary>
+    LockedAssignmentOnAClosedLine = 11,
+
     // Raised by the rule validator, before generation is attempted.
 
     /// <summary>More employees are mandatory on a line than the line has places.</summary>

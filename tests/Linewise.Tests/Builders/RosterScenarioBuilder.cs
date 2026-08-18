@@ -75,6 +75,20 @@ internal sealed class RosterScenarioBuilder
         return this;
     }
 
+    /// <summary>The line is not running that day.</summary>
+    public RosterScenarioBuilder Closed(string line, int day)
+    {
+        _demands.Add(new LineDemand
+        {
+            LineId = _lines[line].Id,
+            Date = DateFor(day),
+            RequiredHeadcount = _lines[line].RequiredHeadcount,
+            IsClosed = true,
+        });
+
+        return this;
+    }
+
     public RosterScenarioBuilder LineRequiresSkill(string line, string skill)
     {
         var skillId = EnsureSkill(skill).Id;

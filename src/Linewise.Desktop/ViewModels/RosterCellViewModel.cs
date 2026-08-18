@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.Input;
 using Linewise.Desktop.Resources;
 
 namespace Linewise.Desktop.ViewModels;
@@ -6,12 +7,25 @@ namespace Linewise.Desktop.ViewModels;
 /// <summary>One line on one day: who is on it, and whether that is enough.</summary>
 public sealed class RosterCellViewModel
 {
-    public RosterCellViewModel(DateOnly date, IEnumerable<PersonChipViewModel> people, int required)
+    public RosterCellViewModel(
+        DateOnly date,
+        IEnumerable<PersonChipViewModel> people,
+        int required,
+        Guid lineId = default,
+        bool isClosed = false,
+        IRosterEditor? editor = null)
     {
         ArgumentNullException.ThrowIfNull(people);
 
         Date = date;
         Required = required;
+        LineId = lineId;
+        IsClosed = isClosed;
+
+        ToggleClosedCommand = new AsyncRelayCommand(
+            () => editor is null
+                ? Task.CompletedTask
+                : editor.SetLineClosedAsync(lineId, date, !isClosed));
 
         // Leader first, then by name. The same order the printed sheet uses, so somebody
         // holding the paper and somebody at the screen are reading the same list.
@@ -26,6 +40,19 @@ public sealed class RosterCellViewModel
     }
 
     public DateOnly Date { get; }
+
+    public Guid LineId { get; }
+
+    /// <summary>
+    /// The line is not running today. Not the same as empty: a line nobody could be found
+    /// for and a line nobody was wanted on are different problems, and only one of them is
+    /// a problem at all.
+    /// </summary>
+    public bool IsClosed { get; }
+
+    public string ToggleClosedLabel => IsClosed ? Strings.ReopenLine : Strings.CloseLine;
+
+    public IAsyncRelayCommand ToggleClosedCommand { get; }
 
     public ObservableCollection<PersonChipViewModel> People { get; }
 
@@ -47,13 +74,17 @@ public sealed class RosterCellViewModel
     public int Required { get; }
 
     /// <summary>Reads "3 of 4". Always both numbers, so short is visible without arithmetic.</summary>
-    public string Headcount => Strings.Headcount(Assigned, Required);
+    /// <summary>
+    /// Reads "3 of 4", or says the line is shut. The word rather than a blank or a dash: a
+    /// cell that simply went empty would read as a line nobody could be found for.
+    /// </summary>
+    public string Headcount => IsClosed ? Strings.CellClosed : Strings.Headcount(Assigned, Required);
 
     /// <summary>
     /// Below what the line asked for. Paired with the numbers rather than replacing them:
     /// a cell that is short says so in words as well as in styling.
     /// </summary>
-    public bool IsShort => Assigned < Required;
+    public bool IsShort => !IsClosed && Assigned < Required;
 
     /// <summary>
     /// Nobody on the line to ask. An absent leader counts as no leader, because a name on a
@@ -61,7 +92,7 @@ public sealed class RosterCellViewModel
     /// needs to know when the phone call is from the person who runs it.
     /// </summary>
     public bool HasNoLeader =>
-        People.Count > 0 && !People.Any(person => person.IsLeader && !person.IsAbsent);
+        !IsClosed && People.Count > 0 && !People.Any(person => person.IsLeader && !person.IsAbsent);
 
     public bool IsEmpty => People.Count == 0;
 }

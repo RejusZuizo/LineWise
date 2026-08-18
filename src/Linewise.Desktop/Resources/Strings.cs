@@ -301,6 +301,18 @@ public static class Strings
 
     public static string MarkedBackIn => Get(nameof(MarkedBackIn));
 
+    public static string CellClosed => Get(nameof(CellClosed));
+
+    public static string CloseLine => Get(nameof(CloseLine));
+
+    public static string ReopenLine => Get(nameof(ReopenLine));
+
+    public static string CouldNotCloseLine => Get(nameof(CouldNotCloseLine));
+
+    public static string LineClosedFor(DateOnly date) => Format(nameof(LineClosedFor), date);
+
+    public static string LineReopenedFor(DateOnly date) => Format(nameof(LineReopenedFor), date);
+
     public static string CouldNotMarkAbsent => Get(nameof(CouldNotMarkAbsent));
 
     /// <summary>

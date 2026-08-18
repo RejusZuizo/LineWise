@@ -25,4 +25,11 @@ public interface ILineDemandRepository
         DateOnly toExclusive,
         IReadOnlyList<LineDemand> demands,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Writes one line's entry for one date, replacing whatever was there. Closing a line
+    /// for a day is a decision about that day alone, and rewriting the week around it would
+    /// take the rest of the week's demands with it.
+    /// </summary>
+    Task SetAsync(LineDemand demand, CancellationToken cancellationToken = default);
 }
