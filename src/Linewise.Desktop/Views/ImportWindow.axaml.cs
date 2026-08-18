@@ -10,6 +10,7 @@ public sealed partial class ImportWindow : Window
     public ImportWindow(ImportViewModel viewModel)
     {
         InitializeComponent();
+        this.CloseOnEscape();
         DataContext = viewModel;
     }
 
