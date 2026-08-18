@@ -649,4 +649,80 @@
     <value>Line reopened for {0:d MMMM}. Generate again to staff it.</value>
     <comment>0 = the date reopened.</comment>
   </data>
+  <data name="GroupLineLeaders" xml:space="preserve">
+    <value>Line leaders</value>
+    <comment>Heading over everybody permitted to lead a line.</comment>
+  </data>
+  <data name="GroupOperatingAssistants" xml:space="preserve">
+    <value>Operating assistants</value>
+    <comment>Heading over everybody permitted to assist but not lead.</comment>
+  </data>
+  <data name="GroupLineWorkers" xml:space="preserve">
+    <value>Line workers</value>
+    <comment>Heading over everybody who holds no rank.</comment>
+  </data>
+  <data name="GroupCountOne" xml:space="preserve">
+    <value>1 person</value>
+    <comment>Count beside a group heading.</comment>
+  </data>
+  <data name="GroupCountMany" xml:space="preserve">
+    <value>{0} people</value>
+    <comment>0 = count. Singular is a separate entry.</comment>
+  </data>
+  <data name="PeopleChoiceFirst" xml:space="preserve">
+    <value>First choice</value>
+    <comment>The top line in a person's ordered list. Named rather than numbered.</comment>
+  </data>
+  <data name="PeopleChoiceOther" xml:space="preserve">
+    <value>Choice {0}</value>
+    <comment>0 = position in the list, counted from one.</comment>
+  </data>
+  <data name="PeopleWorksHeading" xml:space="preserve">
+    <value>Works these lines, best first</value>
+    <comment>Heading over the ordered list of lines.</comment>
+  </data>
+  <data name="PeopleWorksNone" xml:space="preserve">
+    <value>No lines yet. Add one, and the engine may place them anywhere until you do.</value>
+    <comment>Shown when a person has no lines in their ordered list.</comment>
+  </data>
+  <data name="PeopleBlockedHeading" xml:space="preserve">
+    <value>Never put them here</value>
+    <comment>Heading over the blocked lines.</comment>
+  </data>
+  <data name="PeopleBlockedNone" xml:space="preserve">
+    <value>Nothing refused.</value>
+    <comment>Shown when a person is blocked from no lines.</comment>
+  </data>
+  <data name="PeopleAddWorked" xml:space="preserve">
+    <value>Add a line</value>
+    <comment>Button opening the list of lines to add to the ordered list.</comment>
+  </data>
+  <data name="PeopleAddBlocked" xml:space="preserve">
+    <value>Refuse a line</value>
+    <comment>Button opening the list of lines to block.</comment>
+  </data>
+  <data name="PeopleMoveUp" xml:space="preserve">
+    <value>Move up</value>
+    <comment>Raises a line's priority. The keyboard route to what dragging does.</comment>
+  </data>
+  <data name="PeopleMoveDown" xml:space="preserve">
+    <value>Move down</value>
+    <comment>Lowers a line's priority.</comment>
+  </data>
+  <data name="PeopleRemoveLine" xml:space="preserve">
+    <value>Remove</value>
+    <comment>Takes a line out of a person's list.</comment>
+  </data>
+  <data name="PeopleMustWork" xml:space="preserve">
+    <value>Must work here</value>
+    <comment>Marks a line as mandatory rather than merely preferred.</comment>
+  </data>
+  <data name="PeopleDragHandle" xml:space="preserve">
+    <value>Drag this to reorder</value>
+    <comment>Tooltip on the grip at the left of a line row.</comment>
+  </data>
+  <data name="PeopleDragHint" xml:space="preserve">
+    <value>Drag the grip to reorder, or use the arrows. The order is the priority.</value>
+    <comment>Explains that the list order is the priority.</comment>
+  </data>
 </root>

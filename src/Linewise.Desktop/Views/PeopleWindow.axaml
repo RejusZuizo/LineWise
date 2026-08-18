@@ -1,18 +1,37 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="using:Linewise.Desktop.ViewModels"
         xmlns:res="using:Linewise.Desktop.Resources"
+        xmlns:views="using:Linewise.Desktop.Views"
+        xmlns:entities="using:Linewise.Domain.Entities"
         mc:Ignorable="d"
-        d:DesignWidth="900" d:DesignHeight="640"
+        d:DesignWidth="980" d:DesignHeight="680"
         x:Class="Linewise.Desktop.Views.PeopleWindow"
         x:DataType="vm:PeopleViewModel"
         Title="{x:Static res:Strings.People}"
-        Width="900" Height="640"
-        MinWidth="760" MinHeight="520"
+        Width="980" Height="680"
+        MinWidth="820" MinHeight="560"
         Background="{DynamicResource LinewiseSurfaceAlt}"
         WindowStartupLocation="CenterOwner">
+
+  <Window.Styles>
+    <Style Selector="Border.ruleRow">
+      <Setter Property="Background" Value="{DynamicResource LinewiseSurfaceAlt}" />
+      <Setter Property="CornerRadius" Value="{StaticResource RadiusSm}" />
+      <Setter Property="Padding" Value="10,8" />
+      <Setter Property="Margin" Value="0,0,0,6" />
+    </Style>
+
+    <!-- The first choice is the one that decides most rosters, so it is the one the eye
+         finds. A border rather than a colour: the rest of this screen is already carrying
+         the line accents. -->
+    <Style Selector="Border.ruleRow.first">
+      <Setter Property="BorderBrush" Value="{DynamicResource LinewiseBorderStrong}" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+  </Window.Styles>
 
   <DockPanel LastChildFill="True" Margin="16">
 
@@ -66,10 +85,13 @@
                IsVisible="{Binding IsPossible}"
                Margin="0,12,0,0" />
 
-    <!-- The list. Filtered rather than paged: a hundred and fifty people is a long list
-         and a short search, and somebody looking for one person knows their name. -->
+    <!-- The list, grouped by what each person is permitted to be. Sixty names in one flat
+         column is a wall; "who can lead Ovens" is what this screen is opened to answer.
+
+         A tree rather than a list of lists, so selection is one thing across every group
+         and a heading can be collapsed without taking the selection with it. -->
     <Border DockPanel.Dock="Left"
-            Width="260"
+            Width="290"
             Background="{DynamicResource LinewiseSurface}"
             BorderBrush="{DynamicResource LinewiseBorder}"
             BorderThickness="1"
@@ -80,20 +102,44 @@
                  Text="{Binding Search}"
                  Watermark="{x:Static res:Strings.PeopleSearch}"
                  Margin="10" />
-        <TextBlock Text="{x:Static res:Strings.PeopleNobody}"
-                   Classes="subtitle"
+
+        <TextBlock DockPanel.Dock="Bottom"
+                   Text="{Binding CapabilityBreakdown}"
+                   Classes="caption"
                    TextWrapping="Wrap"
-                   Margin="10,0,10,10"
-                   IsVisible="{Binding !HasSelection}" />
-        <ListBox ItemsSource="{Binding Visible}"
-                 SelectedItem="{Binding Selected}"
-                 Background="Transparent"
-                 BorderThickness="0">
-          <ListBox.ItemTemplate>
-            <DataTemplate x:DataType="vm:EmployeeViewModel">
+                   Margin="10,8,10,10" />
+
+        <TreeView ItemsSource="{Binding Groups}"
+                  SelectedItem="{Binding SelectedNode, Mode=TwoWay}"
+                  Background="Transparent"
+                  BorderThickness="0">
+
+          <!-- Open on arrival. A screen that opens with every group shut makes somebody
+               click three times to see what they came for.
+
+               A setter rather than a binding: whether a heading is open is a property of
+               the screen and nothing else reads it, and a click still collapses the group
+               because a local value outranks one set by a theme. -->
+          <TreeView.ItemContainerTheme>
+            <ControlTheme TargetType="TreeViewItem" BasedOn="{StaticResource {x:Type TreeViewItem}}">
+              <Setter Property="IsExpanded" Value="True" />
+            </ControlTheme>
+          </TreeView.ItemContainerTheme>
+          <TreeView.DataTemplates>
+
+            <TreeDataTemplate DataType="vm:PeopleGroupViewModel" ItemsSource="{Binding People}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="12.5" />
+                <TextBlock Text="{Binding CountLabel}" Classes="caption" VerticalAlignment="Center" />
+              </StackPanel>
+            </TreeDataTemplate>
+
+            <DataTemplate DataType="vm:EmployeeViewModel">
               <StackPanel Spacing="1">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                   <TextBlock Text="{Binding Name}" FontSize="13" />
+                  <!-- Agency staff are marked rather than grouped apart. A temporary worker
+                       who can lead is exactly who is wanted when a line loses its leader. -->
                   <TextBlock Text="{x:Static res:Strings.PeopleTemporary}"
                              Classes="caption"
                              IsVisible="{Binding IsTemporary}"
@@ -102,14 +148,12 @@
                 <TextBlock Text="{Binding Summary}" Classes="caption" />
               </StackPanel>
             </DataTemplate>
-          </ListBox.ItemTemplate>
-        </ListBox>
+
+          </TreeView.DataTemplates>
+        </TreeView>
       </DockPanel>
     </Border>
 
-    <!-- One row per line, whether or not a rule exists for it. A list showing only the
-         lines somebody has already had an opinion about is the shape that makes an unset
-         preference invisible. -->
     <Border Background="{DynamicResource LinewiseSurface}"
             BorderBrush="{DynamicResource LinewiseBorder}"
             BorderThickness="1"
@@ -123,74 +167,178 @@
                    Margin="14,12,14,8" />
 
         <ScrollViewer>
-          <ItemsControl ItemsSource="{Binding Selected.Lines}" Margin="14,0,14,14">
-            <ItemsControl.ItemTemplate>
-              <DataTemplate x:DataType="vm:EmployeeLineRuleViewModel">
-                <Border Background="{DynamicResource LinewiseSurfaceAlt}"
-                        CornerRadius="{StaticResource RadiusSm}"
-                        Padding="10"
-                        Margin="0,0,0,6">
-                  <StackPanel Spacing="8">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                      <Border Width="3" CornerRadius="2" Background="{Binding AccentColour}" />
-                      <TextBlock Text="{Binding LineName}"
-                                 FontWeight="SemiBold"
-                                 FontSize="13"
-                                 VerticalAlignment="Center" />
-                    </StackPanel>
+          <StackPanel Margin="14,0,14,14" Spacing="8">
 
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                      <!-- No opinion is a real answer and has to be selectable, or every
-                           person acquires a rule about every line.
+            <DockPanel LastChildFill="False">
+              <TextBlock DockPanel.Dock="Left"
+                         Text="{x:Static res:Strings.PeopleWorksHeading}"
+                         Classes="sectionHeading"
+                         VerticalAlignment="Center" />
+              <Button DockPanel.Dock="Right"
+                      Content="{x:Static res:Strings.PeopleAddWorked}"
+                      Classes="quiet"
+                      IsEnabled="{Binding Selected.HasAddable}">
+                <Button.Flyout>
+                  <MenuFlyout ItemsSource="{Binding Selected.Addable}">
+                    <MenuFlyout.ItemTemplate>
+                      <DataTemplate DataType="entities:ProductionLine">
+                        <TextBlock Text="{Binding Name}" />
+                      </DataTemplate>
+                    </MenuFlyout.ItemTemplate>
+                    <MenuFlyout.ItemContainerTheme>
+                      <ControlTheme TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                        <Setter Property="Command"
+                                Value="{Binding $parent[Window].((vm:PeopleViewModel)DataContext).Selected.AddWorkedCommand}" />
+                        <Setter Property="CommandParameter" Value="{Binding}" />
+                      </ControlTheme>
+                    </MenuFlyout.ItemContainerTheme>
+                  </MenuFlyout>
+                </Button.Flyout>
+              </Button>
+            </DockPanel>
 
-                           GroupName is the line's identifier, so the four buttons on one
-                           row are a group and the rows do not interfere with each other.
-                           Bound two way to settable properties: the radio drives the value
-                           through its own binding rather than through a command beside it. -->
-                      <RadioButton Content="{x:Static res:Strings.PeopleNone}"
-                                   GroupName="{Binding LineId, StringFormat='pref-{0}'}"
-                                   IsChecked="{Binding IsNoPreference, Mode=TwoWay}" />
-                      <RadioButton Content="{x:Static res:Strings.PeoplePreferred}"
-                                   GroupName="{Binding LineId, StringFormat='pref-{0}'}"
-                                   IsChecked="{Binding IsPreferred, Mode=TwoWay}" />
-                      <RadioButton Content="{x:Static res:Strings.PeopleMandatory}"
-                                   GroupName="{Binding LineId, StringFormat='pref-{0}'}"
-                                   IsChecked="{Binding IsMandatory, Mode=TwoWay}" />
-                      <RadioButton Content="{x:Static res:Strings.PeopleBlocked}"
-                                   GroupName="{Binding LineId, StringFormat='pref-{0}'}"
-                                   IsChecked="{Binding IsBlocked, Mode=TwoWay}" />
-                    </StackPanel>
+            <TextBlock Text="{x:Static res:Strings.PeopleDragHint}"
+                       Classes="caption"
+                       TextWrapping="Wrap"
+                       IsVisible="{Binding Selected.HasWorks}" />
 
-                    <StackPanel Orientation="Horizontal" Spacing="14">
-                      <StackPanel Orientation="Horizontal"
-                                  Spacing="6"
-                                  IsVisible="{Binding IsRankRelevant}">
-                        <TextBlock Text="{x:Static res:Strings.PeopleRank}"
-                                   Classes="caption"
-                                   VerticalAlignment="Center" />
-                        <NumericUpDown Value="{Binding Rank}"
-                                       Minimum="1"
-                                       Maximum="20"
-                                       Increment="1"
-                                       FormatString="0"
-                                       Width="100" />
+            <TextBlock Text="{x:Static res:Strings.PeopleWorksNone}"
+                       Classes="caption"
+                       TextWrapping="Wrap"
+                       IsVisible="{Binding !Selected.HasWorks}" />
+
+            <!-- Order is the priority. Nothing here stores a rank, so two lines cannot
+                 claim the same one and the screen cannot disagree with what is saved. -->
+            <ItemsControl ItemsSource="{Binding Selected.Works}"
+                          views:Reorderable.AllowDrag="True">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="vm:EmployeeLineRuleViewModel">
+                  <Border Classes="ruleRow" Classes.first="{Binding IsFirst}">
+                    <DockPanel LastChildFill="True">
+
+                      <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="2">
+                        <!-- The keyboard route to what dragging does. A drag is a gesture
+                             somebody has to discover and cannot perform without a mouse. -->
+                        <Button Content="↑"
+                                Classes="quiet"
+                                Padding="8,2"
+                                ToolTip.Tip="{x:Static res:Strings.PeopleMoveUp}"
+                                IsEnabled="{Binding !IsFirst}"
+                                Command="{Binding MoveUpCommand}" />
+                        <Button Content="↓"
+                                Classes="quiet"
+                                Padding="8,2"
+                                ToolTip.Tip="{x:Static res:Strings.PeopleMoveDown}"
+                                IsEnabled="{Binding !IsLast}"
+                                Command="{Binding MoveDownCommand}" />
+                        <Button Content="✕"
+                                Classes="quiet"
+                                Padding="8,2"
+                                ToolTip.Tip="{x:Static res:Strings.PeopleRemoveLine}"
+                                Command="{Binding RemoveCommand}" />
                       </StackPanel>
-                      <CheckBox Content="{x:Static res:Strings.PeopleCanLead}"
-                                IsChecked="{Binding CanLead}"
-                                IsEnabled="{Binding !IsBlocked}" />
-                      <CheckBox Content="{x:Static res:Strings.PeopleCanAssist}"
-                                IsChecked="{Binding CanAssist}"
-                                IsEnabled="{Binding !IsBlocked}" />
-                    </StackPanel>
-                  </StackPanel>
-                </Border>
-              </DataTemplate>
-            </ItemsControl.ItemTemplate>
-          </ItemsControl>
+
+                      <StackPanel Spacing="4">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                          <Border Width="3" CornerRadius="2" Background="{Binding AccentColour}" />
+
+                          <!-- The only place a drag may start. Anywhere else on the row is a
+                               click on the way to a checkbox, and an accidental drag holds a
+                               pointer grab for as long as it runs. -->
+                          <TextBlock Text="⠿"
+                                     views:Reorderable.IsHandle="True"
+                                     Classes="caption"
+                                     FontSize="14"
+                                     Cursor="Hand"
+                                     ToolTip.Tip="{x:Static res:Strings.PeopleDragHandle}"
+                                     VerticalAlignment="Center" />
+
+                          <TextBlock Text="{Binding LineName}"
+                                     FontWeight="SemiBold"
+                                     FontSize="13"
+                                     VerticalAlignment="Center" />
+                          <TextBlock Text="{Binding PositionLabel}"
+                                     Classes="caption"
+                                     VerticalAlignment="Center" />
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" Spacing="14">
+                          <CheckBox Content="{x:Static res:Strings.PeopleMustWork}"
+                                    IsChecked="{Binding IsMandatory, Mode=TwoWay}" />
+                          <CheckBox Content="{x:Static res:Strings.PeopleCanLead}"
+                                    IsChecked="{Binding CanLead, Mode=TwoWay}" />
+                          <CheckBox Content="{x:Static res:Strings.PeopleCanAssist}"
+                                    IsChecked="{Binding CanAssist, Mode=TwoWay}" />
+                        </StackPanel>
+                      </StackPanel>
+
+                    </DockPanel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <DockPanel LastChildFill="False" Margin="0,8,0,0">
+              <TextBlock DockPanel.Dock="Left"
+                         Text="{x:Static res:Strings.PeopleBlockedHeading}"
+                         Classes="sectionHeading"
+                         VerticalAlignment="Center" />
+              <Button DockPanel.Dock="Right"
+                      Content="{x:Static res:Strings.PeopleAddBlocked}"
+                      Classes="quiet"
+                      IsEnabled="{Binding Selected.HasAddable}">
+                <Button.Flyout>
+                  <MenuFlyout ItemsSource="{Binding Selected.Addable}">
+                    <MenuFlyout.ItemTemplate>
+                      <DataTemplate DataType="entities:ProductionLine">
+                        <TextBlock Text="{Binding Name}" />
+                      </DataTemplate>
+                    </MenuFlyout.ItemTemplate>
+                    <MenuFlyout.ItemContainerTheme>
+                      <ControlTheme TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                        <Setter Property="Command"
+                                Value="{Binding $parent[Window].((vm:PeopleViewModel)DataContext).Selected.AddBlockedCommand}" />
+                        <Setter Property="CommandParameter" Value="{Binding}" />
+                      </ControlTheme>
+                    </MenuFlyout.ItemContainerTheme>
+                  </MenuFlyout>
+                </Button.Flyout>
+              </Button>
+            </DockPanel>
+
+            <TextBlock Text="{x:Static res:Strings.PeopleBlockedNone}"
+                       Classes="caption"
+                       IsVisible="{Binding !Selected.HasBlocked}" />
+
+            <!-- Not orderable. A refusal has no priority, and letting one be dragged into a
+                 position would imply it had one. -->
+            <ItemsControl ItemsSource="{Binding Selected.Blocked}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="vm:EmployeeLineRuleViewModel">
+                  <Border Classes="ruleRow">
+                    <DockPanel LastChildFill="True">
+                      <Button DockPanel.Dock="Right"
+                              Content="✕"
+                              Classes="quiet"
+                              Padding="8,2"
+                              ToolTip.Tip="{x:Static res:Strings.PeopleRemoveLine}"
+                              Command="{Binding RemoveCommand}" />
+                      <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Border Width="3" CornerRadius="2" Background="{Binding AccentColour}" />
+                        <TextBlock Text="{Binding LineName}"
+                                   FontSize="13"
+                                   VerticalAlignment="Center" />
+                      </StackPanel>
+                    </DockPanel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+          </StackPanel>
         </ScrollViewer>
       </DockPanel>
     </Border>
 
   </DockPanel>
-
 </Window>

@@ -18,79 +18,232 @@ public sealed class PeopleViewModelTests
     private static readonly Guid Packing = Guid.NewGuid();
 
     /// <summary>
-    /// The engine reads an unset preference as freedom to place somebody anywhere. If the
-    /// screen cannot express that, every person acquires an opinion about every line the
-    /// first time somebody opens it.
+    /// A person with no lines in their list is the engine's freedom to place them anywhere.
+    /// If the screen cannot express that, every person acquires an opinion about every line
+    /// the first time somebody opens it.
     /// </summary>
     [Fact]
-    public async Task A_line_nobody_has_an_opinion_about_stores_no_preference()
+    public async Task A_person_with_no_lines_stores_no_preferences()
     {
-        var editor = await Loaded();
+        var editor = await Loaded(leadersEligible: false);
 
-        Assert.Equal(2, editor.Selected!.Lines.Count);
-        Assert.All(editor.Selected.Lines, line => Assert.Null(line.Type));
+        Assert.Empty(editor.Selected!.Works);
+        Assert.Empty(editor.Selected.Blocked);
         Assert.Empty(editor.Selected.ToPreferences());
-    }
 
-    [Fact]
-    public async Task A_ranked_wish_is_stored_with_its_rank()
-    {
-        var editor = await Loaded();
-
-        var ovens = editor.Selected!.Lines.First(line => line.LineId == Ovens);
-        ovens.Type = PreferenceType.Preferred;
-        ovens.Rank = 2;
-
-        var preference = Assert.Single(editor.Selected.ToPreferences());
-
-        Assert.Equal(Ovens, preference.LineId);
-        Assert.Equal(PreferenceType.Preferred, preference.Type);
-        Assert.Equal(2, preference.Rank);
+        // Both lines are still on offer, which is what makes the empty list a starting
+        // point rather than a dead end.
+        Assert.Equal(2, editor.Selected.Addable.Count);
     }
 
     /// <summary>
-    /// Barred from a line and allowed to run it cannot both be true. The validator would
-    /// report it; the screen should not let it be entered in the first place.
+    /// The change this screen exists for: priority is the order of a list, not a number
+    /// somebody types into a box beside each line.
     /// </summary>
     [Fact]
-    public async Task Blocking_a_line_withdraws_permission_to_lead_or_assist_on_it()
+    public async Task Priority_is_the_position_in_the_list()
     {
-        var editor = await Loaded();
+        var editor = await Loaded(leadersEligible: false);
+        var person = editor.Selected!;
 
-        var ovens = editor.Selected!.Lines.First(line => line.LineId == Ovens);
-        ovens.CanLead = true;
-        ovens.CanAssist = true;
+        person.AddWorkedCommand.Execute(Line(Ovens, "Ovens"));
+        person.AddWorkedCommand.Execute(Line(Packing, "Packing"));
 
-        ovens.Type = PreferenceType.Blocked;
+        var preferences = person.ToPreferences();
 
-        Assert.False(ovens.CanLead);
-        Assert.False(ovens.CanAssist);
-
-        // Ovens specifically, not everything. Blocking one line says nothing about the
-        // others, and an assertion that everything vanished would pass for the wrong reason.
-        Assert.DoesNotContain(editor.Selected.ToLeaderEligibilities(), e => e.LineId == Ovens);
-        Assert.DoesNotContain(editor.Selected.ToAssistantEligibilities(), e => e.LineId == Ovens);
-        Assert.Contains(editor.Selected.ToLeaderEligibilities(), e => e.LineId == Packing);
+        Assert.Equal(Ovens, preferences.Single(p => p.Rank == 1).LineId);
+        Assert.Equal(Packing, preferences.Single(p => p.Rank == 2).LineId);
+        Assert.All(preferences, p => Assert.Equal(PreferenceType.Preferred, p.Type));
     }
 
     [Fact]
-    public async Task Rank_is_only_meaningful_for_a_wish_or_a_requirement()
+    public async Task Moving_a_line_up_makes_it_the_first_choice()
+    {
+        var editor = await Loaded(leadersEligible: false);
+        var person = editor.Selected!;
+
+        person.AddWorkedCommand.Execute(Line(Ovens, "Ovens"));
+        person.AddWorkedCommand.Execute(Line(Packing, "Packing"));
+
+        person.MoveUp(person.Works.Single(row => row.LineId == Packing));
+
+        Assert.Equal(Packing, person.ToPreferences().Single(p => p.Rank == 1).LineId);
+        Assert.Equal(1, person.Works[0].Position);
+        Assert.True(person.Works[0].IsFirst);
+        Assert.True(person.Works[1].IsLast);
+    }
+
+    /// <summary>
+    /// A drag that lands where it started, and the arrows at the ends of the list. Neither
+    /// should reorder anything, and neither should throw.
+    /// </summary>
+    [Fact]
+    public async Task Moving_beyond_either_end_does_nothing()
+    {
+        var editor = await Loaded(leadersEligible: false);
+        var person = editor.Selected!;
+
+        person.AddWorkedCommand.Execute(Line(Ovens, "Ovens"));
+        person.AddWorkedCommand.Execute(Line(Packing, "Packing"));
+
+        person.MoveUp(person.Works[0]);
+        person.MoveDown(person.Works[1]);
+
+        Assert.Equal([Ovens, Packing], person.Works.Select(row => row.LineId));
+    }
+
+    /// <summary>
+    /// Rank cannot be duplicated or skipped, because nothing stores it. That whole class of
+    /// warning — two lines claiming the same choice — stops being possible to enter.
+    /// </summary>
+    [Fact]
+    public async Task Ranks_are_always_one_two_three_with_no_gaps()
+    {
+        var editor = await Loaded(leadersEligible: false);
+        var person = editor.Selected!;
+
+        person.AddWorkedCommand.Execute(Line(Ovens, "Ovens"));
+        person.AddWorkedCommand.Execute(Line(Packing, "Packing"));
+
+        person.Remove(person.Works.Single(row => row.LineId == Ovens));
+
+        var preference = Assert.Single(person.ToPreferences());
+        Assert.Equal(1, preference.Rank);
+    }
+
+    [Fact]
+    public async Task A_line_must_work_flag_is_stored_as_a_requirement()
+    {
+        var editor = await Loaded(leadersEligible: false);
+        var person = editor.Selected!;
+
+        person.AddWorkedCommand.Execute(Line(Ovens, "Ovens"));
+        person.Works[0].IsMandatory = true;
+
+        var preference = Assert.Single(person.ToPreferences());
+
+        Assert.Equal(PreferenceType.Mandatory, preference.Type);
+
+        // Still ranked. A requirement the engine may break on overtime still has a position
+        // relative to the rest of the list.
+        Assert.Equal(1, preference.Rank);
+    }
+
+    [Fact]
+    public async Task A_refused_line_is_stored_as_blocked_and_carries_no_rank()
+    {
+        var editor = await Loaded(leadersEligible: false);
+        var person = editor.Selected!;
+
+        person.AddBlockedCommand.Execute(Line(Ovens, "Ovens"));
+
+        var preference = Assert.Single(person.ToPreferences());
+
+        Assert.Equal(PreferenceType.Blocked, preference.Type);
+        Assert.Equal(0, preference.Rank);
+    }
+
+    /// <summary>
+    /// Worked and refused are two lists, so a line cannot be in both. The old screen made
+    /// that unrepresentable with a radio group; this makes it unrepresentable by removing
+    /// the line from what can be added.
+    /// </summary>
+    [Fact]
+    public async Task A_line_cannot_be_both_worked_and_refused()
+    {
+        var editor = await Loaded(leadersEligible: false);
+        var person = editor.Selected!;
+
+        person.AddWorkedCommand.Execute(Line(Ovens, "Ovens"));
+
+        Assert.DoesNotContain(person.Addable, line => line.Id == Ovens);
+
+        person.Remove(person.Works[0]);
+
+        Assert.Contains(person.Addable, line => line.Id == Ovens);
+    }
+
+    /// <summary>
+    /// Permission to lead used to be settable on a line nobody had an opinion about, and
+    /// there is data on disk shaped that way. Dropping those rows would quietly take away
+    /// permissions somebody had already granted.
+    /// </summary>
+    [Fact]
+    public async Task An_existing_permission_to_lead_puts_that_line_in_the_worked_list()
     {
         var editor = await Loaded();
 
-        var ovens = editor.Selected!.Lines.First(line => line.LineId == Ovens);
+        var person = editor.Selected!;
 
-        ovens.Type = PreferenceType.Preferred;
-        Assert.True(ovens.IsRankRelevant);
+        Assert.Equal(2, person.Works.Count);
+        Assert.All(person.Works, row => Assert.True(row.CanLead));
+        Assert.Contains(person.ToLeaderEligibilities(), e => e.LineId == Ovens);
+    }
 
-        ovens.Type = PreferenceType.Mandatory;
-        Assert.True(ovens.IsRankRelevant);
+    [Fact]
+    public async Task Removing_a_line_withdraws_the_permission_that_sat_on_it()
+    {
+        var editor = await Loaded();
+        var person = editor.Selected!;
 
-        ovens.Type = PreferenceType.Blocked;
-        Assert.False(ovens.IsRankRelevant);
+        person.Remove(person.Works.Single(row => row.LineId == Ovens));
 
-        ovens.Type = null;
-        Assert.False(ovens.IsRankRelevant);
+        // Ovens specifically, not everything. Removing one line says nothing about the
+        // others, and an assertion that everything vanished would pass for the wrong reason.
+        Assert.DoesNotContain(person.ToLeaderEligibilities(), e => e.LineId == Ovens);
+        Assert.Contains(person.ToLeaderEligibilities(), e => e.LineId == Packing);
+    }
+
+    /// <summary>
+    /// Sixty names in one column is a wall. The groups are what the manager reads down when
+    /// a line has lost its leader.
+    /// </summary>
+    [Fact]
+    public async Task People_are_grouped_by_what_they_are_permitted_to_be()
+    {
+        var editor = await Loaded();
+
+        var group = Assert.Single(editor.Groups);
+
+        Assert.Equal(WorkerCapability.LineLeader, group.Capability);
+        Assert.Equal(2, group.Count);
+    }
+
+    [Fact]
+    public async Task An_empty_group_is_not_drawn()
+    {
+        var editor = await Loaded(leadersEligible: false);
+
+        var group = Assert.Single(editor.Groups);
+
+        Assert.Equal(WorkerCapability.LineWorker, group.Capability);
+    }
+
+    /// <summary>
+    /// A heading is a legitimate thing to click. Losing the rules being edited because
+    /// somebody collapsed a group would be its own bug.
+    /// </summary>
+    [Fact]
+    public async Task Selecting_a_group_heading_keeps_the_person_on_screen()
+    {
+        var editor = await Loaded();
+        var person = editor.Selected;
+
+        editor.SelectedNode = editor.Groups[0];
+
+        Assert.Same(person, editor.Selected);
+        Assert.True(editor.HasSelection);
+    }
+
+    [Fact]
+    public async Task Selecting_a_person_in_the_tree_selects_them()
+    {
+        var editor = await Loaded();
+        var other = editor.Groups[0].People[1];
+
+        editor.SelectedNode = other;
+
+        Assert.Same(other, editor.Selected);
     }
 
     /// <summary>
@@ -170,11 +323,11 @@ public sealed class PeopleViewModelTests
         Assert.Equal(2, editor.Visible.Count);
     }
 
-    private static async Task<PeopleViewModel> Loaded(params ProductionLine[] lines)
+    private static async Task<PeopleViewModel> Loaded(bool leadersEligible = true)
     {
-        var configuration = new FakeConfiguration(lines.Length == 0
-            ? [Line(Ovens, "Ovens"), Line(Packing, "Packing")]
-            : lines);
+        var configuration = new FakeConfiguration(
+            [Line(Ovens, "Ovens"), Line(Packing, "Packing")],
+            leadersEligible);
 
         var editor = new PeopleViewModel(configuration, new RosterRuleValidator());
 
