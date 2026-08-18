@@ -32,6 +32,8 @@ internal sealed class ProductionLineConfiguration : IEntityTypeConfiguration<Pro
         builder.Property(line => line.DisplayOrder);
         builder.Property(line => line.RequiredHeadcount);
         builder.Property(line => line.AccentColour).IsRequired().HasMaxLength(9);
+        builder.Property(line => line.Description).IsRequired().HasMaxLength(500);
+        builder.Property(line => line.LayoutNotes).IsRequired().HasMaxLength(2000);
 
         builder.Ignore(line => line.RequiredSkillIds);
     }

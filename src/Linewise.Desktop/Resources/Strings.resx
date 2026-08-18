@@ -725,4 +725,20 @@
     <value>Drag the grip to reorder, or use the arrows. The order is the priority.</value>
     <comment>Explains that the list order is the priority.</comment>
   </data>
+  <data name="LineDescription" xml:space="preserve">
+    <value>What this line is for (optional)</value>
+    <comment>Watermark on the line description box.</comment>
+  </data>
+  <data name="LineLayoutNotes" xml:space="preserve">
+    <value>How the line is laid out (optional)</value>
+    <comment>Watermark on the line layout notes box.</comment>
+  </data>
+  <data name="LineLayoutNotesHint" xml:space="preserve">
+    <value>Printed on this line's own sheet, for the people standing at it.</value>
+    <comment>Explains where the layout notes end up.</comment>
+  </data>
+  <data name="EditThisLine" xml:space="preserve">
+    <value>Edit this line</value>
+    <comment>Tooltip on a line in the sidebar.</comment>
+  </data>
 </root>

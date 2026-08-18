@@ -176,4 +176,51 @@ public sealed class LineEditorViewModelTests
             CancellationToken cancellationToken = default) =>
             Task.CompletedTask;
     }
+
+    /// <summary>
+    /// Editing a line must not silently drop what another screen configured on it. The
+    /// description and the layout notes join the skills in that category.
+    /// </summary>
+    [Fact]
+    public void Editing_a_line_keeps_its_description_and_layout_notes()
+    {
+        var line = new ProductionLine
+        {
+            Id = Guid.NewGuid(),
+            Name = "Ovens",
+            RequiredHeadcount = 4,
+            Description = "Par-baked goods.",
+            LayoutNotes = "Loader at the cold end, two on the belt.",
+        };
+
+        var editable = new EditableLineViewModel(line);
+
+        Assert.Equal("Par-baked goods.", editable.Description);
+        Assert.True(editable.HasNotes);
+
+        editable.RequiredHeadcount = 6;
+
+        var saved = editable.ToLine();
+
+        Assert.Equal(6, saved.RequiredHeadcount);
+        Assert.Equal("Par-baked goods.", saved.Description);
+        Assert.Equal("Loader at the cold end, two on the belt.", saved.LayoutNotes);
+    }
+
+    [Fact]
+    public void Notes_are_trimmed_and_an_empty_line_has_none()
+    {
+        var editable = new EditableLineViewModel(new ProductionLine
+        {
+            Id = Guid.NewGuid(),
+            Name = "Packing",
+            RequiredHeadcount = 2,
+        });
+
+        Assert.False(editable.HasNotes);
+
+        editable.LayoutNotes = "  Two at the taper.  ";
+
+        Assert.Equal("Two at the taper.", editable.ToLine().LayoutNotes);
+    }
 }

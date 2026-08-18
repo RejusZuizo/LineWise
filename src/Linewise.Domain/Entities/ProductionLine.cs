@@ -27,6 +27,23 @@ public sealed record ProductionLine
     public IReadOnlySet<Guid> RequiredSkillIds { get; init; } = new HashSet<Guid>();
 
     /// <summary>
+    /// What the line is for, in the manager's own words. Optional, and shown wherever the
+    /// line is being chosen rather than merely listed.
+    /// </summary>
+    public string Description { get; init; } = string.Empty;
+
+    /// <summary>
+    /// How the line is physically arranged: who stands where, which end the product comes
+    /// off, anything somebody arriving at it needs to be told.
+    /// </summary>
+    /// <remarks>
+    /// Printed on that line's own sheet rather than on the full roster. It is written for
+    /// the people standing at the line, and putting it on the sheet in the office would be
+    /// putting it where nobody who needs it is looking.
+    /// </remarks>
+    public string LayoutNotes { get; init; } = string.Empty;
+
+    /// <summary>
     /// Hex colour used to distinguish the line on screen and in print. Never the only
     /// thing carrying a meaning; always paired with a label.
     /// </summary>

@@ -227,6 +227,17 @@ public sealed class QuestPdfRosterPrinter : IRosterPrinter
 
         container.PaddingVertical(settings.BaseFontPoints * 0.5f).Column(column =>
         {
+            // How the line is arranged, at the top of its own sheet. This is the one place
+            // it is worth printing: the sheet is pinned at the line, and the people it is
+            // written for are the ones standing there.
+            if (!string.IsNullOrWhiteSpace(line.LayoutNotes))
+            {
+                column.Item()
+                    .PaddingBottom(settings.BaseFontPoints * 0.6f)
+                    .Text(line.LayoutNotes)
+                    .FontSize(RosterDocumentStyle.Small(settings));
+            }
+
             foreach (var day in request.Roster.Days)
             {
                 var onLine = day.Assignments

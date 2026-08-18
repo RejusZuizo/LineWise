@@ -156,6 +156,17 @@ public sealed partial class EditableLineViewModel : ObservableObject
     [ObservableProperty]
     private int _requiredOperatingAssistants;
 
+    /// <summary>What the line is for. Optional, and empty is the ordinary answer.</summary>
+    [ObservableProperty]
+    private string _description;
+
+    /// <summary>
+    /// How the line is arranged. Printed on that line's own sheet, where the people it is
+    /// written for will actually see it.
+    /// </summary>
+    [ObservableProperty]
+    private string _layoutNotes;
+
     public EditableLineViewModel(ProductionLine line)
     {
         ArgumentNullException.ThrowIfNull(line);
@@ -165,6 +176,8 @@ public sealed partial class EditableLineViewModel : ObservableObject
         _requiredHeadcount = line.RequiredHeadcount;
         _displayOrder = line.DisplayOrder;
         _requiredOperatingAssistants = line.RequiredOperatingAssistants;
+        _description = line.Description;
+        _layoutNotes = line.LayoutNotes;
     }
 
     public string AccentColour => _original.AccentColour;
@@ -179,5 +192,10 @@ public sealed partial class EditableLineViewModel : ObservableObject
         RequiredHeadcount = Math.Max(1, RequiredHeadcount),
         DisplayOrder = DisplayOrder,
         RequiredOperatingAssistants = Math.Max(0, RequiredOperatingAssistants),
+        Description = Description.Trim(),
+        LayoutNotes = LayoutNotes.Trim(),
     };
+
+    /// <summary>Whether anything has been written about this line at all.</summary>
+    public bool HasNotes => !string.IsNullOrWhiteSpace(LayoutNotes);
 }

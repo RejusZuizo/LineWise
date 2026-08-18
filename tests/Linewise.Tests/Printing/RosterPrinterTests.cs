@@ -218,6 +218,37 @@ public sealed class RosterPrinterTests
         Assert.Equal(stated.Length, silent.Length);
     }
 
+    /// <summary>
+    /// The layout notes belong on the sheet pinned at the line, where the people they are
+    /// written for will see them, and nowhere else.
+    /// </summary>
+    [Fact]
+    public async Task Layout_notes_reach_the_line_s_own_sheet_and_not_the_full_one()
+    {
+        var plain = Request(days: 1);
+
+        var annotated = plain with
+        {
+            Lines =
+            [
+                .. plain.Lines.Select((line, index) => index == 0
+                    ? line with { LayoutNotes = "Loader at the cold end, two on the belt." }
+                    : line),
+            ],
+        };
+
+        var perLineBefore = await _printer.PrintPerLineSheetsAsync(plain);
+        var perLineAfter = await _printer.PrintPerLineSheetsAsync(annotated);
+
+        var fullBefore = await _printer.PrintFullSheetAsync(plain);
+        var fullAfter = await _printer.PrintFullSheetAsync(annotated);
+
+        Assert.NotEqual(perLineBefore.Length, perLineAfter.Length);
+        Assert.Equal(fullBefore.Length, fullAfter.Length);
+
+        PrintedRoster.Save(perLineAfter, "per-line-with-notes.pdf");
+    }
+
     private static PrintRequest Request(
         int days,
         RosterWeek? roster = null,

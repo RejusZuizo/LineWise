@@ -139,10 +139,17 @@
             <ItemsControl ItemsSource="{Binding ConfiguredLines}">
               <ItemsControl.ItemTemplate>
                 <DataTemplate x:DataType="vm:SidebarLineViewModel">
-                  <Border Background="{DynamicResource LinewiseSurfaceAlt}"
-                          CornerRadius="{StaticResource RadiusSm}"
+                  <!-- A button, because the lines in this list are the obvious place
+                       somebody goes to change one. It was a label for four phases and
+                       clicking it did nothing, which is its own kind of wrong. -->
+                  <Button Classes="quiet"
+                          HorizontalAlignment="Stretch"
+                          HorizontalContentAlignment="Left"
                           Padding="8,6"
-                          Margin="0,0,0,4">
+                          Margin="0,0,0,4"
+                          Background="{DynamicResource LinewiseSurfaceAlt}"
+                          ToolTip.Tip="{Binding EditTip}"
+                          Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).SetUpLinesCommand}">
                     <DockPanel LastChildFill="True">
                       <Border DockPanel.Dock="Left"
                               Width="3"
@@ -152,9 +159,13 @@
                       <StackPanel>
                         <TextBlock Text="{Binding Name}" FontSize="12.5" FontWeight="SemiBold" />
                         <TextBlock Text="{Binding Summary}" Classes="caption" />
+                        <TextBlock Text="{Binding Description}"
+                                   Classes="caption"
+                                   TextWrapping="Wrap"
+                                   IsVisible="{Binding HasDescription}" />
                       </StackPanel>
                     </DockPanel>
-                  </Border>
+                  </Button>
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
             </ItemsControl>
