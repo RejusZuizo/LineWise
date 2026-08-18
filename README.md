@@ -2,40 +2,33 @@
 
 [![CI](https://github.com/socom1/LineWise/actions/workflows/ci.yml/badge.svg)](https://github.com/socom1/LineWise/actions/workflows/ci.yml)
 ![.NET 8](https://img.shields.io/badge/.NET-8.0-512BD4)
-![Tests](https://img.shields.io/badge/tests-558-brightgreen)
 ![Licence](https://img.shields.io/badge/licence-all%20rights%20reserved-lightgrey)
 
-Production line rostering for food manufacturing. Windows desktop, .NET 8, Avalonia.
+Weekly rostering for food production lines. Windows desktop app, .NET 8 and Avalonia.
 
-![The overview, leading with the lines that cannot run](docs/images/roster.png)
+![The overview screen](docs/images/roster.png)
 
 ## Why
 
-I work in food manufacturing. Every week I watched the same thing: a production manager
-building the line roster by hand from a colour coded spreadsheet, deciding who works which
-line and who leads it, honouring a set of rules that exist nowhere except in their head.
-Print it, stick it on the wall, done — until somebody rings in sick on Monday and it is done
-again.
+I work in food manufacturing. The weekly line roster where I am gets built by hand off a
+colour-coded spreadsheet: who's on which line, who's leading it, and a pile of rules that
+only exist in one person's head. It takes hours. When someone calls in sick on a Monday
+morning, most of it gets done again.
 
-It costs hours a week. The rules leave with the person who holds them. And the sick call is
-the expensive part, because it is never one change: taking somebody off Ovens means finding
-cover who is in, who is allowed on that line, and who is not already standing somewhere else.
+Linewise reads that same spreadsheet and builds the roster from it. It records why it put
+each person where it did, so you can argue with the result instead of guessing at it.
 
-Linewise reads the same spreadsheet, produces the roster, and explains every placement. It
-does not try to be cleverer than the manager — it does the arithmetic and leaves the
-judgement.
-
-Knowing the floor is why the awkward parts are in here at all: agency workers who turn up
-unannounced and must be addable mid-import, a sheet that changed format halfway through
-being built against, printers that are monochrome more often than not, and the fact that the
-person reading the roster is doing it from four feet away while walking past.
+A few things are in here only because I've seen the floor. Agency staff turn up unannounced,
+so unknown names have to be addable during the import rather than blocking it. The source
+sheet switched from coloured cells to written marks partway through the project, so the
+importer reads both. Most factory printers are black and white. And the sheet gets read from
+about four feet away by someone on their way past.
 
 ## Status
 
-Phase 6 of eight. Not released, and not yet used by anybody.
+Phase 6 of 8. Not released, and nobody has used it yet.
 
-1.0.0 is reserved for the first build that has produced a roster somebody actually worked
-to. See [Known limitations](#known-limitations).
+1.0.0 is reserved for a build that has produced a roster someone actually worked to.
 
 ## Build and test
 
@@ -44,78 +37,71 @@ dotnet test
 dotnet run --project src/Linewise.Desktop
 ```
 
-`dotnet test --filter Category!=Integration` for the fast loop.
+Use `dotnet test --filter Category!=Integration` for the fast loop.
 
-## How it decides
+## How the engine works
 
 Ten rules in a fixed order: locked placements, availability, mandatory preferences, leader
-selection, overtime routed to the busy lines, ranked preferences across the whole workforce
-at once, the fairness tie break, the absolute skill and blocked filter, backfill, then
-warnings.
+selection, overtime routed to whichever lines are busy, ranked preferences across everyone at
+once, the fairness tie break, the skill and blocked filter, backfill, then warnings.
 
-Greedy, not optimal. A constraint solver would find better rosters and produce answers nobody
-can explain, and the first question about any generated roster is why it did what it did.
-Every placement records which rule made it and at what preference rank.
-[ADR 0001](docs/adr/0001-greedy-assignment-over-a-constraint-solver.md).
+Greedy, not optimal. A constraint solver would produce better rosters and no explanation, and
+"why is she on Ovens today" is the first thing anyone asks. Every assignment stores which rule
+placed it and at what preference rank. [ADR 0001](docs/adr/0001-greedy-assignment-over-a-constraint-solver.md).
 
-The engine is pure: no I/O, no logging, no static state, and identical inputs always produce
-an identical week.
+The engine does no I/O and holds no state. Same inputs, same roster, every time.
 
-## If you are reviewing this
+## Worth a look
 
-The code is ordinary. The decisions are the interesting part, and they are written down.
+Most of the code is unremarkable. The decisions are written down, and those are more
+interesting:
 
-- [ADR 0009](docs/adr/0009-overtime-follows-demand-rather-than-preference.md) — a rule that
-  was correct on paper and would almost never have fired, caught before it shipped.
-- [ADR 0014](docs/adr/0014-availability-records-say-who-set-them.md) — marking somebody absent
-  turned out to be a change to two records, and a re-import would have silently undone it.
-- [ADR 0010](docs/adr/0010-the-printed-sheet-carries-no-meaning-in-colour.md) — nothing on the
-  printed sheet is distinguished by colour alone. Monochrome printers, photocopiers, and the
-  eight percent of men with a colour vision deficiency reading a sheet whose source
-  spreadsheet already uses red and green.
-- [ADR 0013](docs/adr/0013-the-application-ships-its-own-typeface.md) — reverses an earlier
-  rule in the design document, and says which part of it survived.
-- [docs/data-protection.md](docs/data-protection.md) — no reason for an absence is stored
-  beyond the status. "Holiday" is recorded, "hospital appointment" is not.
+- [ADR 0009](docs/adr/0009-overtime-follows-demand-rather-than-preference.md). Overtime
+  routing sat at the wrong step. It would have been correct on paper and almost never fired.
+- [ADR 0014](docs/adr/0014-availability-records-say-who-set-them.md). Marking someone absent
+  turns out to touch two records, and re-importing the sheet would have undone it silently.
+- [ADR 0010](docs/adr/0010-the-printed-sheet-carries-no-meaning-in-colour.md). Nothing on the
+  printed roster is told apart by colour on its own.
+- [ADR 0013](docs/adr/0013-the-application-ships-its-own-typeface.md). Reverses a rule from
+  the design document, and says which part of it still holds.
+- [data-protection.md](docs/data-protection.md). No reason for an absence is stored beyond the
+  status. "Holiday" is kept, "hospital appointment" isn't.
 
-Four defects on this project were invisible to a green test suite and only appeared by
-running the application: an uninitialised database, a week with no shifts, a main window
-whose every command was silently a no-op, and a screen that could not be saved twice. Two of
-them now have tests that would have caught them. The commit messages say what was rejected
-and why, which is usually the part worth reading.
+Four bugs got past a green test suite and only showed up when I ran the app: an uninitialised
+database, a week with no shifts, a main window where every command silently did nothing, and
+a screen that couldn't be saved twice. Two of them have tests now. The commit messages say
+what was rejected and why.
 
 ## Design
 
-Seventeen numbered decisions in [docs/adr](docs/adr/), including the ones later reversed.
-[Architecture](docs/architecture.md) explains the layering and why `Linewise.Domain` contains
-no `PackageReference` at all. [Technical design](docs/technical-design.md) is the plan;
-[threat model](docs/threat-model.md) and [data protection](docs/data-protection.md) are living
-documents rather than sections of it.
+Seventeen ADRs in [docs/adr](docs/adr/), including the ones that were later reversed.
+[architecture.md](docs/architecture.md) covers the layering and why `Linewise.Domain` has no
+NuGet packages at all. The [technical design](docs/technical-design.md) is the original plan.
+[threat-model.md](docs/threat-model.md) and [data-protection.md](docs/data-protection.md) get
+updated as things change rather than sitting inside the plan.
 
 ## Known limitations
 
-- **Never used in a factory.** Every rule the engine encodes is an assumption that happens to
-  compile.
-- **The historic replay has not been done.** Replaying a real month against the engine and
-  comparing it to what the manager actually produced is the highest value testing left, and it
-  needs data nobody has sent yet.
-- **No installer.** Runs from `dotnet run`. Packaging is phase 8.
-- **Windows is the target; Linux is where it is developed.** The suite passes on both and the
-  application runs on both, but the database key is weaker on Linux by design.
+- Never used in a factory. Every rule in the engine is an assumption that happens to compile.
+- The historic replay hasn't been done. Running a real month through the engine and comparing
+  it against what the manager actually produced is the most useful testing left, and it needs
+  data I don't have yet.
+- No installer. It runs from `dotnet run`. Packaging is phase 8.
+- Ships to Windows, developed on Linux. Both build and run, but the database key is weaker on
+  Linux on purpose.
   [ADR 0011](docs/adr/0011-development-happens-on-linux-and-shipping-does-not.md).
-- **Import detection was built against invented spreadsheets.** It finds the shapes somebody
-  thought to invent. A sheet nobody imagined still needs a template by hand.
+- The importer's layout detection was built against spreadsheets I made up, so it finds the
+  shapes I thought of. Anything stranger still needs a template set up by hand.
   [ADR 0017](docs/adr/0017-the-importer-reads-the-sheet-before-it-reads-the-template.md).
-- **No undo.** Every editing action is one way.
-- **Backup runs on startup and cannot be restored from the application.** The service and the
-  restore routine are tested; neither has a button.
+- No undo yet.
+- Backups run at startup but there's no way to restore one from inside the app. The restore
+  routine exists and is tested. It just has no button.
 
 ## Licence
 
-All rights reserved. See [LICENSE](LICENSE). Not open source, and not accepting
-contributions.
+All rights reserved, see [LICENSE](LICENSE). Not open source and not taking contributions.
 
-No real employee data appears anywhere in this repository, including screenshots and test
-fixtures. The client is not named.
+There's no real employee data anywhere in this repository, including the screenshot and the
+test fixtures, and the site isn't named.
 
-Built by Rejus Zuzevicius.
+Rejus Zuzevicius
