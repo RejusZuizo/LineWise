@@ -1,3 +1,4 @@
+using Linewise.Application.Rostering;
 using Linewise.Domain.Enums;
 
 namespace Linewise.Desktop.ViewModels;
@@ -22,4 +23,10 @@ public interface IRosterEditor
 
     /// <summary>Shuts a line for one day, or puts it back into service.</summary>
     Task SetLineClosedAsync(Guid lineId, DateOnly date, bool closed);
+
+    /// <summary>Who could take a place on this line today, best first.</summary>
+    Task<IReadOnlyList<ReplacementCandidate>> FindReplacementsAsync(Guid lineId, DateOnly date);
+
+    /// <summary>Puts somebody on the line, locked so a regenerate leaves them there.</summary>
+    Task PlaceAsync(Guid employeeId, Guid lineId, DateOnly date);
 }

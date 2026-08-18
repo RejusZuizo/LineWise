@@ -31,6 +31,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     private readonly IThemeService? _theme;
     private readonly IAbsenceService? _absences;
     private readonly ILineDayService? _lineDays;
+    private readonly IReplacementFinder? _replacements;
     private readonly ILineDemandRepository? _demands;
 
     private DateOnly _weekStart = MondayOf(DateOnly.FromDateTime(DateTime.Today));
@@ -104,7 +105,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
         IThemeService theme,
         IAbsenceService absences,
         ILineDayService lineDays,
-        ILineDemandRepository demands)
+        ILineDemandRepository demands,
+        IReplacementFinder replacements)
     {
         _rosters = rosters;
         _configuration = configuration;
@@ -117,6 +119,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
         _theme = theme;
         _absences = absences;
         _lineDays = lineDays;
+        _replacements = replacements;
         _demands = demands;
     }
 
@@ -392,6 +395,47 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
         {
             Log.Error(exception, "Could not mark somebody back in.");
             Status = Strings.CouldNotMarkAbsent;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    public Task<IReadOnlyList<ReplacementCandidate>> FindReplacementsAsync(Guid lineId, DateOnly date) =>
+        _replacements is null
+            ? Task.FromResult<IReadOnlyList<ReplacementCandidate>>([])
+            : _replacements.FindAsync(lineId, date);
+
+    /// <summary>
+    /// Puts somebody on a line for a day, locked, and redraws.
+    /// </summary>
+    /// <remarks>
+    /// Locked and marked manual, so the generate somebody presses afterwards leaves them
+    /// where they were put. That is the rule the whole of phase 6 rests on.
+    /// </remarks>
+    public async Task PlaceAsync(Guid employeeId, Guid lineId, DateOnly date)
+    {
+        if (_absences is null)
+        {
+            return;
+        }
+
+        IsBusy = true;
+
+        try
+        {
+            await _absences.PlaceAsync(employeeId, lineId, date).ConfigureAwait(true);
+
+            Log.Information("Placed somebody on {LineId} for {Date}, locked.", lineId, date);
+
+            await LoadAsync(_weekStart).ConfigureAwait(true);
+            Status = Strings.PlacedCover;
+        }
+        catch (Exception exception)
+        {
+            Log.Error(exception, "Could not place somebody on a line.");
+            Status = Strings.CouldNotPlace;
         }
         finally
         {

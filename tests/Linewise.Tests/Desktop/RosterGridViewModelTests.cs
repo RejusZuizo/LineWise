@@ -405,6 +405,19 @@ public sealed class RosterGridViewModelTests
             Closure = (lineId, date, closed);
             return Task.CompletedTask;
         }
+
+        public IReadOnlyList<ReplacementCandidate> Offer { get; init; } = [];
+
+        public (Guid EmployeeId, Guid LineId, DateOnly Date)? Placed { get; private set; }
+
+        public Task<IReadOnlyList<ReplacementCandidate>> FindReplacementsAsync(Guid lineId, DateOnly date) =>
+            Task.FromResult(Offer);
+
+        public Task PlaceAsync(Guid employeeId, Guid lineId, DateOnly date)
+        {
+            Placed = (employeeId, lineId, date);
+            return Task.CompletedTask;
+        }
     }
 
     /// <summary>
@@ -471,6 +484,113 @@ public sealed class RosterGridViewModelTests
 
         Assert.Equal((Ovens, Monday, false), editor.Closure);
     }
+
+    /// <summary>
+    /// Offered on a short line, and not on a full one. A button on a line that needs nothing
+    /// is one more thing to read past.
+    /// </summary>
+    [Fact]
+    public void Filling_is_offered_only_where_there_is_a_place_to_fill()
+    {
+        var full = Build(
+            assignments: [Assign(Ada, Ovens), Assign(Bram, Ovens)],
+            lines: [Line(Ovens, "Ovens", order: 1, required: 2)]);
+
+        var short_ = Build(
+            assignments: [Assign(Ada, Ovens)],
+            lines: [Line(Ovens, "Ovens", order: 1, required: 2)]);
+
+        var closed = Build(
+            assignments: [],
+            lines: [Line(Ovens, "Ovens", order: 1, required: 2)],
+            demands: [Closed(Ovens)]);
+
+        Assert.False(full.Rows[0].Cells[0].CanFill);
+        Assert.True(short_.Rows[0].Cells[0].CanFill);
+
+        // A closed line is not short. Offering to fill it would be offering to staff a line
+        // nobody asked to run.
+        Assert.False(closed.Rows[0].Cells[0].CanFill);
+    }
+
+    [Fact]
+    public async Task The_picker_keeps_the_order_it_was_given()
+    {
+        var editor = new RecordingEditor
+        {
+            Offer =
+            [
+                Candidate(Bram, "Bram Invented", rank: 1),
+                Candidate(Cleo, "Cleo Notreal", rank: null),
+            ],
+        };
+
+        var grid = Build(
+            assignments: [Assign(Ada, Ovens)],
+            lines: [Line(Ovens, "Ovens", order: 1, required: 2)],
+            editor: editor);
+
+        var cell = grid.Rows[0].Cells[0];
+
+        await cell.FindReplacementsCommand.ExecuteAsync(null);
+
+        // Not re-sorted on the way to the screen. The ranking is the feature and the view
+        // model is not entitled to a second opinion about it.
+        Assert.Equal(["Bram Invented", "Cleo Notreal"], cell.Candidates.Select(c => c.DisplayName));
+        Assert.True(cell.IsPickingReplacement);
+    }
+
+    [Fact]
+    public async Task Choosing_somebody_places_them_on_that_line_and_day()
+    {
+        var editor = new RecordingEditor { Offer = [Candidate(Bram, "Bram Invented", rank: 1)] };
+
+        var grid = Build(
+            days: 2,
+            assignments: [Assign(Ada, Ovens, dayOffset: 1)],
+            lines: [Line(Ovens, "Ovens", order: 1, required: 2)],
+            editor: editor);
+
+        var cell = grid.Rows[0].Cells[1];
+
+        await cell.FindReplacementsCommand.ExecuteAsync(null);
+        await cell.Candidates[0].PlaceCommand.ExecuteAsync(null);
+
+        Assert.Equal((Bram, Ovens, Monday.AddDays(1)), editor.Placed);
+        Assert.False(cell.IsPickingReplacement);
+    }
+
+    /// <summary>
+    /// Which line goes short is the part the manager weighs, so it is named rather than
+    /// flagged.
+    /// </summary>
+    [Fact]
+    public async Task Taking_somebody_off_another_line_names_that_line()
+    {
+        var editor = new RecordingEditor
+        {
+            Offer = [Candidate(Bram, "Bram Invented", rank: 1) with { AlreadyOnLineId = Packing, AlreadyOnLineName = "Packing" }],
+        };
+
+        var grid = Build(
+            assignments: [Assign(Ada, Ovens)],
+            lines: [Line(Ovens, "Ovens", order: 1, required: 2)],
+            editor: editor);
+
+        var cell = grid.Rows[0].Cells[0];
+        await cell.FindReplacementsCommand.ExecuteAsync(null);
+
+        Assert.True(cell.Candidates[0].LeavesAHoleElsewhere);
+        Assert.Contains("Packing", cell.Candidates[0].Warning, StringComparison.Ordinal);
+    }
+
+    private static ReplacementCandidate Candidate(Guid id, string name, int? rank) => new()
+    {
+        EmployeeId = id,
+        DisplayName = name,
+        Status = AvailabilityStatus.Working,
+        PreferenceRank = rank,
+    };
 
     private static LineDemand Closed(Guid lineId, int dayOffset = 0) => new()
     {

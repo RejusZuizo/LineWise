@@ -1,12 +1,16 @@
 using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Linewise.Application.Rostering;
 using Linewise.Desktop.Resources;
 
 namespace Linewise.Desktop.ViewModels;
 
 /// <summary>One line on one day: who is on it, and whether that is enough.</summary>
-public sealed class RosterCellViewModel
+public sealed partial class RosterCellViewModel : ObservableObject
 {
+    private readonly IRosterEditor? _editor;
+
     public RosterCellViewModel(
         DateOnly date,
         IEnumerable<PersonChipViewModel> people,
@@ -21,6 +25,8 @@ public sealed class RosterCellViewModel
         Required = required;
         LineId = lineId;
         IsClosed = isClosed;
+
+        _editor = editor;
 
         ToggleClosedCommand = new AsyncRelayCommand(
             () => editor is null
@@ -53,6 +59,50 @@ public sealed class RosterCellViewModel
     public string ToggleClosedLabel => IsClosed ? Strings.ReopenLine : Strings.CloseLine;
 
     public IAsyncRelayCommand ToggleClosedCommand { get; }
+
+    /// <summary>
+    /// Who could fill a place here, best first. Loaded when the picker is opened rather than
+    /// with the grid: a week is a hundred and forty cells and none of them needs this until
+    /// somebody asks.
+    /// </summary>
+    public ObservableCollection<ReplacementCandidateViewModel> Candidates { get; } = [];
+
+    [ObservableProperty]
+    private bool _isPickingReplacement;
+
+    /// <summary>
+    /// Somewhere to put somebody. Offered on a short line rather than on every cell, because
+    /// a full line does not need filling and a button on it is one more thing to read past.
+    /// </summary>
+    public bool CanFill => IsShort && !IsClosed;
+
+    [RelayCommand]
+    private async Task FindReplacementsAsync()
+    {
+        if (_editor is null)
+        {
+            return;
+        }
+
+        Candidates.Clear();
+
+        foreach (var candidate in await _editor.FindReplacementsAsync(LineId, Date).ConfigureAwait(true))
+        {
+            Candidates.Add(new ReplacementCandidateViewModel(candidate, this));
+        }
+
+        IsPickingReplacement = true;
+    }
+
+    internal async Task PlaceAsync(Guid employeeId)
+    {
+        IsPickingReplacement = false;
+
+        if (_editor is not null)
+        {
+            await _editor.PlaceAsync(employeeId, LineId, Date).ConfigureAwait(true);
+        }
+    }
 
     public ObservableCollection<PersonChipViewModel> People { get; }
 

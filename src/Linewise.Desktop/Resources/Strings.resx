@@ -741,4 +741,44 @@
     <value>Edit this line</value>
     <comment>Tooltip on a line in the sidebar.</comment>
   </data>
+  <data name="FillThisPlace" xml:space="preserve">
+    <value>Fill</value>
+    <comment>Opens the ranked list of people who could take a place on this line.</comment>
+  </data>
+  <data name="CandidateRequiredHere" xml:space="preserve">
+    <value>Required on this line</value>
+    <comment>Why a candidate is near the top of the list.</comment>
+  </data>
+  <data name="CandidateFirstChoice" xml:space="preserve">
+    <value>First choice</value>
+    <comment>Why a candidate is near the top of the list.</comment>
+  </data>
+  <data name="CandidateChoice" xml:space="preserve">
+    <value>Choice {0}</value>
+    <comment>0 = preference rank for this line.</comment>
+  </data>
+  <data name="CandidateOnOvertime" xml:space="preserve">
+    <value>Available, on overtime</value>
+    <comment>Available but being paid a premium.</comment>
+  </data>
+  <data name="CandidateAvailable" xml:space="preserve">
+    <value>Available</value>
+    <comment>In today, with no preference about this line.</comment>
+  </data>
+  <data name="CandidateLeavesLineShort" xml:space="preserve">
+    <value>Leaves {0} short</value>
+    <comment>0 = the line they are currently on. Taking them opens a hole there.</comment>
+  </data>
+  <data name="CandidateNobody" xml:space="preserve">
+    <value>Nobody available who may work this line.</value>
+    <comment>Shown when the ranked list comes back empty.</comment>
+  </data>
+  <data name="PlacedCover" xml:space="preserve">
+    <value>Placed, and locked so generating again leaves them there.</value>
+    <comment>Status bar after filling a place by hand.</comment>
+  </data>
+  <data name="CouldNotPlace" xml:space="preserve">
+    <value>Could not place them. Nothing was altered.</value>
+    <comment>Shown instead of a stack trace.</comment>
+  </data>
 </root>
