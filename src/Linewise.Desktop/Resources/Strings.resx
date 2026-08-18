@@ -797,4 +797,112 @@
     <value>Not saved yet</value>
     <comment>Shown beside the save button when the screen holds changes that are not stored.</comment>
   </data>
+  <data name="GapsFilledOne" xml:space="preserve">
+    <value>One place filled by the new rules.</value>
+    <comment>Status bar after a rule change topped the week up.</comment>
+  </data>
+  <data name="GapsFilledMany" xml:space="preserve">
+    <value>{0} places filled by the new rules.</value>
+    <comment>0 = number of places. Singular is a separate entry.</comment>
+  </data>
+  <data name="PreviousWeek" xml:space="preserve">
+    <value>Previous week</value>
+    <comment>Moves the roster back seven days.</comment>
+  </data>
+  <data name="NextWeek" xml:space="preserve">
+    <value>Next week</value>
+    <comment>Moves the roster forward seven days.</comment>
+  </data>
+  <data name="ThisWeek" xml:space="preserve">
+    <value>This week</value>
+    <comment>Returns to the week containing today.</comment>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>Settings</value>
+    <comment>Opens the panel holding how the window is arranged.</comment>
+  </data>
+  <data name="SettingsHeading" xml:space="preserve">
+    <value>APPEARANCE</value>
+    <comment>Heading inside the settings panel.</comment>
+  </data>
+  <data name="SettingsDarkTheme" xml:space="preserve">
+    <value>Dark theme</value>
+    <comment>Switches the palette. Light is the default, to match a sheet of paper.</comment>
+  </data>
+  <data name="SettingsShowWarnings" xml:space="preserve">
+    <value>Show warnings panel</value>
+    <comment>Whether the right hand panel is on screen.</comment>
+  </data>
+  <data name="SettingsShowSidebar" xml:space="preserve">
+    <value>Show sidebar</value>
+    <comment>Whether the left hand navigation is on screen.</comment>
+  </data>
+  <data name="HideWarnings" xml:space="preserve">
+    <value>Hide the warnings panel</value>
+    <comment>Tooltip on the collapse icon at the top of the warnings panel.</comment>
+  </data>
+  <data name="DashboardNeedsAttention" xml:space="preserve">
+    <value>Needs a decision</value>
+    <comment>Heading over the errors on the overview.</comment>
+  </data>
+  <data name="DashboardAllWell" xml:space="preserve">
+    <value>Every line has the people and the leader it needs this week.</value>
+    <comment>Shown on the overview when a roster exists and raises no errors.</comment>
+  </data>
+  <data name="DashboardMoreProblemsOne" xml:space="preserve">
+    <value>and one more</value>
+    <comment>Shown under the errors listed on the overview.</comment>
+  </data>
+  <data name="DashboardMoreProblemsMany" xml:space="preserve">
+    <value>and {0} more</value>
+    <comment>0 = how many errors are not listed. Singular is a separate entry.</comment>
+  </data>
+  <data name="CouldNotSaveSettings" xml:space="preserve">
+    <value>Could not save the settings. See the log for details.</value>
+    <comment>Shown instead of a stack trace.</comment>
+  </data>
+  <data name="SettingsPrintHeading" xml:space="preserve">
+    <value>PRINTED SHEET</value>
+    <comment>Heading over the print settings.</comment>
+  </data>
+  <data name="SettingsCompanyName" xml:space="preserve">
+    <value>Company name</value>
+    <comment>Printed in the header of every sheet.</comment>
+  </data>
+  <data name="SettingsPaperSize" xml:space="preserve">
+    <value>Paper size</value>
+    <comment>Print setting.</comment>
+  </data>
+  <data name="SettingsOrientation" xml:space="preserve">
+    <value>Orientation</value>
+    <comment>Print setting.</comment>
+  </data>
+  <data name="SettingsFontSize" xml:space="preserve">
+    <value>Type size</value>
+    <comment>Print setting. Everything else on the sheet scales from this one number.</comment>
+  </data>
+  <data name="SettingsFontSizeHint" xml:space="preserve">
+    <value>Everything on the sheet scales from this. Raise it if the roster is read from further away.</value>
+    <comment>Explains the one number the printed layout is built on.</comment>
+  </data>
+  <data name="SettingsAccentColours" xml:space="preserve">
+    <value>Line colours on paper</value>
+    <comment>Print setting, off by default.</comment>
+  </data>
+  <data name="SettingsAccentColoursHint" xml:space="preserve">
+    <value>Decoration only. Nothing on the sheet is ever told apart by colour alone, so this is safe to leave off for a monochrome printer.</value>
+    <comment>Explains why line colours are optional on paper.</comment>
+  </data>
+  <data name="RegenerateHeading" xml:space="preserve">
+    <value>This week already has a roster</value>
+    <comment>Heading on the confirmation before rebuilding an existing roster.</comment>
+  </data>
+  <data name="RegenerateExplains" xml:space="preserve">
+    <value>Generating again rebuilds it from the current rules. Anything you placed by hand is locked and stays where it is; everything else may move.</value>
+    <comment>Explains what regenerating will and will not disturb.</comment>
+  </data>
+  <data name="RegenerateConfirm" xml:space="preserve">
+    <value>Generate again</value>
+    <comment>Confirms rebuilding an existing roster.</comment>
+  </data>
 </root>

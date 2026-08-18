@@ -32,6 +32,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     private readonly IAbsenceService? _absences;
     private readonly ILineDayService? _lineDays;
     private readonly IReplacementFinder? _replacements;
+    private readonly IGapFiller? _gaps;
     private readonly ILineDemandRepository? _demands;
 
     private DateOnly _weekStart = MondayOf(DateOnly.FromDateTime(DateTime.Today));
@@ -79,6 +80,14 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     [ObservableProperty]
     private RosterSummaryViewModel? _summary;
 
+    /// <summary>
+    /// How the printed sheet is laid out. Held here because the settings panel is part of
+    /// this window, and stored in the database so it travels with a backup rather than
+    /// living in a configuration file beside the executable.
+    /// </summary>
+    [ObservableProperty]
+    private PrintSettingsViewModel? _printSettings;
+
     [ObservableProperty]
     private string _status = Strings.Starting;
 
@@ -106,7 +115,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
         IAbsenceService absences,
         ILineDayService lineDays,
         ILineDemandRepository demands,
-        IReplacementFinder replacements)
+        IReplacementFinder replacements,
+        IGapFiller gaps)
     {
         _rosters = rosters;
         _configuration = configuration;
@@ -120,6 +130,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
         _absences = absences;
         _lineDays = lineDays;
         _replacements = replacements;
+        _gaps = gaps;
         _demands = demands;
     }
 
@@ -206,8 +217,58 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     [RelayCommand]
     private void ToggleTheme() => _theme?.Toggle();
 
+    /// <summary>
+    /// Which palette is on, as a switch rather than a button that flips something.
+    /// </summary>
+    /// <remarks>
+    /// A settings panel says what the state is; a button in a list only says what pressing
+    /// it would do. The theme service holds the truth either way.
+    /// </remarks>
+    public bool IsDarkTheme
+    {
+        get => _theme?.IsDark ?? false;
+        set
+        {
+            if (_theme is not null && value != _theme.IsDark)
+            {
+                _theme.Toggle();
+                OnPropertyChanged();
+            }
+        }
+    }
+
     [RelayCommand]
     private void ShowDashboard() => IsShowingRoster = false;
+
+    /// <summary>
+    /// The week before, the week after, and back to this one.
+    /// </summary>
+    /// <remarks>
+    /// The week on screen was fixed to whichever one contained today, and nothing could
+    /// change it. A rostering tool that can only show the current week cannot be used for
+    /// the thing rostering is for: a manager builds Monday's roster on the Thursday before
+    /// it.
+    /// </remarks>
+    [RelayCommand]
+    private Task PreviousWeekAsync(CancellationToken cancellationToken) =>
+        LoadAsync(_weekStart.AddDays(-7), cancellationToken);
+
+    [RelayCommand]
+    private Task NextWeekAsync(CancellationToken cancellationToken) =>
+        LoadAsync(_weekStart.AddDays(7), cancellationToken);
+
+    [RelayCommand]
+    private Task ThisWeekAsync(CancellationToken cancellationToken) =>
+        LoadAsync(DateOnly.FromDateTime(DateTime.Today), cancellationToken);
+
+    /// <summary>
+    /// Whether the week on screen is the one today falls in. Drives a way back, and the
+    /// label that says where you are.
+    /// </summary>
+    public bool IsThisWeek => _weekStart == MondayOf(DateOnly.FromDateTime(DateTime.Today));
+
+    /// <summary>The week on screen, named. Always says which week, never just "this week".</summary>
+    public string WeekLabel => Strings.WeekBeginning(_weekStart);
 
     [RelayCommand]
     private void ShowToday()
@@ -283,7 +344,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
         }
 
         await _dialogs.ShowPeopleAsync().ConfigureAwait(true);
-        await LoadAsync(_weekStart, cancellationToken).ConfigureAwait(true);
+        await FillGapsAsync(cancellationToken).ConfigureAwait(true);
     }
 
     /// <summary>
@@ -299,7 +360,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
         }
 
         await _dialogs.ShowLineEditorAsync().ConfigureAwait(true);
-        await LoadAsync(_weekStart, cancellationToken).ConfigureAwait(true);
+        await FillGapsAsync(cancellationToken).ConfigureAwait(true);
     }
 
     /// <summary>
@@ -495,6 +556,74 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     }
 
     /// <summary>
+    /// Stores how the printed sheet should look. Written as it is changed rather than
+    /// behind a save button: there is nothing to review, and a settings panel that needs
+    /// saving is one somebody closes without saving.
+    /// </summary>
+    private async Task SavePrintSettingsAsync(Domain.Entities.PrintSettings settings)
+    {
+        if (_configuration is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await _configuration.SavePrintSettingsAsync(settings).ConfigureAwait(true);
+        }
+        catch (Exception exception)
+        {
+            Log.Error(exception, "Could not save the print settings.");
+            Status = Strings.CouldNotSaveSettings;
+        }
+    }
+
+    /// <summary>
+    /// Whether this week already has a roster, so generating again would rebuild one that
+    /// has been looked at. Drives the warning on the button rather than blocking it.
+    /// </summary>
+    public bool WouldRegenerate => HasRoster;
+
+    /// <summary>
+    /// Fills whatever the rules can now fill, then redraws.
+    /// </summary>
+    /// <remarks>
+    /// Run after the rules are edited. Making somebody eligible to lead a line that has no
+    /// leader should put them on it, and it should not take pressing generate — which would
+    /// also fix it, and would reshuffle a week that has already been reviewed to do so.
+    /// <para>
+    /// Only ever adds. Nobody already placed moves, and nobody is taken off another line.
+    /// </para>
+    /// </remarks>
+    private async Task FillGapsAsync(CancellationToken cancellationToken)
+    {
+        if (_gaps is not null)
+        {
+            try
+            {
+                var filled = await _gaps.FillAsync(_weekStart, cancellationToken).ConfigureAwait(true);
+
+                await LoadAsync(_weekStart, cancellationToken).ConfigureAwait(true);
+
+                if (filled > 0)
+                {
+                    Log.Information("Filled {Filled} places after a rule change.", filled);
+                    Status = Strings.GapsFilled(filled);
+                }
+
+                return;
+            }
+            catch (Exception exception)
+            {
+                // A week that could not be topped up is still a week worth drawing.
+                Log.Error(exception, "Could not fill the gaps after a rule change.");
+            }
+        }
+
+        await LoadAsync(_weekStart, cancellationToken).ConfigureAwait(true);
+    }
+
+    /// <summary>
     /// Builds a roster for the week on screen and stores it as the draft, then redraws.
     /// </summary>
     /// <remarks>
@@ -628,6 +757,10 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
 
             var configuration = await _configuration.GetAsync(cancellationToken).ConfigureAwait(true);
 
+            PrintSettings ??= new PrintSettingsViewModel(
+                await _configuration.GetPrintSettingsAsync(cancellationToken).ConfigureAwait(true),
+                SavePrintSettingsAsync);
+
             var weekAvailability = await _availability
                 .GetAsync(weekStart, weekStart.AddDays(7), cancellationToken)
                 .ConfigureAwait(true);
@@ -684,13 +817,6 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
                 _loadedDemands);
             Summary = new RosterSummaryViewModel(stored.Roster, weekAvailability, stored.Version);
 
-            Dashboard = new DashboardViewModel(
-                weekStart,
-                configuration.Lines,
-                configuration.Employees,
-                weekAvailability,
-                Summary);
-
             var lineNames = configuration.Lines.ToDictionary(line => line.Id, line => line.Name);
             var employeeNames = configuration.Employees.ToDictionary(e => e.Id, e => e.FullName);
 
@@ -719,6 +845,18 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
             {
                 WarningGroups.Add(new WarningGroupViewModel([.. group]));
             }
+
+            // Built after the warnings, not before. The overview leads with what needs
+            // deciding, and it cannot do that until there is something to lead with.
+            Dashboard = new DashboardViewModel(
+                weekStart,
+                configuration.Lines,
+                configuration.Employees,
+                weekAvailability,
+                Summary)
+            {
+                Problems = [.. WarningGroups.Where(group => group.IsError)],
+            };
 
             WarningSections.Clear();
 
@@ -797,6 +935,9 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     private void Notify()
     {
         OnPropertyChanged(nameof(HasRoster));
+        OnPropertyChanged(nameof(WouldRegenerate));
+        OnPropertyChanged(nameof(IsThisWeek));
+        OnPropertyChanged(nameof(WeekLabel));
         OnPropertyChanged(nameof(HasWarnings));
         OnPropertyChanged(nameof(HasLines));
         OnPropertyChanged(nameof(IsFirstRun));

@@ -242,4 +242,67 @@ public sealed class LineEditorViewModelTests
 
         Assert.Equal(2, edits);
     }
+
+    /// <summary>
+    /// Every one of these has been stored and honoured by the printer since phase 4 and
+    /// none of them could be changed without editing the database by hand.
+    /// </summary>
+    [Fact]
+    public async Task Print_settings_are_saved_as_they_are_changed()
+    {
+        var saved = new List<PrintSettings>();
+
+        var settings = new PrintSettingsViewModel(
+            new PrintSettings { Id = Guid.NewGuid(), CompanyName = "A Food Manufacturer" },
+            written =>
+            {
+                saved.Add(written);
+                return Task.CompletedTask;
+            });
+
+        // Nothing written on the way to the screen.
+        Assert.Empty(saved);
+
+        settings.BaseFontPoints = 18;
+        settings.UseAccentColours = true;
+
+        Assert.Equal(2, saved.Count);
+        Assert.Equal(18, saved[^1].BaseFontPoints);
+        Assert.True(saved[^1].UseAccentColours);
+
+        await Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// A settings panel that does not show the logo must not quietly drop it.
+    /// </summary>
+    [Fact]
+    public void Print_settings_carry_through_what_they_do_not_show()
+    {
+        var logo = new byte[] { 1, 2, 3 };
+
+        var settings = new PrintSettingsViewModel(
+            new PrintSettings { Id = Guid.NewGuid(), LogoPng = logo },
+            _ => Task.CompletedTask);
+
+        settings.CompanyName = "A Food Manufacturer";
+
+        Assert.Equal(logo, settings.ToSettings().LogoPng);
+    }
+
+    /// <summary>
+    /// The type size is the one number the whole printed layout scales from, so a nonsense
+    /// value would not merely look odd, it would produce an unreadable sheet.
+    /// </summary>
+    [Fact]
+    public void Type_size_is_held_within_what_a_sheet_can_carry()
+    {
+        var settings = new PrintSettingsViewModel(
+            new PrintSettings { Id = Guid.NewGuid() },
+            _ => Task.CompletedTask);
+
+        settings.BaseFontPoints = 400;
+
+        Assert.Equal(36, settings.ToSettings().BaseFontPoints);
+    }
 }

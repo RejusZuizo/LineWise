@@ -191,4 +191,61 @@ public sealed class RosterSummaryViewModelTests
             Status = status,
             CreatedAtUtc = new DateTime(2026, 8, 3, 9, 0, 0, DateTimeKind.Utc),
         };
+
+    /// <summary>
+    /// The overview was five true statements about how many of everything there is, none of
+    /// which told the manager what to do next.
+    /// </summary>
+    [Fact]
+    public void The_overview_leads_with_what_needs_deciding()
+    {
+        var dashboard = new DashboardViewModel(
+            new DateOnly(2026, 8, 3),
+            [new ProductionLine { Id = Guid.NewGuid(), Name = "Ovens", RequiredHeadcount = 2 }],
+            [new Employee { Id = Guid.NewGuid(), FullName = "Ada Fictional" }],
+            [],
+            roster: null)
+        {
+            Problems = [.. Enumerable.Range(0, 6).Select(_ => ErrorGroup())],
+        };
+
+        Assert.True(dashboard.HasProblems);
+
+        // A front page, not the whole list. The rest are one click away in the panel.
+        Assert.Equal(4, dashboard.TopProblems.Count);
+        Assert.True(dashboard.HasMoreProblems);
+        Assert.Contains("2", dashboard.MoreProblemsLabel, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_week_with_nothing_wrong_says_so()
+    {
+        var dashboard = new DashboardViewModel(
+            new DateOnly(2026, 8, 3),
+            [new ProductionLine { Id = Guid.NewGuid(), Name = "Ovens", RequiredHeadcount = 2 }],
+            [new Employee { Id = Guid.NewGuid(), FullName = "Ada Fictional" }],
+            [],
+            new RosterSummaryViewModel(
+                new RosterWeek { WeekStart = new DateOnly(2026, 8, 3) },
+                [],
+                version: null));
+
+        // Silence about a good week would leave somebody wondering whether it looked.
+        Assert.False(dashboard.HasProblems);
+        Assert.True(dashboard.IsAllWell);
+    }
+
+    private static WarningGroupViewModel ErrorGroup() =>
+        new([
+            new WarningViewModel(
+                new RosterWarning
+                {
+                    Severity = WarningSeverity.Error,
+                    Code = WarningCode.LineHasNoLeader,
+                    Message = "Ovens has no line leader.",
+                    Date = new DateOnly(2026, 8, 3),
+                },
+                "Ovens",
+                null),
+        ]);
 }

@@ -101,6 +101,9 @@ public sealed class SqliteConfigurationRepository : IConfigurationRepository
             .Where(skill => skill.EmployeeId == employee.Id)
             .ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
 
+        _context.Forget<EmployeeAliasRow>(alias => alias.EmployeeId == employee.Id);
+        _context.Forget<EmployeeSkillRow>(skill => skill.EmployeeId == employee.Id);
+
         foreach (var alias in employee.Aliases.Distinct(StringComparer.Ordinal))
         {
             _context.Set<EmployeeAliasRow>().Add(new EmployeeAliasRow
@@ -131,6 +134,8 @@ public sealed class SqliteConfigurationRepository : IConfigurationRepository
         await _context.Set<LineSkillRow>()
             .Where(skill => skill.LineId == line.Id)
             .ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
+
+        _context.Forget<LineSkillRow>(skill => skill.LineId == line.Id);
 
         foreach (var skillId in line.RequiredSkillIds)
         {
@@ -163,6 +168,7 @@ public sealed class SqliteConfigurationRepository : IConfigurationRepository
             .Where(preference => preference.EmployeeId == employeeId)
             .ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
 
+        _context.Forget<LinePreference>(preference => preference.EmployeeId == employeeId);
         _context.Preferences.AddRange(preferences);
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -178,6 +184,7 @@ public sealed class SqliteConfigurationRepository : IConfigurationRepository
             .Where(eligibility => eligibility.EmployeeId == employeeId)
             .ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
 
+        _context.Forget<LeaderEligibility>(eligibility => eligibility.EmployeeId == employeeId);
         _context.LeaderEligibilities.AddRange(eligibilities);
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -193,6 +200,7 @@ public sealed class SqliteConfigurationRepository : IConfigurationRepository
             .Where(eligibility => eligibility.EmployeeId == employeeId)
             .ExecuteDeleteAsync(cancellationToken).ConfigureAwait(false);
 
+        _context.Forget<OperatingAssistantEligibility>(eligibility => eligibility.EmployeeId == employeeId);
         _context.OperatingAssistantEligibilities.AddRange(eligibilities);
         await _context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }

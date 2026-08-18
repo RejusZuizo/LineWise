@@ -234,6 +234,18 @@ public sealed class SqliteRosterRepository : IRosterRepository
             .Where(day => day.RosterVersionId == versionId)
             .ExecuteDeleteAsync(cancellationToken)
             .ConfigureAwait(false);
+
+        // Every tracked child, not the ones for this version alone. The parent key lives in
+        // shadow state, which a predicate over the entity cannot read, and this repository
+        // reads everything AsNoTracking — so nothing tracked here is anything but the
+        // leftovers of a previous write.
+        //
+        // The draft is rewritten on every autosave. Without this the tracker accumulates
+        // every assignment the application has ever written, which is a leak on its own and
+        // eventually a key collision.
+        _context.Forget<Assignment>(_ => true);
+        _context.Forget<RosterWarning>(_ => true);
+        _context.Forget<RosterDayRow>(_ => true);
     }
 
     private void WriteChildren(Guid versionId, RosterWeek roster)

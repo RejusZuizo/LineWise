@@ -98,6 +98,49 @@ public static class Strings
 
     public static string ToggleTheme => Get(nameof(ToggleTheme));
 
+    public static string Settings => Get(nameof(Settings));
+
+    public static string DashboardMoreProblems(int more) =>
+        more == 1 ? Get("DashboardMoreProblemsOne") : Format("DashboardMoreProblemsMany", more);
+
+    public static string DashboardNeedsAttention => Get(nameof(DashboardNeedsAttention));
+
+    public static string DashboardAllWell => Get(nameof(DashboardAllWell));
+
+    public static string SettingsHeading => Get(nameof(SettingsHeading));
+
+    public static string CouldNotSaveSettings => Get(nameof(CouldNotSaveSettings));
+
+    public static string SettingsPrintHeading => Get(nameof(SettingsPrintHeading));
+
+    public static string SettingsCompanyName => Get(nameof(SettingsCompanyName));
+
+    public static string SettingsPaperSize => Get(nameof(SettingsPaperSize));
+
+    public static string SettingsOrientation => Get(nameof(SettingsOrientation));
+
+    public static string SettingsFontSize => Get(nameof(SettingsFontSize));
+
+    public static string SettingsFontSizeHint => Get(nameof(SettingsFontSizeHint));
+
+    public static string SettingsAccentColours => Get(nameof(SettingsAccentColours));
+
+    public static string SettingsAccentColoursHint => Get(nameof(SettingsAccentColoursHint));
+
+    public static string RegenerateHeading => Get(nameof(RegenerateHeading));
+
+    public static string RegenerateExplains => Get(nameof(RegenerateExplains));
+
+    public static string RegenerateConfirm => Get(nameof(RegenerateConfirm));
+
+    public static string SettingsDarkTheme => Get(nameof(SettingsDarkTheme));
+
+    public static string SettingsShowWarnings => Get(nameof(SettingsShowWarnings));
+
+    public static string SettingsShowSidebar => Get(nameof(SettingsShowSidebar));
+
+    public static string HideWarnings => Get(nameof(HideWarnings));
+
     public static string NavRoster => Get(nameof(NavRoster));
 
     public static string NavDashboard => Get(nameof(NavDashboard));
@@ -361,6 +404,15 @@ public static class Strings
     public static string FillThisPlace => Get(nameof(FillThisPlace));
 
     public static string PlacedCover => Get(nameof(PlacedCover));
+
+    public static string GapsFilled(int places) =>
+        places == 1 ? Get("GapsFilledOne") : Format("GapsFilledMany", places);
+
+    public static string PreviousWeek => Get(nameof(PreviousWeek));
+
+    public static string NextWeek => Get(nameof(NextWeek));
+
+    public static string ThisWeek => Get(nameof(ThisWeek));
 
     public static string CouldNotPlace => Get(nameof(CouldNotPlace));
 
