@@ -584,6 +584,25 @@ public sealed class RosterGridViewModelTests
         Assert.Contains("Packing", cell.Candidates[0].Warning, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// The week on screen was fixed to whichever one contained today, and nothing could
+    /// change it. A rostering tool that can only show this week cannot be used for the
+    /// thing rostering is for.
+    /// </summary>
+    [Theory]
+    [InlineData(2026, 8, 3)]
+    [InlineData(2026, 8, 6)]
+    [InlineData(2026, 8, 9)]
+    public void Any_day_resolves_to_its_monday_for_navigation(int year, int month, int day)
+    {
+        var monday = MainWindowViewModel.MondayOf(new DateOnly(year, month, day));
+
+        // A week step lands on a Monday whichever day it started from, so stepping back and
+        // forward returns to where it began rather than drifting through the week.
+        Assert.Equal(monday, MainWindowViewModel.MondayOf(monday.AddDays(7).AddDays(-7)));
+        Assert.Equal(monday.AddDays(7), MainWindowViewModel.MondayOf(monday.AddDays(7)));
+    }
+
     private static ReplacementCandidate Candidate(Guid id, string name, int? rank) => new()
     {
         EmployeeId = id,

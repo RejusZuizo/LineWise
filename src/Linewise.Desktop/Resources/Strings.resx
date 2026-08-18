@@ -797,4 +797,24 @@
     <value>Not saved yet</value>
     <comment>Shown beside the save button when the screen holds changes that are not stored.</comment>
   </data>
+  <data name="GapsFilledOne" xml:space="preserve">
+    <value>One place filled by the new rules.</value>
+    <comment>Status bar after a rule change topped the week up.</comment>
+  </data>
+  <data name="GapsFilledMany" xml:space="preserve">
+    <value>{0} places filled by the new rules.</value>
+    <comment>0 = number of places. Singular is a separate entry.</comment>
+  </data>
+  <data name="PreviousWeek" xml:space="preserve">
+    <value>Previous week</value>
+    <comment>Moves the roster back seven days.</comment>
+  </data>
+  <data name="NextWeek" xml:space="preserve">
+    <value>Next week</value>
+    <comment>Moves the roster forward seven days.</comment>
+  </data>
+  <data name="ThisWeek" xml:space="preserve">
+    <value>This week</value>
+    <comment>Returns to the week containing today.</comment>
+  </data>
 </root>

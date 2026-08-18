@@ -32,6 +32,7 @@ public static class ServiceCollectionExtensions
         services.TryAddScoped<IAbsenceService, AbsenceService>();
         services.TryAddScoped<ILineDayService, LineDayService>();
         services.TryAddScoped<IReplacementFinder, ReplacementFinder>();
+        services.TryAddScoped<IGapFiller, GapFiller>();
 
         return services;
     }

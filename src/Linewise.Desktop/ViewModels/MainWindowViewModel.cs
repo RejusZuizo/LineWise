@@ -32,6 +32,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     private readonly IAbsenceService? _absences;
     private readonly ILineDayService? _lineDays;
     private readonly IReplacementFinder? _replacements;
+    private readonly IGapFiller? _gaps;
     private readonly ILineDemandRepository? _demands;
 
     private DateOnly _weekStart = MondayOf(DateOnly.FromDateTime(DateTime.Today));
@@ -106,7 +107,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
         IAbsenceService absences,
         ILineDayService lineDays,
         ILineDemandRepository demands,
-        IReplacementFinder replacements)
+        IReplacementFinder replacements,
+        IGapFiller gaps)
     {
         _rosters = rosters;
         _configuration = configuration;
@@ -120,6 +122,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
         _absences = absences;
         _lineDays = lineDays;
         _replacements = replacements;
+        _gaps = gaps;
         _demands = demands;
     }
 
@@ -209,6 +212,36 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     [RelayCommand]
     private void ShowDashboard() => IsShowingRoster = false;
 
+    /// <summary>
+    /// The week before, the week after, and back to this one.
+    /// </summary>
+    /// <remarks>
+    /// The week on screen was fixed to whichever one contained today, and nothing could
+    /// change it. A rostering tool that can only show the current week cannot be used for
+    /// the thing rostering is for: a manager builds Monday's roster on the Thursday before
+    /// it.
+    /// </remarks>
+    [RelayCommand]
+    private Task PreviousWeekAsync(CancellationToken cancellationToken) =>
+        LoadAsync(_weekStart.AddDays(-7), cancellationToken);
+
+    [RelayCommand]
+    private Task NextWeekAsync(CancellationToken cancellationToken) =>
+        LoadAsync(_weekStart.AddDays(7), cancellationToken);
+
+    [RelayCommand]
+    private Task ThisWeekAsync(CancellationToken cancellationToken) =>
+        LoadAsync(DateOnly.FromDateTime(DateTime.Today), cancellationToken);
+
+    /// <summary>
+    /// Whether the week on screen is the one today falls in. Drives a way back, and the
+    /// label that says where you are.
+    /// </summary>
+    public bool IsThisWeek => _weekStart == MondayOf(DateOnly.FromDateTime(DateTime.Today));
+
+    /// <summary>The week on screen, named. Always says which week, never just "this week".</summary>
+    public string WeekLabel => Strings.WeekBeginning(_weekStart);
+
     [RelayCommand]
     private void ShowToday()
     {
@@ -283,7 +316,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
         }
 
         await _dialogs.ShowPeopleAsync().ConfigureAwait(true);
-        await LoadAsync(_weekStart, cancellationToken).ConfigureAwait(true);
+        await FillGapsAsync(cancellationToken).ConfigureAwait(true);
     }
 
     /// <summary>
@@ -299,7 +332,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
         }
 
         await _dialogs.ShowLineEditorAsync().ConfigureAwait(true);
-        await LoadAsync(_weekStart, cancellationToken).ConfigureAwait(true);
+        await FillGapsAsync(cancellationToken).ConfigureAwait(true);
     }
 
     /// <summary>
@@ -492,6 +525,45 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
         {
             IsBusy = false;
         }
+    }
+
+    /// <summary>
+    /// Fills whatever the rules can now fill, then redraws.
+    /// </summary>
+    /// <remarks>
+    /// Run after the rules are edited. Making somebody eligible to lead a line that has no
+    /// leader should put them on it, and it should not take pressing generate — which would
+    /// also fix it, and would reshuffle a week that has already been reviewed to do so.
+    /// <para>
+    /// Only ever adds. Nobody already placed moves, and nobody is taken off another line.
+    /// </para>
+    /// </remarks>
+    private async Task FillGapsAsync(CancellationToken cancellationToken)
+    {
+        if (_gaps is not null)
+        {
+            try
+            {
+                var filled = await _gaps.FillAsync(_weekStart, cancellationToken).ConfigureAwait(true);
+
+                await LoadAsync(_weekStart, cancellationToken).ConfigureAwait(true);
+
+                if (filled > 0)
+                {
+                    Log.Information("Filled {Filled} places after a rule change.", filled);
+                    Status = Strings.GapsFilled(filled);
+                }
+
+                return;
+            }
+            catch (Exception exception)
+            {
+                // A week that could not be topped up is still a week worth drawing.
+                Log.Error(exception, "Could not fill the gaps after a rule change.");
+            }
+        }
+
+        await LoadAsync(_weekStart, cancellationToken).ConfigureAwait(true);
     }
 
     /// <summary>
@@ -797,6 +869,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     private void Notify()
     {
         OnPropertyChanged(nameof(HasRoster));
+        OnPropertyChanged(nameof(IsThisWeek));
+        OnPropertyChanged(nameof(WeekLabel));
         OnPropertyChanged(nameof(HasWarnings));
         OnPropertyChanged(nameof(HasLines));
         OnPropertyChanged(nameof(IsFirstRun));

@@ -362,6 +362,15 @@ public static class Strings
 
     public static string PlacedCover => Get(nameof(PlacedCover));
 
+    public static string GapsFilled(int places) =>
+        places == 1 ? Get("GapsFilledOne") : Format("GapsFilledMany", places);
+
+    public static string PreviousWeek => Get(nameof(PreviousWeek));
+
+    public static string NextWeek => Get(nameof(NextWeek));
+
+    public static string ThisWeek => Get(nameof(ThisWeek));
+
     public static string CouldNotPlace => Get(nameof(CouldNotPlace));
 
     public static string CandidateRequiredHere => Get(nameof(CandidateRequiredHere));

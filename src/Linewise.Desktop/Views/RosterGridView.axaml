@@ -141,6 +141,28 @@
              screen changes, which is why the buttons live on the grid rather than in the
              navigation beside things that load. -->
         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6">
+
+          <!-- Which week. The roster used to be fixed to whichever one contained today,
+               which made the tool unusable for the thing rostering is for: a manager builds
+               Monday's roster on the Thursday before it. -->
+          <Button Content="‹"
+                  Classes="quiet"
+                  Padding="10,2"
+                  ToolTip.Tip="{x:Static res:Strings.PreviousWeek}"
+                  Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).PreviousWeekCommand}" />
+          <Button Content="{x:Static res:Strings.ThisWeek}"
+                  Classes="quiet"
+                  ToolTip.Tip="{x:Static res:Strings.ThisWeek}"
+                  IsEnabled="{Binding !$parent[Window].((vm:MainWindowViewModel)DataContext).IsThisWeek}"
+                  Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).ThisWeekCommand}" />
+          <Button Content="›"
+                  Classes="quiet"
+                  Padding="10,2"
+                  ToolTip.Tip="{x:Static res:Strings.NextWeek}"
+                  Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).NextWeekCommand}" />
+
+          <Border Width="1" Background="{DynamicResource LinewiseBorder}" Margin="4,2" />
+
           <Button Content="{x:Static res:Strings.ViewToday}"
                   Classes="quiet"
                   Command="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).ShowTodayCommand}" />
