@@ -535,7 +535,10 @@ docs/threat-model.md, docs/data-protection.md, .github/workflows/ci.yml,
 licence file that appears in the last week of a project is one nobody thought
 about.
 
-Still to write: README.md, THIRD-PARTY-NOTICES.txt, docs/architecture.md.
+Written since: README.md, THIRD-PARTY-NOTICES.txt, docs/architecture.md.
+
+Still to write: a user manual for the manager, including the restore procedure, and the
+customer licence agreement.
 
 No CONTRIBUTING.md. This project does not accept contributions and an empty ritual file is
 worse than no file.
