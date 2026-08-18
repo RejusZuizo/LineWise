@@ -46,7 +46,7 @@ public interface IDialogService
 /// </remarks>
 public sealed class DialogService : IDialogService
 {
-    private readonly IServiceProvider _services;
+    private readonly IServiceScopeFactory _scopes;
 
     /// <summary>
     /// One window of each kind at a time. Without this a second click on the sidebar opens
@@ -55,33 +55,32 @@ public sealed class DialogService : IDialogService
     /// </summary>
     private readonly Dictionary<Type, Window> _open = [];
 
-    public DialogService(IServiceProvider services) => _services = services;
+    public DialogService(IServiceScopeFactory scopes) => _scopes = scopes;
 
     public Task ShowLineEditorAsync() =>
-        ShowAsync(() => _services.GetRequiredService<LineEditorWindow>());
+        ShowAsync(services => services.GetRequiredService<LineEditorWindow>());
 
     public async Task<bool> ShowImportAsync()
     {
-        var viewModel = _services.GetRequiredService<ImportViewModel>();
-        ImportWindow? opened = null;
+        ImportViewModel? viewModel = null;
 
-        await ShowAsync(() =>
+        await ShowAsync(services =>
         {
-            opened = new ImportWindow(viewModel);
-            return opened;
+            viewModel = services.GetRequiredService<ImportViewModel>();
+            return new ImportWindow(viewModel);
         }).ConfigureAwait(true);
 
-        return viewModel.Committed;
+        return viewModel?.Committed ?? false;
     }
 
     public Task ShowPeopleAsync() =>
-        ShowAsync(() => _services.GetRequiredService<PeopleWindow>());
+        ShowAsync(services => services.GetRequiredService<PeopleWindow>());
 
     /// <summary>
     /// Shows a window and returns a task that completes when it is closed, so a caller can
     /// still redraw afterwards exactly as it did when these were modal.
     /// </summary>
-    private Task ShowAsync<TWindow>(Func<TWindow> create)
+    private Task ShowAsync<TWindow>(Func<IServiceProvider, TWindow> create)
         where TWindow : Window
     {
         if (_open.TryGetValue(typeof(TWindow), out var existing))
@@ -92,7 +91,14 @@ public sealed class DialogService : IDialogService
             return Task.CompletedTask;
         }
 
-        var window = create();
+        // A scope per window, disposed when it closes. These windows were resolved from the
+        // root provider, which turns every scoped service they hold — the database context
+        // among them — into one that lives for the whole run of the application.
+        //
+        // The scope outlives the call rather than the resolve, because the window keeps
+        // using its view model long after this method returns.
+        var scope = _scopes.CreateScope();
+        var window = create(scope.ServiceProvider);
         var closed = new TaskCompletionSource();
 
         _open[typeof(TWindow)] = window;
@@ -100,6 +106,7 @@ public sealed class DialogService : IDialogService
         window.Closed += (_, _) =>
         {
             _open.Remove(typeof(TWindow));
+            scope.Dispose();
             closed.TrySetResult();
         };
 

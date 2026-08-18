@@ -10,6 +10,7 @@ using Linewise.Desktop.Services;
 using Linewise.Domain.Entities;
 using Linewise.Domain.Enums;
 using Linewise.Domain.Rostering;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
 namespace Linewise.Desktop.ViewModels;
@@ -20,20 +21,25 @@ namespace Linewise.Desktop.ViewModels;
 /// </summary>
 public sealed partial class MainWindowViewModel : ObservableObject, IRosterEditor
 {
-    private readonly IRosterRepository? _rosters;
-    private readonly IConfigurationRepository? _configuration;
-    private readonly IAvailabilityRepository? _availability;
-    private readonly IRosterGenerationService? _generation;
-    private readonly IRosterPrinter? _printer;
-    private readonly IDocumentLauncher? _launcher;
-    private readonly IShiftRepository? _shifts;
+    /// <summary>
+    /// Where a unit of work comes from.
+    /// </summary>
+    /// <remarks>
+    /// This window lives for the whole run of the application, and the repositories it used
+    /// to hold are scoped to a database context. Holding them made that context live just as
+    /// long: one change tracker, accumulating every entity the application ever wrote, for
+    /// hours. That is a captive dependency, and it is what turned "I cannot save rules
+    /// sometimes" from an unlikely race into a certainty.
+    /// <para>
+    /// Each operation now opens its own scope, does its work and disposes it. That is also
+    /// the honest shape: a load is one unit of work and should read one consistent snapshot,
+    /// rather than whatever a months-old tracker happens to be holding.
+    /// </para>
+    /// </remarks>
+    private readonly IServiceScopeFactory? _scopes;
+
     private readonly IDialogService? _dialogs;
     private readonly IThemeService? _theme;
-    private readonly IAbsenceService? _absences;
-    private readonly ILineDayService? _lineDays;
-    private readonly IReplacementFinder? _replacements;
-    private readonly IGapFiller? _gaps;
-    private readonly ILineDemandRepository? _demands;
 
     private DateOnly _weekStart = MondayOf(DateOnly.FromDateTime(DateTime.Today));
 
@@ -103,35 +109,35 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     private bool _isBusy;
 
     public MainWindowViewModel(
-        IRosterRepository rosters,
-        IConfigurationRepository configuration,
-        IAvailabilityRepository availability,
-        IRosterGenerationService generation,
-        IRosterPrinter printer,
-        IDocumentLauncher launcher,
-        IShiftRepository shifts,
+        IServiceScopeFactory scopes,
         IDialogService dialogs,
-        IThemeService theme,
-        IAbsenceService absences,
-        ILineDayService lineDays,
-        ILineDemandRepository demands,
-        IReplacementFinder replacements,
-        IGapFiller gaps)
+        IThemeService theme)
     {
-        _rosters = rosters;
-        _configuration = configuration;
-        _availability = availability;
-        _generation = generation;
-        _printer = printer;
-        _launcher = launcher;
-        _shifts = shifts;
+        _scopes = scopes;
         _dialogs = dialogs;
         _theme = theme;
-        _absences = absences;
-        _lineDays = lineDays;
-        _replacements = replacements;
-        _gaps = gaps;
-        _demands = demands;
+    }
+
+    /// <summary>
+    /// Runs one piece of work against its own scope, and disposes it afterwards.
+    /// </summary>
+    /// <remarks>
+    /// The whole operation shares one scope rather than one per service, because a load that
+    /// reads the roster, the configuration and the availability is one question and should
+    /// get one answer.
+    /// </remarks>
+    private async Task<TResult> InScopeAsync<TResult>(Func<IServiceProvider, Task<TResult>> work)
+    {
+        await using var scope = _scopes!.CreateAsyncScope();
+
+        return await work(scope.ServiceProvider).ConfigureAwait(true);
+    }
+
+    private async Task InScopeAsync(Func<IServiceProvider, Task> work)
+    {
+        await using var scope = _scopes!.CreateAsyncScope();
+
+        await work(scope.ServiceProvider).ConfigureAwait(true);
     }
 
     /// <summary>For the Avalonia designer, which cannot resolve from the container.</summary>
@@ -398,7 +404,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     {
         ArgumentNullException.ThrowIfNull(chip);
 
-        if (_absences is null)
+        if (_scopes is null)
         {
             return;
         }
@@ -407,13 +413,14 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
 
         try
         {
-            var result = await _absences.MarkAbsentAsync(
-                new MarkAbsentRequest
-                {
-                    EmployeeId = chip.EmployeeId,
-                    Date = chip.Date,
-                    Reason = reason,
-                }).ConfigureAwait(true);
+            var result = await InScopeAsync(services =>
+                services.GetRequiredService<IAbsenceService>().MarkAbsentAsync(
+                    new MarkAbsentRequest
+                    {
+                        EmployeeId = chip.EmployeeId,
+                        Date = chip.Date,
+                        Reason = reason,
+                    })).ConfigureAwait(true);
 
             // A count and a date. Never the name, and never the reason, which is the half
             // of this that a log file has no business holding.
@@ -444,7 +451,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     {
         ArgumentNullException.ThrowIfNull(chip);
 
-        if (_absences is null)
+        if (_scopes is null)
         {
             return;
         }
@@ -453,7 +460,9 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
 
         try
         {
-            await _absences.ClearAbsenceAsync(chip.EmployeeId, chip.Date).ConfigureAwait(true);
+            await InScopeAsync(services =>
+                services.GetRequiredService<IAbsenceService>()
+                    .ClearAbsenceAsync(chip.EmployeeId, chip.Date)).ConfigureAwait(true);
 
             await LoadAsync(_weekStart).ConfigureAwait(true);
             Status = Strings.MarkedBackIn;
@@ -470,9 +479,10 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     }
 
     public Task<IReadOnlyList<ReplacementCandidate>> FindReplacementsAsync(Guid lineId, DateOnly date) =>
-        _replacements is null
+        _scopes is null
             ? Task.FromResult<IReadOnlyList<ReplacementCandidate>>([])
-            : _replacements.FindAsync(lineId, date);
+            : InScopeAsync(services =>
+                services.GetRequiredService<IReplacementFinder>().FindAsync(lineId, date));
 
     /// <summary>
     /// Puts somebody on a line for a day, locked, and redraws.
@@ -483,7 +493,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     /// </remarks>
     public async Task PlaceAsync(Guid employeeId, Guid lineId, DateOnly date)
     {
-        if (_absences is null)
+        if (_scopes is null)
         {
             return;
         }
@@ -492,7 +502,9 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
 
         try
         {
-            await _absences.PlaceAsync(employeeId, lineId, date).ConfigureAwait(true);
+            await InScopeAsync(services =>
+                services.GetRequiredService<IAbsenceService>()
+                    .PlaceAsync(employeeId, lineId, date)).ConfigureAwait(true);
 
             Log.Information("Placed somebody on {LineId} for {Date}, locked.", lineId, date);
 
@@ -521,7 +533,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     /// </remarks>
     public async Task SetLineClosedAsync(Guid lineId, DateOnly date, bool closed)
     {
-        if (_lineDays is null)
+        if (_scopes is null)
         {
             return;
         }
@@ -530,14 +542,14 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
 
         try
         {
-            if (closed)
+            await InScopeAsync(services =>
             {
-                await _lineDays.CloseAsync(lineId, date).ConfigureAwait(true);
-            }
-            else
-            {
-                await _lineDays.ReopenAsync(lineId, date).ConfigureAwait(true);
-            }
+                var lineDays = services.GetRequiredService<ILineDayService>();
+
+                return closed
+                    ? lineDays.CloseAsync(lineId, date)
+                    : lineDays.ReopenAsync(lineId, date);
+            }).ConfigureAwait(true);
 
             Log.Information("Line {LineId} {State} for {Date}.", lineId, closed ? "closed" : "reopened", date);
 
@@ -562,14 +574,16 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     /// </summary>
     private async Task SavePrintSettingsAsync(Domain.Entities.PrintSettings settings)
     {
-        if (_configuration is null)
+        if (_scopes is null)
         {
             return;
         }
 
         try
         {
-            await _configuration.SavePrintSettingsAsync(settings).ConfigureAwait(true);
+            await InScopeAsync(services =>
+                services.GetRequiredService<IConfigurationRepository>()
+                    .SavePrintSettingsAsync(settings)).ConfigureAwait(true);
         }
         catch (Exception exception)
         {
@@ -597,11 +611,13 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     /// </remarks>
     private async Task FillGapsAsync(CancellationToken cancellationToken)
     {
-        if (_gaps is not null)
+        if (_scopes is not null)
         {
             try
             {
-                var filled = await _gaps.FillAsync(_weekStart, cancellationToken).ConfigureAwait(true);
+                var filled = await InScopeAsync(services =>
+                    services.GetRequiredService<IGapFiller>()
+                        .FillAsync(_weekStart, cancellationToken)).ConfigureAwait(true);
 
                 await LoadAsync(_weekStart, cancellationToken).ConfigureAwait(true);
 
@@ -634,7 +650,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     [RelayCommand]
     private async Task GenerateAsync(CancellationToken cancellationToken)
     {
-        if (_generation is null)
+        if (_scopes is null)
         {
             return;
         }
@@ -643,7 +659,9 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
 
         try
         {
-            var stored = await _generation.GenerateAsync(_weekStart, cancellationToken).ConfigureAwait(true);
+            var stored = await InScopeAsync(services =>
+                services.GetRequiredService<IRosterGenerationService>()
+                    .GenerateAsync(_weekStart, cancellationToken)).ConfigureAwait(true);
 
             Log.Information(
                 "Generated {WeekStart}: {Assignments} assignments, {Warnings} warnings.",
@@ -674,8 +692,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     [RelayCommand(CanExecute = nameof(HasRoster))]
     private async Task PrintAsync(CancellationToken cancellationToken)
     {
-        if (_printer is null || _launcher is null || _rosters is null
-            || _configuration is null || _shifts is null || _availability is null)
+        if (_scopes is null)
         {
             return;
         }
@@ -684,43 +701,61 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
 
         try
         {
-            var stored = await _rosters.GetLatestAsync(_weekStart, cancellationToken).ConfigureAwait(true);
+            // One scope for the whole print. The roster, the configuration, the shifts and
+            // the availability are one question — what goes on this sheet — and reading them
+            // through separate contexts would let the answer change halfway through.
+            var document = await InScopeAsync(async services =>
+            {
+                var rosters = services.GetRequiredService<IRosterRepository>();
+                var configuration = services.GetRequiredService<IConfigurationRepository>();
 
-            if (stored is null)
+                var stored = await rosters.GetLatestAsync(_weekStart, cancellationToken).ConfigureAwait(true);
+
+                if (stored is null)
+                {
+                    return null;
+                }
+
+                var rules = await configuration.GetAsync(cancellationToken).ConfigureAwait(true);
+
+                var shifts = await services.GetRequiredService<IShiftRepository>()
+                    .GetAsync(_weekStart, _weekStart.AddDays(7), cancellationToken)
+                    .ConfigureAwait(true);
+
+                var settings = await configuration
+                    .GetPrintSettingsAsync(cancellationToken)
+                    .ConfigureAwait(true);
+
+                var availability = await services.GetRequiredService<IAvailabilityRepository>()
+                    .GetAsync(_weekStart, _weekStart.AddDays(7), cancellationToken)
+                    .ConfigureAwait(true);
+
+                return await services.GetRequiredService<IRosterPrinter>().PrintFullSheetAsync(
+                    new PrintRequest
+                    {
+                        Roster = stored.Roster,
+                        Version = stored.Version,
+                        Lines = rules.Lines,
+                        Employees = rules.Employees,
+                        Shifts = shifts,
+
+                        // So the sheet on the wall does not name somebody who rang in at seven.
+                        Availabilities = availability,
+                        Settings = settings,
+                    },
+                    cancellationToken).ConfigureAwait(true);
+            }).ConfigureAwait(true);
+
+            if (document is null)
             {
                 Status = Strings.NothingToPrint;
                 return;
             }
 
-            var configuration = await _configuration.GetAsync(cancellationToken).ConfigureAwait(true);
-            var shifts = await _shifts
-                .GetAsync(_weekStart, _weekStart.AddDays(7), cancellationToken)
-                .ConfigureAwait(true);
-            var settings = await _configuration
-                .GetPrintSettingsAsync(cancellationToken)
-                .ConfigureAwait(true);
-
-            var document = await _printer.PrintFullSheetAsync(
-                new PrintRequest
-                {
-                    Roster = stored.Roster,
-                    Version = stored.Version,
-                    Lines = configuration.Lines,
-                    Employees = configuration.Employees,
-                    Shifts = shifts,
-
-                    // So the sheet on the wall does not name somebody who rang in at seven.
-                    Availabilities = await _availability
-                        .GetAsync(_weekStart, _weekStart.AddDays(7), cancellationToken)
-                        .ConfigureAwait(true),
-                    Settings = settings,
-                },
-                cancellationToken).ConfigureAwait(true);
-
-            await _launcher.PrintAsync(
+            await InScopeAsync(services => services.GetRequiredService<IDocumentLauncher>().PrintAsync(
                 document,
                 $"linewise-{_weekStart:yyyy-MM-dd}.pdf",
-                cancellationToken).ConfigureAwait(true);
+                cancellationToken)).ConfigureAwait(true);
 
             Status = Strings.SentToPrinter;
         }
@@ -742,7 +777,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     /// </summary>
     public async Task LoadAsync(DateOnly anyDateInWeek, CancellationToken cancellationToken = default)
     {
-        if (_rosters is null || _configuration is null || _availability is null || _demands is null)
+        if (_scopes is null)
         {
             return;
         }
@@ -753,21 +788,31 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
         {
             var weekStart = MondayOf(anyDateInWeek);
             _weekStart = weekStart;
-            var stored = await _rosters.GetLatestAsync(weekStart, cancellationToken).ConfigureAwait(true);
 
-            var configuration = await _configuration.GetAsync(cancellationToken).ConfigureAwait(true);
+            // One scope for the whole load. A week's roster, rules, availability and demands
+            // are one question, and reading them through four contexts would let the answer
+            // change between the first read and the last.
+            var (stored, configuration, printSettings, weekAvailability, demands) =
+                await InScopeAsync(async services =>
+                {
+                    var rosters = services.GetRequiredService<IRosterRepository>();
+                    var rules = services.GetRequiredService<IConfigurationRepository>();
 
-            PrintSettings ??= new PrintSettingsViewModel(
-                await _configuration.GetPrintSettingsAsync(cancellationToken).ConfigureAwait(true),
-                SavePrintSettingsAsync);
+                    return (
+                        await rosters.GetLatestAsync(weekStart, cancellationToken).ConfigureAwait(true),
+                        await rules.GetAsync(cancellationToken).ConfigureAwait(true),
+                        await rules.GetPrintSettingsAsync(cancellationToken).ConfigureAwait(true),
+                        await services.GetRequiredService<IAvailabilityRepository>()
+                            .GetAsync(weekStart, weekStart.AddDays(7), cancellationToken)
+                            .ConfigureAwait(true),
+                        await services.GetRequiredService<ILineDemandRepository>()
+                            .GetAsync(weekStart, weekStart.AddDays(7), cancellationToken)
+                            .ConfigureAwait(true));
+                }).ConfigureAwait(true);
 
-            var weekAvailability = await _availability
-                .GetAsync(weekStart, weekStart.AddDays(7), cancellationToken)
-                .ConfigureAwait(true);
+            PrintSettings ??= new PrintSettingsViewModel(printSettings, SavePrintSettingsAsync);
 
-            _loadedDemands = await _demands
-                .GetAsync(weekStart, weekStart.AddDays(7), cancellationToken)
-                .ConfigureAwait(true);
+            _loadedDemands = demands;
 
             if (stored is null)
             {
@@ -901,12 +946,14 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
 
     private async Task LoadLinesAsync(CancellationToken cancellationToken)
     {
-        if (_configuration is null)
+        if (_scopes is null)
         {
             return;
         }
 
-        var configuration = await _configuration.GetAsync(cancellationToken).ConfigureAwait(true);
+        var configuration = await InScopeAsync(services =>
+            services.GetRequiredService<IConfigurationRepository>()
+                .GetAsync(cancellationToken)).ConfigureAwait(true);
 
         ConfiguredLines.Clear();
 

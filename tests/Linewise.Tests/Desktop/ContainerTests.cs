@@ -90,11 +90,13 @@ public sealed class ContainerTests
         });
         services.AddDesktop();
 
-        // Built the way the application builds it. Strict scope validation is deliberately
-        // off: the main window is a singleton holding scoped repositories, which is a real
-        // captive dependency and a real thing to fix, but it is not what this test is
-        // guarding and turning it on here would make every registration failure look like
-        // that one problem.
-        return services.BuildServiceProvider();
+        // Strict, now that it can be. ValidateScopes is the whole point: it fails the build
+        // if any singleton holds a scoped service, which is the defect this suite could not
+        // see and which reached an operator as "I cannot save rules sometimes".
+        return services.BuildServiceProvider(new ServiceProviderOptions
+        {
+            ValidateOnBuild = true,
+            ValidateScopes = true,
+        });
     }
 }
