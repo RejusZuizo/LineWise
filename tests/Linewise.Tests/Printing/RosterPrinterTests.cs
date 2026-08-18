@@ -138,6 +138,86 @@ public sealed class RosterPrinterTests
         PrintedRoster.Save(document, "empty-line.pdf");
     }
 
+    /// <summary>
+    /// Somebody marked absent keeps their assignment, so that the screen can grey the name
+    /// rather than lose it. The sheet on the wall must not be the one place that fact fails
+    /// to arrive: a name on a wall is read as somebody who will be standing there.
+    /// </summary>
+    /// <remarks>
+    /// Asserted on length rather than by reading the text out. QuestPDF embeds its fonts as
+    /// subsets, so a name is glyph indices in a compressed stream by the time it reaches the
+    /// file and no amount of searching the bytes will find it. Length is the honest proxy:
+    /// the same layout with one fewer name in it is a measurably smaller document.
+    /// <para>
+    /// The stronger half of this is the second assertion. Printing a roster with an absence
+    /// produces a document of exactly the size of one printed from a roster that never had
+    /// that person on the line, which is the claim being made.
+    /// </para>
+    /// </remarks>
+    [Fact]
+    public async Task Somebody_marked_absent_is_left_off_the_printed_sheet()
+    {
+        var request = Request(days: 1);
+        var ada = request.Employees.Single(employee => employee.FullName == "Ada Fictional");
+        var day = RosterScenarioBuilder.DefaultWeekStart;
+
+        var withAda = await _printer.PrintFullSheetAsync(request);
+
+        var absent = await _printer.PrintFullSheetAsync(request with
+        {
+            Availabilities =
+            [
+                new Availability { EmployeeId = ada.Id, Date = day, Status = AvailabilityStatus.Off },
+            ],
+        });
+
+        var neverPlaced = await _printer.PrintFullSheetAsync(request with
+        {
+            Roster = request.Roster with
+            {
+                Days =
+                [
+                    .. request.Roster.Days.Select(rosterDay => rosterDay with
+                    {
+                        Assignments =
+                            [.. rosterDay.Assignments.Where(a => a.EmployeeId != ada.Id)],
+                    }),
+                ],
+            },
+        });
+
+        Assert.NotEqual(withAda.Length, absent.Length);
+        Assert.Equal(neverPlaced.Length, absent.Length);
+
+        PrintedRoster.Save(absent, "absence-full-sheet.pdf");
+    }
+
+    /// <summary>
+    /// The safe direction. A week whose sheet was never imported has no availability at all,
+    /// and reading that silence as absence would print a sheet with nobody on it.
+    /// </summary>
+    [Fact]
+    public async Task Knowing_nothing_about_availability_prints_everybody()
+    {
+        var request = Request(days: 1);
+
+        var silent = await _printer.PrintFullSheetAsync(request);
+        var stated = await _printer.PrintFullSheetAsync(request with
+        {
+            Availabilities =
+            [
+                .. request.Employees.Select(employee => new Availability
+                {
+                    EmployeeId = employee.Id,
+                    Date = RosterScenarioBuilder.DefaultWeekStart,
+                    Status = AvailabilityStatus.Working,
+                }),
+            ],
+        });
+
+        Assert.Equal(stated.Length, silent.Length);
+    }
+
     private static PrintRequest Request(
         int days,
         RosterWeek? roster = null,

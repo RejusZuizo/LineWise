@@ -28,6 +28,7 @@ public static class ServiceCollectionExtensions
         services.TryAddScoped<IAvailabilityImportService, AvailabilityImportService>();
         services.TryAddScoped<IEmployeeSheetImporter, EmployeeSheetImporter>();
         services.TryAddScoped<IRosterGenerationService, RosterGenerationService>();
+        services.TryAddScoped<IAbsenceService, AbsenceService>();
 
         return services;
     }

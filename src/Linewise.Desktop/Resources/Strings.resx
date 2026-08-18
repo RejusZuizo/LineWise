@@ -573,4 +573,56 @@
     <value>{0:dddd d MMMM yyyy}</value>
     <comment>0 = the date on screen when showing a single day.</comment>
   </data>
+  <data name="RoleAbsent" xml:space="preserve">
+    <value>ABSENT</value>
+    <comment>Marks a chip for somebody who will not be in. The word, never colour alone.</comment>
+  </data>
+  <data name="MarkAbsent" xml:space="preserve">
+    <value>Mark absent</value>
+    <comment>Context menu on a person in the roster grid.</comment>
+  </data>
+  <data name="MarkBackIn" xml:space="preserve">
+    <value>Mark back in</value>
+    <comment>Context menu, undoing an absence for somebody who turned up after all.</comment>
+  </data>
+  <data name="AbsenceNotInToday" xml:space="preserve">
+    <value>Not in today</value>
+    <comment>Absence reason. Operational wording: describes the roster, never the person.</comment>
+  </data>
+  <data name="AbsenceHoliday" xml:space="preserve">
+    <value>Holiday</value>
+    <comment>Absence reason for a booked day off.</comment>
+  </data>
+  <data name="AbsenceSentHome" xml:space="preserve">
+    <value>Sent home</value>
+    <comment>Absence reason. The manager's action, not its cause.</comment>
+  </data>
+  <data name="MarkedAbsentNoPlaces" xml:space="preserve">
+    <value>Marked absent. They were not on a line that day.</value>
+    <comment>Status bar after marking somebody absent who held no places.</comment>
+  </data>
+  <data name="MarkedAbsentOnePlace" xml:space="preserve">
+    <value>Marked absent. One place to fill.</value>
+    <comment>Status bar after marking somebody absent who held one place.</comment>
+  </data>
+  <data name="MarkedAbsentManyPlaces" xml:space="preserve">
+    <value>Marked absent. {0} places to fill.</value>
+    <comment>0 = number of places. Singular is a separate entry.</comment>
+  </data>
+  <data name="MarkedBackIn" xml:space="preserve">
+    <value>Marked back in.</value>
+    <comment>Status bar after undoing an absence.</comment>
+  </data>
+  <data name="CouldNotMarkAbsent" xml:space="preserve">
+    <value>Could not change who is in. Nothing was altered.</value>
+    <comment>Status bar when the absence could not be written.</comment>
+  </data>
+  <data name="CellAbsentOne" xml:space="preserve">
+    <value>1 absent</value>
+    <comment>Shown on a cell holding one person who will not be in.</comment>
+  </data>
+  <data name="CellAbsentMany" xml:space="preserve">
+    <value>{0} absent</value>
+    <comment>0 = number absent. Singular is a separate entry.</comment>
+  </data>
 </root>

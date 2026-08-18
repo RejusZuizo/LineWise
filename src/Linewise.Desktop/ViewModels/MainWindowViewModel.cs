@@ -17,7 +17,7 @@ namespace Linewise.Desktop.ViewModels;
 /// The shell. Loads the most recent roster for a week and hands it to the grid, or explains
 /// why there is nothing to draw.
 /// </summary>
-public sealed partial class MainWindowViewModel : ObservableObject
+public sealed partial class MainWindowViewModel : ObservableObject, IRosterEditor
 {
     private readonly IRosterRepository? _rosters;
     private readonly IConfigurationRepository? _configuration;
@@ -28,6 +28,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly IShiftRepository? _shifts;
     private readonly IDialogService? _dialogs;
     private readonly IThemeService? _theme;
+    private readonly IAbsenceService? _absences;
 
     private DateOnly _weekStart = MondayOf(DateOnly.FromDateTime(DateTime.Today));
 
@@ -35,6 +36,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
     // database. Switching between today and the week is a change of view, not of data.
     private RosterWeek? _loadedRoster;
     private RosterConfiguration? _loadedConfiguration;
+
+    // Who is actually in. Kept beside the roster because the grid is rebuilt from both, and
+    // rereading availability to switch between today and the week would make a view toggle
+    // look like a reload.
+    private Attendance _attendance = Attendance.Everybody;
 
     [ObservableProperty]
     private RosterGridViewModel? _grid;
@@ -88,7 +94,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         IDocumentLauncher launcher,
         IShiftRepository shifts,
         IDialogService dialogs,
-        IThemeService theme)
+        IThemeService theme,
+        IAbsenceService absences)
     {
         _rosters = rosters;
         _configuration = configuration;
@@ -99,6 +106,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _shifts = shifts;
         _dialogs = dialogs;
         _theme = theme;
+        _absences = absences;
     }
 
     /// <summary>For the Avalonia designer, which cannot resolve from the container.</summary>
@@ -211,7 +219,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
             _loadedRoster,
             _loadedConfiguration.Lines,
             _loadedConfiguration.Employees,
-            IsSingleDay ? DayInView() : null);
+            IsSingleDay ? DayInView() : null,
+            _attendance,
+            this);
 
         OnPropertyChanged(nameof(HasRoster));
     }
@@ -290,6 +300,94 @@ public sealed partial class MainWindowViewModel : ObservableObject
     }
 
     /// <summary>
+    /// Takes somebody out of a day and redraws. Their name stays on the line, greyed, so
+    /// the manager can still see who should have been there.
+    /// </summary>
+    /// <remarks>
+    /// Writes availability rather than the roster, marked as the manager's own so neither a
+    /// regenerate nor a re-import of the sheet puts them back. ADR 0014.
+    /// <para>
+    /// The reason is picked from a short list of operational words. It says why the roster
+    /// changed and never why the person is away: a reason for an absence would put health
+    /// data into an audit chain that has no delete path.
+    /// </para>
+    /// </remarks>
+    public async Task MarkAbsentAsync(PersonChipViewModel chip, AbsenceReason reason)
+    {
+        ArgumentNullException.ThrowIfNull(chip);
+
+        if (_absences is null)
+        {
+            return;
+        }
+
+        IsBusy = true;
+
+        try
+        {
+            var result = await _absences.MarkAbsentAsync(
+                new MarkAbsentRequest
+                {
+                    EmployeeId = chip.EmployeeId,
+                    Date = chip.Date,
+                    Reason = reason,
+                }).ConfigureAwait(true);
+
+            // A count and a date. Never the name, and never the reason, which is the half
+            // of this that a log file has no business holding.
+            Log.Information(
+                "Marked somebody absent on {Date}, vacating {Vacated} places.",
+                chip.Date,
+                result.Vacated.Count);
+
+            await LoadAsync(_weekStart).ConfigureAwait(true);
+            Status = Strings.MarkedAbsent(result.Vacated.Count);
+        }
+        catch (Exception exception)
+        {
+            Log.Error(exception, "Could not mark somebody absent.");
+            Status = Strings.CouldNotMarkAbsent;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    /// <summary>
+    /// Puts somebody back. For the person who rang in and then turned up anyway, which
+    /// happens often enough that having to undo it through the import would be absurd.
+    /// </summary>
+    public async Task ClearAbsenceAsync(PersonChipViewModel chip)
+    {
+        ArgumentNullException.ThrowIfNull(chip);
+
+        if (_absences is null)
+        {
+            return;
+        }
+
+        IsBusy = true;
+
+        try
+        {
+            await _absences.ClearAbsenceAsync(chip.EmployeeId, chip.Date).ConfigureAwait(true);
+
+            await LoadAsync(_weekStart).ConfigureAwait(true);
+            Status = Strings.MarkedBackIn;
+        }
+        catch (Exception exception)
+        {
+            Log.Error(exception, "Could not mark somebody back in.");
+            Status = Strings.CouldNotMarkAbsent;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    /// <summary>
     /// Builds a roster for the week on screen and stores it as the draft, then redraws.
     /// </summary>
     /// <remarks>
@@ -341,7 +439,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private async Task PrintAsync(CancellationToken cancellationToken)
     {
         if (_printer is null || _launcher is null || _rosters is null
-            || _configuration is null || _shifts is null)
+            || _configuration is null || _shifts is null || _availability is null)
         {
             return;
         }
@@ -374,6 +472,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
                     Lines = configuration.Lines,
                     Employees = configuration.Employees,
                     Shifts = shifts,
+
+                    // So the sheet on the wall does not name somebody who rang in at seven.
+                    Availabilities = await _availability
+                        .GetAsync(_weekStart, _weekStart.AddDays(7), cancellationToken)
+                        .ConfigureAwait(true),
                     Settings = settings,
                 },
                 cancellationToken).ConfigureAwait(true);
@@ -458,12 +561,15 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
             _loadedRoster = stored.Roster;
             _loadedConfiguration = configuration;
+            _attendance = new Attendance(weekAvailability);
 
             Grid = new RosterGridViewModel(
                 stored.Roster,
                 configuration.Lines,
                 configuration.Employees,
-                IsSingleDay ? DayInView() : null);
+                IsSingleDay ? DayInView() : null,
+                _attendance,
+                this);
             Summary = new RosterSummaryViewModel(stored.Roster, weekAvailability, stored.Version);
 
             Dashboard = new DashboardViewModel(
@@ -557,6 +663,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Dashboard = null;
         _loadedRoster = null;
         _loadedConfiguration = null;
+        _attendance = Attendance.Everybody;
         Warnings.Clear();
         WarningGroups.Clear();
     }
