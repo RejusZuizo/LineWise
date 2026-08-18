@@ -128,4 +128,11 @@ public enum WarningCode
     /// One employee ended up on more than one row. The first row on the sheet was used.
     /// </summary>
     ImportEmployeeOnMoreThanOneRow = 212,
+
+    /// <summary>
+    /// A day this person's availability was set by hand, so the sheet did not overwrite it.
+    /// Raised once per record kept, because which day and which person is the part worth
+    /// knowing.
+    /// </summary>
+    ImportManualAvailabilityKept = 213,
 }

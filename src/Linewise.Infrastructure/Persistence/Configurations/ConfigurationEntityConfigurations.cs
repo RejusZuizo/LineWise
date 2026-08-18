@@ -85,7 +85,13 @@ internal sealed class AvailabilityConfiguration : IEntityTypeConfiguration<Avail
         builder.HasKey(availability => new { availability.EmployeeId, availability.Date });
 
         builder.Property(availability => availability.Status);
+        builder.Property(availability => availability.Source);
         builder.HasIndex(availability => availability.Date);
+
+        // An import deletes by date and source together, and marking somebody absent reads
+        // one person's day. Both go through the date index; this one keeps the import's
+        // delete from reading every row in the range to find out which are its own.
+        builder.HasIndex(availability => new { availability.Date, availability.Source });
     }
 }
 

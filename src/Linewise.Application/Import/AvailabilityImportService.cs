@@ -146,9 +146,26 @@ public sealed class AvailabilityImportService : IAvailabilityImportService
         var from = resolved.Dates.Min();
         var toExclusive = resolved.Dates.Max().AddDays(1);
 
-        await _availability
-            .ReplaceAsync(from, toExclusive, availabilities, cancellationToken)
+        // Anything the manager set by hand in this range survives, and is reported rather
+        // than left for somebody to discover. A sheet corrected and re-imported on a
+        // Tuesday afternoon must not quietly put back the four people who rang in sick
+        // that morning.
+        var kept = await _availability
+            .ReplaceImportedAsync(from, toExclusive, availabilities, cancellationToken)
             .ConfigureAwait(false);
+
+        foreach (var record in kept)
+        {
+            warnings.Add(ImportWarnings.ManualAvailabilityKept(record.EmployeeId, record.Date));
+        }
+
+        var manual = kept.Select(record => (record.EmployeeId, record.Date)).ToHashSet();
+
+        // What went in, not what was offered. Reporting the sheet's row count as records
+        // written would overstate it by exactly the number the manager had already
+        // corrected, which is the number they most want to be right.
+        var written = availabilities.Count(
+            availability => !manual.Contains((availability.EmployeeId, availability.Date)));
 
         var import = new CommittedImport
         {
@@ -173,7 +190,7 @@ public sealed class AvailabilityImportService : IAvailabilityImportService
 
         return new ImportCommitResult(
             import.Id,
-            availabilities.Count,
+            written,
             temporariesAdded,
             unresolved,
             warnings);

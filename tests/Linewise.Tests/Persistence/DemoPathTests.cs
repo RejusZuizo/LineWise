@@ -165,6 +165,6 @@ public sealed class DemoPathTests
             .ToList();
 
         return database.InScopeAsync<IAvailabilityRepository>(repository =>
-            repository.ReplaceAsync(Monday, Monday.AddDays(7), availability));
+            repository.ReplaceImportedAsync(Monday, Monday.AddDays(7), availability));
     }
 }

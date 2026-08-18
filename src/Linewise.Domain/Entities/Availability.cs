@@ -13,4 +13,15 @@ public sealed record Availability
     public required DateOnly Date { get; init; }
 
     public required AvailabilityStatus Status { get; init; }
+
+    /// <summary>
+    /// Whether the sheet said this or the manager did. Defaults to
+    /// <see cref="AvailabilitySource.Imported"/>, so every record written before this
+    /// existed reads as what it was.
+    /// </summary>
+    /// <remarks>
+    /// The engine does not read this. Who is available is the same question whoever
+    /// answered it; provenance decides only what an import is allowed to overwrite.
+    /// </remarks>
+    public AvailabilitySource Source { get; init; } = AvailabilitySource.Imported;
 }
