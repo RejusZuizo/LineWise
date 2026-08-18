@@ -2,6 +2,7 @@ using Linewise.Application.Abstractions;
 using Linewise.Application.Persistence;
 using Linewise.Domain.Entities;
 using Linewise.Domain.Enums;
+using Linewise.Domain.Rostering;
 
 namespace Linewise.Application.Rostering;
 
@@ -115,6 +116,67 @@ public sealed class AbsenceService : IAbsenceService
             ? []
             : [.. stored.Roster.AllAssignments.Where(assignment =>
                 assignment.EmployeeId == employeeId && assignment.Date == date)];
+    }
+
+    public async Task PlaceAsync(
+        Guid employeeId,
+        Guid lineId,
+        DateOnly date,
+        AssignmentRole role = AssignmentRole.Worker,
+        CancellationToken cancellationToken = default)
+    {
+        var weekStart = MondayOf(date);
+        var stored = await _rosters.GetLatestAsync(weekStart, cancellationToken).ConfigureAwait(false);
+
+        if (stored is null)
+        {
+            // Nothing to place into. Generating the week first is the operator's move, and
+            // inventing a roster here would hide that from them.
+            return;
+        }
+
+        var shiftId = stored.Roster.Days
+            .Where(day => day.Date == date)
+            .Select(day => day.ShiftId)
+            .FirstOrDefault();
+
+        var placement = new Assignment
+        {
+            Date = date,
+            ShiftId = shiftId,
+            LineId = lineId,
+            EmployeeId = employeeId,
+            Role = role,
+            IsLocked = true,
+            Source = AssignmentSource.Manual,
+            Explanation = AssignmentExplanation.ManualOverride,
+        };
+
+        var days = stored.Roster.Days
+            .Select(day => day.Date != date
+                ? day
+                : day with
+                {
+                    // Removed from wherever they were standing before being put here. One
+                    // place per person per day is the rule the engine keeps, and a manual
+                    // placement that quietly broke it would put one name on two lines.
+                    Assignments =
+                    [
+                        .. day.Assignments.Where(assignment => assignment.EmployeeId != employeeId),
+                        placement,
+                    ],
+                })
+            .ToList();
+
+        await _rosters
+            .SaveDraftAsync(weekStart, stored.Roster with { Days = days }, cancellationToken)
+            .ConfigureAwait(false);
+
+        await _auditLog.AppendAsync(
+            AuditAction.RosterEdited,
+            $"Placed employee {employeeId} on line {lineId} for {date:yyyy-MM-dd}, locked.",
+            "Cover for somebody absent.",
+            cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>

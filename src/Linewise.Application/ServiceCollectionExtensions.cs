@@ -30,6 +30,8 @@ public static class ServiceCollectionExtensions
         services.TryAddScoped<IEmployeeSheetImporter, EmployeeSheetImporter>();
         services.TryAddScoped<IRosterGenerationService, RosterGenerationService>();
         services.TryAddScoped<IAbsenceService, AbsenceService>();
+        services.TryAddScoped<ILineDayService, LineDayService>();
+        services.TryAddScoped<IReplacementFinder, ReplacementFinder>();
 
         return services;
     }

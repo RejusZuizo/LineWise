@@ -262,6 +262,62 @@
                                       FontSize="9.5"
                                       Padding="5,0"
                                       Command="{Binding ToggleClosedCommand}" />
+
+                              <!-- Offered on a short line only. A full line does not need
+                                   filling and a button on it is one more thing to read
+                                   past.
+
+                                   A flyout rather than a window: it dismisses by clicking
+                                   away, so the one interaction that opens over the roster
+                                   cannot trap anybody. -->
+                              <Button Content="{x:Static res:Strings.FillThisPlace}"
+                                      Classes="quiet"
+                                      FontSize="9.5"
+                                      Padding="5,0"
+                                      IsVisible="{Binding CanFill}"
+                                      Command="{Binding FindReplacementsCommand}">
+                                <Button.Flyout>
+                                  <Flyout Placement="BottomEdgeAlignedLeft">
+                                    <StackPanel MinWidth="240" MaxHeight="320">
+                                      <TextBlock Text="{x:Static res:Strings.CandidateNobody}"
+                                                 Classes="caption"
+                                                 TextWrapping="Wrap"
+                                                 Margin="4"
+                                                 IsVisible="{Binding !Candidates.Count}" />
+
+                                      <!-- Ranked, and the order is the answer. Availability,
+                                           required skills and preference for this line
+                                           decide it; the name is the last thing consulted
+                                           rather than the first. -->
+                                      <ScrollViewer>
+                                        <ItemsControl ItemsSource="{Binding Candidates}">
+                                          <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:ReplacementCandidateViewModel">
+                                              <Button Classes="quiet"
+                                                      HorizontalAlignment="Stretch"
+                                                      HorizontalContentAlignment="Left"
+                                                      Padding="8,5"
+                                                      Command="{Binding PlaceCommand}">
+                                                <StackPanel Spacing="1">
+                                                  <TextBlock Text="{Binding DisplayName}" FontSize="12.5" />
+                                                  <TextBlock Text="{Binding Reason}" Classes="caption" />
+                                                  <!-- Named, not merely flagged. Which line
+                                                       goes short is the part the manager
+                                                       weighs. -->
+                                                  <TextBlock Text="{Binding Warning}"
+                                                             Classes="caption"
+                                                             FontWeight="SemiBold"
+                                                             IsVisible="{Binding LeavesAHoleElsewhere}" />
+                                                </StackPanel>
+                                              </Button>
+                                            </DataTemplate>
+                                          </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                      </ScrollViewer>
+                                    </StackPanel>
+                                  </Flyout>
+                                </Button.Flyout>
+                              </Button>
                             </StackPanel>
 
                             <ItemsControl ItemsSource="{Binding People}">

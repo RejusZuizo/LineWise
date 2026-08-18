@@ -351,6 +351,27 @@ public static class Strings
 
     public static string CellClosed => Get(nameof(CellClosed));
 
+    public static string FillThisPlace => Get(nameof(FillThisPlace));
+
+    public static string PlacedCover => Get(nameof(PlacedCover));
+
+    public static string CouldNotPlace => Get(nameof(CouldNotPlace));
+
+    public static string CandidateRequiredHere => Get(nameof(CandidateRequiredHere));
+
+    public static string CandidateFirstChoice => Get(nameof(CandidateFirstChoice));
+
+    public static string CandidateOnOvertime => Get(nameof(CandidateOnOvertime));
+
+    public static string CandidateAvailable => Get(nameof(CandidateAvailable));
+
+    public static string CandidateNobody => Get(nameof(CandidateNobody));
+
+    public static string CandidateChoice(int rank) => Format(nameof(CandidateChoice), rank);
+
+    public static string CandidateLeavesLineShort(string line) =>
+        Format(nameof(CandidateLeavesLineShort), line);
+
     public static string CloseLine => Get(nameof(CloseLine));
 
     public static string ReopenLine => Get(nameof(ReopenLine));

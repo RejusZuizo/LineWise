@@ -27,6 +27,26 @@ public interface IAbsenceService
         Guid employeeId,
         DateOnly date,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Puts somebody onto a line for a day, locked so a regenerate leaves them there.
+    /// </summary>
+    /// <remarks>
+    /// Every manual placement is locked and marked as the manager's own. That is the rule
+    /// the whole of phase 6 rests on: a decision made at seven in the morning must survive
+    /// the generate somebody presses at eight.
+    /// <para>
+    /// Taking somebody who is already on another line moves them. Filling one hole by
+    /// opening another is a decision the manager is allowed to make, and the picker says
+    /// which hole it opens before they make it.
+    /// </para>
+    /// </remarks>
+    Task PlaceAsync(
+        Guid employeeId,
+        Guid lineId,
+        DateOnly date,
+        AssignmentRole role = AssignmentRole.Worker,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed record MarkAbsentRequest
