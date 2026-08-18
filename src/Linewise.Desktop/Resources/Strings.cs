@@ -287,6 +287,36 @@ public static class Strings
     public static string WarningsSummary(string errors, string notices) =>
         Format(nameof(WarningsSummary), errors, notices);
 
+    public static string RoleAbsent => Get(nameof(RoleAbsent));
+
+    public static string MarkAbsent => Get(nameof(MarkAbsent));
+
+    public static string MarkBackIn => Get(nameof(MarkBackIn));
+
+    public static string AbsenceNotInToday => Get(nameof(AbsenceNotInToday));
+
+    public static string AbsenceHoliday => Get(nameof(AbsenceHoliday));
+
+    public static string AbsenceSentHome => Get(nameof(AbsenceSentHome));
+
+    public static string MarkedBackIn => Get(nameof(MarkedBackIn));
+
+    public static string CouldNotMarkAbsent => Get(nameof(CouldNotMarkAbsent));
+
+    /// <summary>
+    /// Three entries rather than one with a plural rule in code, and the zero case says
+    /// something different rather than reading "0 places to fill".
+    /// </summary>
+    public static string MarkedAbsent(int places) => places switch
+    {
+        0 => Get("MarkedAbsentNoPlaces"),
+        1 => Get("MarkedAbsentOnePlace"),
+        _ => Format("MarkedAbsentManyPlaces", places),
+    };
+
+    public static string CellAbsent(int count) =>
+        count == 1 ? Get("CellAbsentOne") : Format("CellAbsentMany", count);
+
     private static string Get(string key) =>
         Manager.GetString(key, CultureInfo.CurrentUICulture) ?? key;
 

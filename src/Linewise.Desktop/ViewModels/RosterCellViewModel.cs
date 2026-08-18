@@ -15,6 +15,10 @@ public sealed class RosterCellViewModel
 
         // Leader first, then by name. The same order the printed sheet uses, so somebody
         // holding the paper and somebody at the screen are reading the same list.
+        //
+        // Absence does not reorder anything. A name that jumped to the bottom of the cell
+        // the moment somebody rang in would be harder to find at exactly the point the
+        // manager is looking for it.
         People = new ObservableCollection<PersonChipViewModel>(
             people
                 .OrderByDescending(person => person.IsLeader)
@@ -25,7 +29,20 @@ public sealed class RosterCellViewModel
 
     public ObservableCollection<PersonChipViewModel> People { get; }
 
-    public int Assigned => People.Count;
+    /// <summary>
+    /// How many will actually be on the line. Somebody marked absent still has a chip, and
+    /// is deliberately not counted here: the cell reading "5 of 6" the moment somebody
+    /// rings in is the whole point of marking them absent.
+    /// </summary>
+    public int Assigned => People.Count(person => !person.IsAbsent);
+
+    /// <summary>Rostered but not coming in. Zero on an ordinary day.</summary>
+    public int Absent => People.Count(person => person.IsAbsent);
+
+    public bool HasAbsences => Absent > 0;
+
+    /// <summary>Reads "2 absent", beside the headcount rather than instead of it.</summary>
+    public string AbsentLabel => Strings.CellAbsent(Absent);
 
     public int Required { get; }
 
@@ -38,7 +55,13 @@ public sealed class RosterCellViewModel
     /// </summary>
     public bool IsShort => Assigned < Required;
 
-    public bool HasNoLeader => People.Count > 0 && !People.Any(person => person.IsLeader);
+    /// <summary>
+    /// Nobody on the line to ask. An absent leader counts as no leader, because a name on a
+    /// sheet is not somebody standing on the line, and this is the first thing a manager
+    /// needs to know when the phone call is from the person who runs it.
+    /// </summary>
+    public bool HasNoLeader =>
+        People.Count > 0 && !People.Any(person => person.IsLeader && !person.IsAbsent);
 
     public bool IsEmpty => People.Count == 0;
 }
