@@ -857,4 +857,52 @@
     <value>and {0} more</value>
     <comment>0 = how many errors are not listed. Singular is a separate entry.</comment>
   </data>
+  <data name="CouldNotSaveSettings" xml:space="preserve">
+    <value>Could not save the settings. See the log for details.</value>
+    <comment>Shown instead of a stack trace.</comment>
+  </data>
+  <data name="SettingsPrintHeading" xml:space="preserve">
+    <value>PRINTED SHEET</value>
+    <comment>Heading over the print settings.</comment>
+  </data>
+  <data name="SettingsCompanyName" xml:space="preserve">
+    <value>Company name</value>
+    <comment>Printed in the header of every sheet.</comment>
+  </data>
+  <data name="SettingsPaperSize" xml:space="preserve">
+    <value>Paper size</value>
+    <comment>Print setting.</comment>
+  </data>
+  <data name="SettingsOrientation" xml:space="preserve">
+    <value>Orientation</value>
+    <comment>Print setting.</comment>
+  </data>
+  <data name="SettingsFontSize" xml:space="preserve">
+    <value>Type size</value>
+    <comment>Print setting. Everything else on the sheet scales from this one number.</comment>
+  </data>
+  <data name="SettingsFontSizeHint" xml:space="preserve">
+    <value>Everything on the sheet scales from this. Raise it if the roster is read from further away.</value>
+    <comment>Explains the one number the printed layout is built on.</comment>
+  </data>
+  <data name="SettingsAccentColours" xml:space="preserve">
+    <value>Line colours on paper</value>
+    <comment>Print setting, off by default.</comment>
+  </data>
+  <data name="SettingsAccentColoursHint" xml:space="preserve">
+    <value>Decoration only. Nothing on the sheet is ever told apart by colour alone, so this is safe to leave off for a monochrome printer.</value>
+    <comment>Explains why line colours are optional on paper.</comment>
+  </data>
+  <data name="RegenerateHeading" xml:space="preserve">
+    <value>This week already has a roster</value>
+    <comment>Heading on the confirmation before rebuilding an existing roster.</comment>
+  </data>
+  <data name="RegenerateExplains" xml:space="preserve">
+    <value>Generating again rebuilds it from the current rules. Anything you placed by hand is locked and stays where it is; everything else may move.</value>
+    <comment>Explains what regenerating will and will not disturb.</comment>
+  </data>
+  <data name="RegenerateConfirm" xml:space="preserve">
+    <value>Generate again</value>
+    <comment>Confirms rebuilding an existing roster.</comment>
+  </data>
 </root>

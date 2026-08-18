@@ -97,21 +97,60 @@
             </StackPanel>
             <Button.Flyout>
               <Flyout Placement="RightEdgeAlignedBottom">
-                <StackPanel MinWidth="220" Spacing="2">
+                <StackPanel MinWidth="280" MaxWidth="300" Spacing="2">
                   <TextBlock Text="{x:Static res:Strings.SettingsHeading}"
                              Classes="sectionHeading"
                              Margin="4,2,0,6" />
 
                   <ToggleSwitch Content="{x:Static res:Strings.SettingsDarkTheme}"
                                 IsChecked="{Binding IsDarkTheme, Mode=TwoWay}" />
-                  <ToggleSwitch Content="{x:Static res:Strings.SettingsShowWarnings}"
-                                IsChecked="{Binding AreWarningsVisible, Mode=TwoWay}" />
-                  <ToggleSwitch Content="{x:Static res:Strings.SettingsShowSidebar}"
-                                IsChecked="{Binding IsNavigationVisible, Mode=TwoWay}" />
+
+                  <!-- Showing and hiding the two panels is not here. Collapsing a panel is
+                       something you do to the panel, and the chevron on it is both quicker
+                       to reach and obvious without opening anything. -->
+
+                  <TextBlock Text="{x:Static res:Strings.SettingsPrintHeading}"
+                             Classes="sectionHeading"
+                             Margin="4,12,0,4" />
+
+                  <!-- Every one of these has been stored and honoured by the printer since
+                       phase 4, and none of them could be changed without editing the
+                       database by hand. -->
+                  <StackPanel Spacing="6" IsVisible="{Binding PrintSettings, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <TextBox Text="{Binding PrintSettings.CompanyName, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                             Watermark="{x:Static res:Strings.SettingsCompanyName}" />
+
+                    <TextBlock Text="{x:Static res:Strings.SettingsPaperSize}" Classes="caption" />
+                    <ComboBox ItemsSource="{Binding PrintSettings.PaperSizes}"
+                              SelectedItem="{Binding PrintSettings.PaperSize, Mode=TwoWay}"
+                              HorizontalAlignment="Stretch" />
+
+                    <TextBlock Text="{x:Static res:Strings.SettingsOrientation}" Classes="caption" />
+                    <ComboBox ItemsSource="{Binding PrintSettings.Orientations}"
+                              SelectedItem="{Binding PrintSettings.Orientation, Mode=TwoWay}"
+                              HorizontalAlignment="Stretch" />
+
+                    <TextBlock Text="{x:Static res:Strings.SettingsFontSize}" Classes="caption" />
+                    <NumericUpDown Value="{Binding PrintSettings.BaseFontPoints, Mode=TwoWay}"
+                                   Minimum="8"
+                                   Maximum="36"
+                                   Increment="1"
+                                   FormatString="0"
+                                   HorizontalAlignment="Stretch" />
+                    <TextBlock Text="{x:Static res:Strings.SettingsFontSizeHint}"
+                               Classes="caption"
+                               TextWrapping="Wrap" />
+
+                    <ToggleSwitch Content="{x:Static res:Strings.SettingsAccentColours}"
+                                  IsChecked="{Binding PrintSettings.UseAccentColours, Mode=TwoWay}" />
+                    <TextBlock Text="{x:Static res:Strings.SettingsAccentColoursHint}"
+                               Classes="caption"
+                               TextWrapping="Wrap" />
+                  </StackPanel>
 
                   <TextBlock Text="{Binding Version}"
                              Classes="caption"
-                             Margin="4,8,0,0"
+                             Margin="4,12,0,0"
                              TextWrapping="Wrap" />
                 </StackPanel>
               </Flyout>
@@ -133,10 +172,38 @@
 
             <TextBlock Text="{x:Static res:Strings.NavActions}" Classes="sectionHeading" Margin="4,12,0,2" />
 
+            <!-- Straight through the first time. Once a week exists, generating again
+                 rebuilds something somebody has already looked at, so it says so first.
+
+                 A flyout rather than a dialog: clicking away is the cancel, and this
+                 application has twice shipped a window somebody could not leave. -->
             <Button Content="{x:Static res:Strings.GenerateRoster}"
                     Classes="primary nav"
-                    Command="{Binding GenerateCommand}"
-                    IsEnabled="{Binding !IsBusy}" />
+                    IsEnabled="{Binding !IsBusy}"
+                    IsVisible="{Binding !WouldRegenerate}"
+                    Command="{Binding GenerateCommand}" />
+
+            <Button Content="{x:Static res:Strings.GenerateRoster}"
+                    Classes="primary nav"
+                    IsEnabled="{Binding !IsBusy}"
+                    IsVisible="{Binding WouldRegenerate}">
+              <Button.Flyout>
+                <Flyout Placement="RightEdgeAlignedTop">
+                  <StackPanel MinWidth="280" MaxWidth="300" Spacing="8">
+                    <TextBlock Text="{x:Static res:Strings.RegenerateHeading}"
+                               FontWeight="SemiBold"
+                               TextWrapping="Wrap" />
+                    <TextBlock Text="{x:Static res:Strings.RegenerateExplains}"
+                               Classes="caption"
+                               TextWrapping="Wrap" />
+                    <Button Content="{x:Static res:Strings.RegenerateConfirm}"
+                            Classes="primary"
+                            HorizontalAlignment="Right"
+                            Command="{Binding GenerateCommand}" />
+                  </StackPanel>
+                </Flyout>
+              </Button.Flyout>
+            </Button>
 
             <Button Content="{x:Static res:Strings.Print}"
                     Classes="nav"

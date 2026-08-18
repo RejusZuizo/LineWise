@@ -109,6 +109,30 @@ public static class Strings
 
     public static string SettingsHeading => Get(nameof(SettingsHeading));
 
+    public static string CouldNotSaveSettings => Get(nameof(CouldNotSaveSettings));
+
+    public static string SettingsPrintHeading => Get(nameof(SettingsPrintHeading));
+
+    public static string SettingsCompanyName => Get(nameof(SettingsCompanyName));
+
+    public static string SettingsPaperSize => Get(nameof(SettingsPaperSize));
+
+    public static string SettingsOrientation => Get(nameof(SettingsOrientation));
+
+    public static string SettingsFontSize => Get(nameof(SettingsFontSize));
+
+    public static string SettingsFontSizeHint => Get(nameof(SettingsFontSizeHint));
+
+    public static string SettingsAccentColours => Get(nameof(SettingsAccentColours));
+
+    public static string SettingsAccentColoursHint => Get(nameof(SettingsAccentColoursHint));
+
+    public static string RegenerateHeading => Get(nameof(RegenerateHeading));
+
+    public static string RegenerateExplains => Get(nameof(RegenerateExplains));
+
+    public static string RegenerateConfirm => Get(nameof(RegenerateConfirm));
+
     public static string SettingsDarkTheme => Get(nameof(SettingsDarkTheme));
 
     public static string SettingsShowWarnings => Get(nameof(SettingsShowWarnings));

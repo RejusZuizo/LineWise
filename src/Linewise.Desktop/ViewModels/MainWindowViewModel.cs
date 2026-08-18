@@ -80,6 +80,14 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     [ObservableProperty]
     private RosterSummaryViewModel? _summary;
 
+    /// <summary>
+    /// How the printed sheet is laid out. Held here because the settings panel is part of
+    /// this window, and stored in the database so it travels with a backup rather than
+    /// living in a configuration file beside the executable.
+    /// </summary>
+    [ObservableProperty]
+    private PrintSettingsViewModel? _printSettings;
+
     [ObservableProperty]
     private string _status = Strings.Starting;
 
@@ -548,6 +556,35 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     }
 
     /// <summary>
+    /// Stores how the printed sheet should look. Written as it is changed rather than
+    /// behind a save button: there is nothing to review, and a settings panel that needs
+    /// saving is one somebody closes without saving.
+    /// </summary>
+    private async Task SavePrintSettingsAsync(Domain.Entities.PrintSettings settings)
+    {
+        if (_configuration is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await _configuration.SavePrintSettingsAsync(settings).ConfigureAwait(true);
+        }
+        catch (Exception exception)
+        {
+            Log.Error(exception, "Could not save the print settings.");
+            Status = Strings.CouldNotSaveSettings;
+        }
+    }
+
+    /// <summary>
+    /// Whether this week already has a roster, so generating again would rebuild one that
+    /// has been looked at. Drives the warning on the button rather than blocking it.
+    /// </summary>
+    public bool WouldRegenerate => HasRoster;
+
+    /// <summary>
     /// Fills whatever the rules can now fill, then redraws.
     /// </summary>
     /// <remarks>
@@ -719,6 +756,10 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
             var stored = await _rosters.GetLatestAsync(weekStart, cancellationToken).ConfigureAwait(true);
 
             var configuration = await _configuration.GetAsync(cancellationToken).ConfigureAwait(true);
+
+            PrintSettings ??= new PrintSettingsViewModel(
+                await _configuration.GetPrintSettingsAsync(cancellationToken).ConfigureAwait(true),
+                SavePrintSettingsAsync);
 
             var weekAvailability = await _availability
                 .GetAsync(weekStart, weekStart.AddDays(7), cancellationToken)
@@ -894,6 +935,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     private void Notify()
     {
         OnPropertyChanged(nameof(HasRoster));
+        OnPropertyChanged(nameof(WouldRegenerate));
         OnPropertyChanged(nameof(IsThisWeek));
         OnPropertyChanged(nameof(WeekLabel));
         OnPropertyChanged(nameof(HasWarnings));
