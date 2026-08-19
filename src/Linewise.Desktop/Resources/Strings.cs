@@ -222,6 +222,28 @@ public static class Strings
 
     public static string PeopleNobody => Get(nameof(PeopleNobody));
 
+    public static string AddPerson => Get(nameof(AddPerson));
+
+    public static string NewPersonName => Get(nameof(NewPersonName));
+
+    public static string NewPersonTemporary => Get(nameof(NewPersonTemporary));
+
+    public static string ShowFormerStaff => Get(nameof(ShowFormerStaff));
+
+    public static string PersonHasLeft => Get(nameof(PersonHasLeft));
+
+    public static string DeactivatePerson => Get(nameof(DeactivatePerson));
+
+    public static string ReactivatePerson => Get(nameof(ReactivatePerson));
+
+    public static string DeactivateExplains => Get(nameof(DeactivateExplains));
+
+    public static string PersonAdded(string name) => Format(nameof(PersonAdded), name);
+
+    public static string PersonDeactivated(string name) => Format(nameof(PersonDeactivated), name);
+
+    public static string PersonReactivated(string name) => Format(nameof(PersonReactivated), name);
+
     public static string GroupLineLeaders => Get(nameof(GroupLineLeaders));
 
     public static string GroupOperatingAssistants => Get(nameof(GroupOperatingAssistants));

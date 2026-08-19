@@ -1,7 +1,9 @@
+using Linewise.Application.Abstractions;
 using Linewise.Application.Persistence;
 using Linewise.Application.Rostering;
 using Linewise.Application.Validation;
 using Linewise.Desktop.ViewModels;
+using Linewise.Domain.Auditing;
 using Linewise.Domain.Entities;
 using Linewise.Domain.Enums;
 using Xunit;
@@ -257,7 +259,10 @@ public sealed class PeopleViewModelTests
             [Line(Ovens, "Ovens")],
             leadersEligible: false);
 
-        var editor = new PeopleViewModel(configuration, new RosterRuleValidator());
+        var editor = new PeopleViewModel(
+            configuration,
+            new RosterRuleValidator(),
+            new EmployeeDirectory(configuration, new SilentAuditLog()));
         await editor.LoadAsync();
 
         await editor.CheckRulesCommand.ExecuteAsync(null);
@@ -286,7 +291,10 @@ public sealed class PeopleViewModelTests
             },
         ]);
 
-        var editor = new PeopleViewModel(configuration, new RosterRuleValidator());
+        var editor = new PeopleViewModel(
+            configuration,
+            new RosterRuleValidator(),
+            new EmployeeDirectory(configuration, new SilentAuditLog()));
         await editor.LoadAsync();
 
         await editor.CheckRulesCommand.ExecuteAsync(null);
@@ -395,13 +403,69 @@ public sealed class PeopleViewModelTests
         Assert.False(editor.HasUnsavedChanges);
     }
 
+    /// <summary>
+    /// Somebody hired on a Tuesday, entered without waiting for next week's sheet.
+    /// </summary>
+    [Fact]
+    public async Task Adding_somebody_puts_them_in_the_list_and_selects_them()
+    {
+        var editor = await Loaded(leadersEligible: false);
+
+        editor.NewPersonName = "Dara Madeup";
+        await editor.AddPersonCommand.ExecuteAsync(null);
+
+        Assert.Equal(3, editor.People.Count);
+        Assert.Equal("Dara Madeup", editor.Selected!.Name);
+
+        // The box is cleared, so a second person can be typed straight in.
+        Assert.Empty(editor.NewPersonName);
+    }
+
+    [Fact]
+    public async Task A_person_with_no_name_cannot_be_added()
+    {
+        var editor = await Loaded(leadersEligible: false);
+
+        Assert.False(editor.AddPersonCommand.CanExecute(null));
+
+        editor.NewPersonName = "   ";
+        Assert.False(editor.AddPersonCommand.CanExecute(null));
+
+        editor.NewPersonName = "Dara Madeup";
+        Assert.True(editor.AddPersonCommand.CanExecute(null));
+    }
+
+    /// <summary>
+    /// A leaver drops out of the list rather than out of the database, and comes back when
+    /// former staff are shown.
+    /// </summary>
+    [Fact]
+    public async Task Somebody_who_leaves_is_hidden_rather_than_deleted()
+    {
+        var editor = await Loaded(leadersEligible: false);
+
+        var person = editor.Selected!;
+        await editor.ToggleActiveCommand.ExecuteAsync(null);
+
+        Assert.DoesNotContain(editor.People, candidate => candidate.Id == person.Id);
+
+        editor.ShowFormerStaff = true;
+        await editor.LoadAsync();
+
+        var former = Assert.Single(editor.People, candidate => candidate.Id == person.Id);
+        Assert.False(former.IsActive);
+    }
+
     private static async Task<PeopleViewModel> Loaded(bool leadersEligible = true)
     {
         var configuration = new FakeConfiguration(
             [Line(Ovens, "Ovens"), Line(Packing, "Packing")],
             leadersEligible);
 
-        var editor = new PeopleViewModel(configuration, new RosterRuleValidator());
+        var editor = new PeopleViewModel(
+            configuration,
+            new RosterRuleValidator(),
+            new EmployeeDirectory(configuration, new SilentAuditLog()));
 
         await editor.LoadAsync();
 
@@ -415,6 +479,8 @@ public sealed class PeopleViewModelTests
     {
         private readonly RosterConfiguration _configuration;
 
+        private readonly List<Employee> _employees;
+
         public FakeConfiguration(IReadOnlyList<ProductionLine> lines, bool leadersEligible = true)
         {
             Employee[] employees =
@@ -422,6 +488,8 @@ public sealed class PeopleViewModelTests
                 new() { Id = Guid.NewGuid(), FullName = "Ada Fictional" },
                 new() { Id = Guid.NewGuid(), FullName = "Bram Invented" },
             ];
+
+            _employees = [.. employees];
 
             // Somebody has to be able to lead each line, or the configuration is genuinely
             // impossible and the validator is right to say so.
@@ -443,11 +511,19 @@ public sealed class PeopleViewModelTests
             };
         }
 
+        // Reads the employees back out of the list rather than the snapshot taken in the
+        // constructor, so adding somebody and taking somebody off actually show up. A fake
+        // that silently discards writes tests nothing.
         public Task<RosterConfiguration> GetAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult(_configuration);
+            Task.FromResult(_configuration with { Employees = [.. _employees] });
 
-        public Task SaveEmployeeAsync(Employee employee, CancellationToken cancellationToken = default) =>
-            Task.CompletedTask;
+        public Task SaveEmployeeAsync(Employee employee, CancellationToken cancellationToken = default)
+        {
+            _employees.RemoveAll(existing => existing.Id == employee.Id);
+            _employees.Add(employee);
+
+            return Task.CompletedTask;
+        }
 
         public Task SaveLineAsync(ProductionLine line, CancellationToken cancellationToken = default) =>
             Task.CompletedTask;
@@ -480,5 +556,34 @@ public sealed class PeopleViewModelTests
             PrintSettings settings,
             CancellationToken cancellationToken = default) =>
             Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Swallows the audit entries. What is written to the chain is asserted where the chain
+    /// is real, not here, where the point is what the screen does.
+    /// </summary>
+    private sealed class SilentAuditLog : IAuditLog
+    {
+        public Task<AuditEntry> AppendAsync(
+            AuditAction action,
+            string summary,
+            string reason,
+            CancellationToken cancellationToken = default) =>
+            Task.FromResult(new AuditEntry
+            {
+                OccurredAtUtc = DateTime.UnixEpoch,
+                UserName = "test",
+                Action = action,
+                Summary = summary,
+                Reason = reason,
+                PreviousHash = string.Empty,
+                Hash = string.Empty,
+            });
+
+        public Task<IReadOnlyList<AuditEntry>> ReadAllAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<AuditEntry>>([]);
+
+        public Task<AuditChainVerification> VerifyAsync(CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
     }
 }

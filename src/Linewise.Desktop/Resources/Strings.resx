@@ -933,4 +933,48 @@
     <value>Per-line sheets</value>
     <comment>Prints one page per line, to pin at that line.</comment>
   </data>
+  <data name="AddPerson" xml:space="preserve">
+    <value>Add</value>
+    <comment>Adds somebody to the roster without waiting for an import.</comment>
+  </data>
+  <data name="NewPersonName" xml:space="preserve">
+    <value>Name of somebody new</value>
+    <comment>Watermark on the add person box.</comment>
+  </data>
+  <data name="NewPersonTemporary" xml:space="preserve">
+    <value>Agency</value>
+    <comment>Marks somebody as agency or temporary when adding them.</comment>
+  </data>
+  <data name="ShowFormerStaff" xml:space="preserve">
+    <value>Show people who have left</value>
+    <comment>Includes deactivated people in the list.</comment>
+  </data>
+  <data name="PersonHasLeft" xml:space="preserve">
+    <value>LEFT</value>
+    <comment>Marks somebody who is no longer on the roster. The word, never colour alone.</comment>
+  </data>
+  <data name="DeactivatePerson" xml:space="preserve">
+    <value>Took them off the roster</value>
+    <comment>Button that deactivates the selected person.</comment>
+  </data>
+  <data name="ReactivatePerson" xml:space="preserve">
+    <value>Put them back on the roster</value>
+    <comment>Button that reactivates a former member of staff.</comment>
+  </data>
+  <data name="DeactivateExplains" xml:space="preserve">
+    <value>They stop being rostered from now on. Nothing is deleted, and every week they have already worked still names them.</value>
+    <comment>Explains that deactivating is not a delete.</comment>
+  </data>
+  <data name="PersonAdded" xml:space="preserve">
+    <value>{0} added. Set which lines they work.</value>
+    <comment>0 = the name just added.</comment>
+  </data>
+  <data name="PersonDeactivated" xml:space="preserve">
+    <value>{0} is no longer on the roster.</value>
+    <comment>0 = the name.</comment>
+  </data>
+  <data name="PersonReactivated" xml:space="preserve">
+    <value>{0} is back on the roster.</value>
+    <comment>0 = the name.</comment>
+  </data>
 </root>

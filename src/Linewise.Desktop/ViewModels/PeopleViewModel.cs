@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Linewise.Application.Persistence;
+using Linewise.Application.Rostering;
 using Linewise.Application.Validation;
 using Linewise.Desktop.Resources;
 using Linewise.Domain.Entities;
@@ -40,6 +41,7 @@ public sealed partial class PeopleViewModel : ObservableObject
 {
     private readonly IConfigurationRepository? _configuration;
     private readonly IRosterRuleValidator? _validator;
+    private readonly IEmployeeDirectory? _directory;
 
     [ObservableProperty]
     private EmployeeViewModel? _selected;
@@ -74,10 +76,36 @@ public sealed partial class PeopleViewModel : ObservableObject
     [ObservableProperty]
     private string _search = string.Empty;
 
-    public PeopleViewModel(IConfigurationRepository configuration, IRosterRuleValidator validator)
+    /// <summary>
+    /// The name of somebody being added. People could only arrive through an import until
+    /// now, so hiring somebody on a Tuesday meant waiting for next week's sheet.
+    /// </summary>
+    [ObservableProperty]
+    private string _newPersonName = string.Empty;
+
+    /// <summary>Agency or temporary. The ordinary case in food production, not an edge one.</summary>
+    [ObservableProperty]
+    private bool _newPersonIsTemporary;
+
+    /// <summary>
+    /// Show people who have left.
+    /// </summary>
+    /// <remarks>
+    /// Off by default, because a list of everybody who ever worked here is not the list
+    /// somebody opens this screen to read. On, because a leaver who returns should be put
+    /// back rather than entered again as a second person with the same name.
+    /// </remarks>
+    [ObservableProperty]
+    private bool _showFormerStaff;
+
+    public PeopleViewModel(
+        IConfigurationRepository configuration,
+        IRosterRuleValidator validator,
+        IEmployeeDirectory directory)
     {
         _configuration = configuration;
         _validator = validator;
+        _directory = directory;
     }
 
     /// <summary>For the Avalonia designer, which cannot resolve from the container.</summary>
@@ -121,7 +149,7 @@ public sealed partial class PeopleViewModel : ObservableObject
         People.Clear();
 
         foreach (var employee in configuration.Employees
-            .Where(employee => employee.IsActive)
+            .Where(employee => employee.IsActive || ShowFormerStaff)
             .OrderBy(employee => employee.FullName, StringComparer.CurrentCulture))
         {
             People.Add(new EmployeeViewModel(employee, configuration));
@@ -133,6 +161,70 @@ public sealed partial class PeopleViewModel : ObservableObject
     }
 
     partial void OnSearchChanged(string value) => ApplySearch();
+
+    partial void OnShowFormerStaffChanged(bool value) => _ = LoadAsync();
+
+    public bool CanAddPerson => !string.IsNullOrWhiteSpace(NewPersonName);
+
+    partial void OnNewPersonNameChanged(string value) =>
+        AddPersonCommand.NotifyCanExecuteChanged();
+
+    /// <summary>Adds somebody, then selects them so their rules can be set straight away.</summary>
+    [RelayCommand(CanExecute = nameof(CanAddPerson))]
+    private async Task AddPersonAsync(CancellationToken cancellationToken)
+    {
+        if (_directory is null)
+        {
+            return;
+        }
+
+        var added = await _directory
+            .AddAsync(NewPersonName, NewPersonIsTemporary, cancellationToken)
+            .ConfigureAwait(true);
+
+        NewPersonName = string.Empty;
+        NewPersonIsTemporary = false;
+
+        await LoadAsync(cancellationToken).ConfigureAwait(true);
+
+        Selected = People.FirstOrDefault(person => person.Id == added.Id);
+        SelectedNode = Selected;
+        Status = Strings.PersonAdded(added.FullName);
+    }
+
+    /// <summary>
+    /// Takes the selected person off the roster, or puts them back.
+    /// </summary>
+    /// <remarks>
+    /// Never a hard delete. Historic rosters name people by identifier, and removing the row
+    /// would turn every week they ever worked into a sheet full of unknowns.
+    /// </remarks>
+    [RelayCommand(CanExecute = nameof(HasSelection))]
+    private async Task ToggleActiveAsync(CancellationToken cancellationToken)
+    {
+        if (_directory is null || Selected is null)
+        {
+            return;
+        }
+
+        var person = Selected;
+        var leaving = person.IsActive;
+
+        if (leaving)
+        {
+            await _directory.DeactivateAsync(person.Id, cancellationToken).ConfigureAwait(true);
+        }
+        else
+        {
+            await _directory.ReactivateAsync(person.Id, cancellationToken).ConfigureAwait(true);
+        }
+
+        await LoadAsync(cancellationToken).ConfigureAwait(true);
+
+        Selected = People.FirstOrDefault(candidate => candidate.Id == person.Id);
+        SelectedNode = Selected;
+        Status = leaving ? Strings.PersonDeactivated(person.Name) : Strings.PersonReactivated(person.Name);
+    }
 
     private EmployeeViewModel? _watching;
 
@@ -158,6 +250,7 @@ public sealed partial class PeopleViewModel : ObservableObject
         IsSaved = false;
 
         OnPropertyChanged(nameof(HasSelection));
+        ToggleActiveCommand.NotifyCanExecuteChanged();
     }
 
     private void OnPersonEdited(object? sender, EventArgs e)
@@ -378,6 +471,7 @@ public sealed partial class EmployeeViewModel : ObservableObject
         Id = employee.Id;
         Name = employee.FullName;
         IsTemporary = employee.IsTemporary;
+        IsActive = employee.IsActive;
 
         _allLines = [.. configuration.Lines.OrderBy(line => line.DisplayOrder)];
 
@@ -430,6 +524,9 @@ public sealed partial class EmployeeViewModel : ObservableObject
     public string Name { get; }
 
     public bool IsTemporary { get; }
+
+    /// <summary>Still on the roster. A leaver is kept, never deleted.</summary>
+    public bool IsActive { get; }
 
     /// <summary>
     /// The lines this person works, best first. Position is the priority: the first entry is
