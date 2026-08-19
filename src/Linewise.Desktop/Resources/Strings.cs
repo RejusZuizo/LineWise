@@ -114,6 +114,28 @@ public static class Strings
 
     public static string Settings => Get(nameof(Settings));
 
+    public static string SettingsBackupsHeading => Get(nameof(SettingsBackupsHeading));
+
+    public static string BackUpNow => Get(nameof(BackUpNow));
+
+    public static string BackupTaken => Get(nameof(BackupTaken));
+
+    public static string CouldNotBackUp => Get(nameof(CouldNotBackUp));
+
+    public static string RestoreBackup => Get(nameof(RestoreBackup));
+
+    public static string RestoreExplains => Get(nameof(RestoreExplains));
+
+    public static string RestoredRestartNeeded => Get(nameof(RestoredRestartNeeded));
+
+    public static string CouldNotRestore => Get(nameof(CouldNotRestore));
+
+    public static string NoBackupsYet => Get(nameof(NoBackupsYet));
+
+    public static string BackupTakenAt(DateTime takenAt) => Format(nameof(BackupTakenAt), takenAt);
+
+    public static string BackupSize(long kilobytes) => Format(nameof(BackupSize), kilobytes);
+
     public static string DashboardMoreProblems(int more) =>
         more == 1 ? Get("DashboardMoreProblemsOne") : Format("DashboardMoreProblemsMany", more);
 

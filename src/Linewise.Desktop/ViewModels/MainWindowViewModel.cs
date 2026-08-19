@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Linewise.Application.Abstractions;
 using Linewise.Application.Persistence;
 using Linewise.Application.Printing;
 using Linewise.Application.Rostering;
@@ -93,6 +94,13 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
     /// </summary>
     [ObservableProperty]
     private PrintSettingsViewModel? _printSettings;
+
+    /// <summary>
+    /// The copies of the database and the way back from one. Built on demand, because a
+    /// backup list is read when somebody opens settings and never otherwise.
+    /// </summary>
+    [ObservableProperty]
+    private BackupsViewModel? _backups;
 
     [ObservableProperty]
     private string _status = Strings.Starting;
@@ -910,6 +918,19 @@ public sealed partial class MainWindowViewModel : ObservableObject, IRosterEdito
                 }).ConfigureAwait(true);
 
             PrintSettings ??= new PrintSettingsViewModel(printSettings, SavePrintSettingsAsync);
+
+            if (Backups is null && _scopes is not null)
+            {
+                Backups = new BackupsViewModel(
+                    () => InScopeAsync(services =>
+                        services.GetRequiredService<IBackupService>().ListAsync()),
+                    () => InScopeAsync(services =>
+                        services.GetRequiredService<IBackupService>().BackupAsync()),
+                    path => InScopeAsync(services =>
+                        services.GetRequiredService<IBackupService>().RestoreAsync(path)));
+
+                await Backups.LoadAsync().ConfigureAwait(true);
+            }
 
             _loadedDemands = demands;
 

@@ -977,4 +977,48 @@
     <value>{0} is back on the roster.</value>
     <comment>0 = the name.</comment>
   </data>
+  <data name="SettingsBackupsHeading" xml:space="preserve">
+    <value>BACKUPS</value>
+    <comment>Heading over the backup list in settings.</comment>
+  </data>
+  <data name="BackUpNow" xml:space="preserve">
+    <value>Back up now</value>
+    <comment>Takes a copy of the database immediately.</comment>
+  </data>
+  <data name="BackupTaken" xml:space="preserve">
+    <value>Backup taken.</value>
+    <comment>Status after a manual backup.</comment>
+  </data>
+  <data name="CouldNotBackUp" xml:space="preserve">
+    <value>Could not take a backup. See the log for details.</value>
+    <comment>Shown instead of a stack trace.</comment>
+  </data>
+  <data name="RestoreBackup" xml:space="preserve">
+    <value>Restore this one</value>
+    <comment>Replaces the live database with the selected backup.</comment>
+  </data>
+  <data name="RestoreExplains" xml:space="preserve">
+    <value>This replaces everything with the copy from that moment. Anything entered since is gone, and nothing undoes it. Linewise has to be restarted afterwards.</value>
+    <comment>Said plainly before a restore, because it is the one destructive action here.</comment>
+  </data>
+  <data name="RestoredRestartNeeded" xml:space="preserve">
+    <value>Restored. Close Linewise and start it again before doing anything else.</value>
+    <comment>Shown after a restore. The open database context still points at the replaced file.</comment>
+  </data>
+  <data name="CouldNotRestore" xml:space="preserve">
+    <value>Could not restore. Nothing was replaced, and the log says why.</value>
+    <comment>The backup is checked before anything is overwritten, so a failure leaves the database alone.</comment>
+  </data>
+  <data name="NoBackupsYet" xml:space="preserve">
+    <value>No backups yet. One is taken every time Linewise starts.</value>
+    <comment>Shown when the backup folder is empty.</comment>
+  </data>
+  <data name="BackupTakenAt" xml:space="preserve">
+    <value>{0:ddd d MMM, HH:mm}</value>
+    <comment>0 = when the backup was taken, in local time.</comment>
+  </data>
+  <data name="BackupSize" xml:space="preserve">
+    <value>{0:N0} KB</value>
+    <comment>0 = size in kilobytes.</comment>
+  </data>
 </root>
