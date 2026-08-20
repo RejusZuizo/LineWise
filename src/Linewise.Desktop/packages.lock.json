@@ -89,6 +89,12 @@
         "resolved": "4.4.0",
         "contentHash": "ZC6Le3rr4TVJJjS4KsQAesxeF1EhW9qcZmmG7eP5Y2G3+gTGkJEUXkq4+tZNPtyp05I0wWOxnIjwtxFweJsObw=="
       },
+      "Velopack": {
+        "type": "Direct",
+        "requested": "[1.2.0, )",
+        "resolved": "1.2.0",
+        "contentHash": "Rz67gJL619fSBS6omaSINUxyDuwhIxkm5mmubf7uLd5Qgi6LLKaKCha+QFP6n+Bw/UjA0vutnH4JQfYzn6ANtw=="
+      },
       "Avalonia.Angle.Windows.Natives": {
         "type": "Transitive",
         "resolved": "2.1.25547.20250602",
@@ -423,7 +429,7 @@
       "linewise.application": {
         "type": "Project",
         "dependencies": {
-          "Linewise.Domain": "[0.6.0-alpha, )",
+          "Linewise.Domain": "[0.7.0, )",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "[8.0.2, )"
         }
       },
@@ -434,8 +440,8 @@
         "type": "Project",
         "dependencies": {
           "ClosedXML": "[0.104.2, )",
-          "Linewise.Application": "[0.6.0-alpha, )",
-          "Linewise.Domain": "[0.6.0-alpha, )",
+          "Linewise.Application": "[0.7.0, )",
+          "Linewise.Domain": "[0.7.0, )",
           "Microsoft.EntityFrameworkCore.Sqlite.Core": "[8.0.30, )",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "[8.0.2, )",
           "Microsoft.Extensions.Options": "[8.0.2, )",

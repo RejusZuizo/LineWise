@@ -86,7 +86,7 @@ and why, which is usually the part worth reading.
 
 ## Design
 
-Seventeen numbered decisions in [docs/adr](docs/adr/), including the ones later reversed.
+Eighteen numbered decisions in [docs/adr](docs/adr/), including the ones later reversed.
 [Architecture](docs/architecture.md) explains the layering and why `Linewise.Domain` contains
 no `PackageReference` at all. [Technical design](docs/technical-design.md) is the plan;
 [threat model](docs/threat-model.md) and [data protection](docs/data-protection.md) are living
@@ -99,7 +99,10 @@ documents rather than sections of it.
 - **The historic replay has not been done.** Replaying a real month against the engine and
   comparing it to what the manager actually produced is the highest value testing left, and it
   needs data nobody has sent yet.
-- **No installer.** Runs from `dotnet run`. Packaging is phase 8.
+- **The installer has never been run.** Packaging is written and the publish step is
+  verified, but `vpk pack` only builds a Windows installer on Windows, so the packing step
+  itself has never executed. It is also unsigned, and
+  [installing.md](docs/installing.md) says what Windows will do about that.
 - **Windows is the target; Linux is where it is developed.** The suite passes on both and the
   application runs on both, but the database key is weaker on Linux by design.
   [ADR 0011](docs/adr/0011-development-happens-on-linux-and-shipping-does-not.md).
@@ -107,8 +110,8 @@ documents rather than sections of it.
   thought to invent. A sheet nobody imagined still needs a template by hand.
   [ADR 0017](docs/adr/0017-the-importer-reads-the-sheet-before-it-reads-the-template.md).
 - **No undo.** Every editing action is one way.
-- **Backup runs on startup and cannot be restored from the application.** The service and the
-  restore routine are tested; neither has a button.
+- **No auto update feed.** Velopack produces the files; nothing serves them yet, so updating
+  means running a newer installer.
 
 ## Licence
 

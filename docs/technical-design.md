@@ -537,6 +537,8 @@ about.
 
 Written since: README.md, THIRD-PARTY-NOTICES.txt, docs/architecture.md.
 
+Written since: docs/installing.md, the one page install guide.
+
 Still to write: a user manual for the manager, including the restore procedure, and the
 customer licence agreement.
 

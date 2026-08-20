@@ -3,6 +3,26 @@
   <PropertyGroup>
     <!-- Follows Infrastructure, which is Windows specific because of DPAPI. ADR 0006. -->
     <TargetFramework>net8.0-windows</TargetFramework>
+
+    <!--
+      Published self contained for win-x64. The factory PC is a machine nobody here
+      administers, and "install the .NET runtime first" is a support call rather than an
+      instruction. It costs about seventy megabytes in the installer, paid once.
+    -->
+    <RuntimeIdentifier Condition="'$(Configuration)' == 'Release'">win-x64</RuntimeIdentifier>
+    <SelfContained Condition="'$(Configuration)' == 'Release'">true</SelfContained>
+
+    <!--
+      Trimming is off. Avalonia resolves controls and this application resolves services
+      through reflection, and a trimmed build fails at the moment somebody opens a screen
+      rather than at build time. Seventy megabytes is not worth that.
+    -->
+    <PublishTrimmed>false</PublishTrimmed>
+    <PublishSingleFile>false</PublishSingleFile>
+
+    <AssemblyName>Linewise</AssemblyName>
+    <Product>Linewise</Product>
+    <Company>Linewise</Company>
     <OutputType>WinExe</OutputType>
     <RootNamespace>Linewise.Desktop</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -19,6 +39,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Velopack" />
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Desktop" />
     <PackageReference Include="Avalonia.Themes.Fluent" />

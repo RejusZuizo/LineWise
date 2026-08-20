@@ -415,7 +415,7 @@
       "linewise.application": {
         "type": "Project",
         "dependencies": {
-          "Linewise.Domain": "[0.6.0-alpha, )",
+          "Linewise.Domain": "[0.7.0, )",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "[8.0.2, )"
         }
       },
