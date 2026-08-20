@@ -114,6 +114,28 @@ public static class Strings
 
     public static string Settings => Get(nameof(Settings));
 
+    public static string SettingsBackupsHeading => Get(nameof(SettingsBackupsHeading));
+
+    public static string BackUpNow => Get(nameof(BackUpNow));
+
+    public static string BackupTaken => Get(nameof(BackupTaken));
+
+    public static string CouldNotBackUp => Get(nameof(CouldNotBackUp));
+
+    public static string RestoreBackup => Get(nameof(RestoreBackup));
+
+    public static string RestoreExplains => Get(nameof(RestoreExplains));
+
+    public static string RestoredRestartNeeded => Get(nameof(RestoredRestartNeeded));
+
+    public static string CouldNotRestore => Get(nameof(CouldNotRestore));
+
+    public static string NoBackupsYet => Get(nameof(NoBackupsYet));
+
+    public static string BackupTakenAt(DateTime takenAt) => Format(nameof(BackupTakenAt), takenAt);
+
+    public static string BackupSize(long kilobytes) => Format(nameof(BackupSize), kilobytes);
+
     public static string DashboardMoreProblems(int more) =>
         more == 1 ? Get("DashboardMoreProblemsOne") : Format("DashboardMoreProblemsMany", more);
 
@@ -221,6 +243,28 @@ public static class Strings
     public static string PeopleTemporary => Get(nameof(PeopleTemporary));
 
     public static string PeopleNobody => Get(nameof(PeopleNobody));
+
+    public static string AddPerson => Get(nameof(AddPerson));
+
+    public static string NewPersonName => Get(nameof(NewPersonName));
+
+    public static string NewPersonTemporary => Get(nameof(NewPersonTemporary));
+
+    public static string ShowFormerStaff => Get(nameof(ShowFormerStaff));
+
+    public static string PersonHasLeft => Get(nameof(PersonHasLeft));
+
+    public static string DeactivatePerson => Get(nameof(DeactivatePerson));
+
+    public static string ReactivatePerson => Get(nameof(ReactivatePerson));
+
+    public static string DeactivateExplains => Get(nameof(DeactivateExplains));
+
+    public static string PersonAdded(string name) => Format(nameof(PersonAdded), name);
+
+    public static string PersonDeactivated(string name) => Format(nameof(PersonDeactivated), name);
+
+    public static string PersonReactivated(string name) => Format(nameof(PersonReactivated), name);
 
     public static string GroupLineLeaders => Get(nameof(GroupLineLeaders));
 

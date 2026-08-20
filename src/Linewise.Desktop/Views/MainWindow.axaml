@@ -148,6 +148,77 @@
                                TextWrapping="Wrap" />
                   </StackPanel>
 
+                  <TextBlock Text="{x:Static res:Strings.SettingsBackupsHeading}"
+                             Classes="sectionHeading"
+                             Margin="4,14,0,4" />
+
+                  <!-- A backup has been taken on every startup since phase 2 and the restore
+                       routine has been tested since then. Neither had a button, so on the one
+                       machine holding the only copy of the roster there was no way to use
+                       either. -->
+                  <StackPanel Spacing="6" IsVisible="{Binding Backups, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <Button Content="{x:Static res:Strings.BackUpNow}"
+                            Classes="quiet"
+                            HorizontalAlignment="Stretch"
+                            Command="{Binding Backups.BackUpNowCommand}"
+                            IsEnabled="{Binding !Backups.IsBusy}" />
+
+                    <TextBlock Text="{x:Static res:Strings.NoBackupsYet}"
+                               Classes="caption"
+                               TextWrapping="Wrap"
+                               IsVisible="{Binding !Backups.HasBackups}" />
+
+                    <ScrollViewer MaxHeight="180">
+                      <ItemsControl ItemsSource="{Binding Backups.Backups}">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate x:DataType="vm:BackupViewModel">
+                            <DockPanel LastChildFill="True" Margin="0,2">
+                              <!-- The one destructive thing in this application, so it says
+                                   what it costs before it happens rather than asking whether
+                                   somebody is sure. -->
+                              <Button DockPanel.Dock="Right"
+                                      Content="…"
+                                      Classes="icon">
+                                <Button.Flyout>
+                                  <Flyout Placement="LeftEdgeAlignedTop">
+                                    <StackPanel MinWidth="260" MaxWidth="300" Spacing="8">
+                                      <TextBlock Text="{Binding TakenAtLabel}" FontWeight="SemiBold" />
+                                      <TextBlock Text="{x:Static res:Strings.RestoreExplains}"
+                                                 Classes="caption"
+                                                 TextWrapping="Wrap" />
+                                      <Button Content="{x:Static res:Strings.RestoreBackup}"
+                                              Classes="primary"
+                                              HorizontalAlignment="Right"
+                                              Command="{Binding RestoreCommand}" />
+                                    </StackPanel>
+                                  </Flyout>
+                                </Button.Flyout>
+                              </Button>
+                              <TextBlock Text="{Binding TakenAtLabel}" FontSize="12" VerticalAlignment="Center" />
+                              <TextBlock Text="{Binding SizeLabel}"
+                                         Classes="caption"
+                                         Margin="8,0,0,0"
+                                         VerticalAlignment="Center" />
+                            </DockPanel>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                    </ScrollViewer>
+
+                    <!-- After a restore the context still points at the file that was just
+                         replaced, so carrying on would write the old data back over it. -->
+                    <Border Classes="severity error" IsVisible="{Binding Backups.NeedsRestart}">
+                      <TextBlock Text="{x:Static res:Strings.RestoredRestartNeeded}"
+                                 FontSize="11"
+                                 FontWeight="SemiBold"
+                                 TextWrapping="Wrap" />
+                    </Border>
+
+                    <TextBlock Text="{Binding Backups.Status}"
+                               Classes="caption"
+                               TextWrapping="Wrap" />
+                  </StackPanel>
+
                   <TextBlock Text="{Binding Version}"
                              Classes="caption"
                              Margin="4,12,0,0"

@@ -35,6 +35,7 @@ public static class ServiceCollectionExtensions
         services.TryAddScoped<IReplacementFinder, ReplacementFinder>();
         services.TryAddScoped<IGapFiller, GapFiller>();
         services.TryAddScoped<IPublishingService, PublishingService>();
+        services.TryAddScoped<IEmployeeDirectory, EmployeeDirectory>();
 
         return services;
     }

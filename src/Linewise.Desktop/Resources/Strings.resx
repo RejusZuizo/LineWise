@@ -933,4 +933,92 @@
     <value>Per-line sheets</value>
     <comment>Prints one page per line, to pin at that line.</comment>
   </data>
+  <data name="AddPerson" xml:space="preserve">
+    <value>Add</value>
+    <comment>Adds somebody to the roster without waiting for an import.</comment>
+  </data>
+  <data name="NewPersonName" xml:space="preserve">
+    <value>Name of somebody new</value>
+    <comment>Watermark on the add person box.</comment>
+  </data>
+  <data name="NewPersonTemporary" xml:space="preserve">
+    <value>Agency</value>
+    <comment>Marks somebody as agency or temporary when adding them.</comment>
+  </data>
+  <data name="ShowFormerStaff" xml:space="preserve">
+    <value>Show people who have left</value>
+    <comment>Includes deactivated people in the list.</comment>
+  </data>
+  <data name="PersonHasLeft" xml:space="preserve">
+    <value>LEFT</value>
+    <comment>Marks somebody who is no longer on the roster. The word, never colour alone.</comment>
+  </data>
+  <data name="DeactivatePerson" xml:space="preserve">
+    <value>Took them off the roster</value>
+    <comment>Button that deactivates the selected person.</comment>
+  </data>
+  <data name="ReactivatePerson" xml:space="preserve">
+    <value>Put them back on the roster</value>
+    <comment>Button that reactivates a former member of staff.</comment>
+  </data>
+  <data name="DeactivateExplains" xml:space="preserve">
+    <value>They stop being rostered from now on. Nothing is deleted, and every week they have already worked still names them.</value>
+    <comment>Explains that deactivating is not a delete.</comment>
+  </data>
+  <data name="PersonAdded" xml:space="preserve">
+    <value>{0} added. Set which lines they work.</value>
+    <comment>0 = the name just added.</comment>
+  </data>
+  <data name="PersonDeactivated" xml:space="preserve">
+    <value>{0} is no longer on the roster.</value>
+    <comment>0 = the name.</comment>
+  </data>
+  <data name="PersonReactivated" xml:space="preserve">
+    <value>{0} is back on the roster.</value>
+    <comment>0 = the name.</comment>
+  </data>
+  <data name="SettingsBackupsHeading" xml:space="preserve">
+    <value>BACKUPS</value>
+    <comment>Heading over the backup list in settings.</comment>
+  </data>
+  <data name="BackUpNow" xml:space="preserve">
+    <value>Back up now</value>
+    <comment>Takes a copy of the database immediately.</comment>
+  </data>
+  <data name="BackupTaken" xml:space="preserve">
+    <value>Backup taken.</value>
+    <comment>Status after a manual backup.</comment>
+  </data>
+  <data name="CouldNotBackUp" xml:space="preserve">
+    <value>Could not take a backup. See the log for details.</value>
+    <comment>Shown instead of a stack trace.</comment>
+  </data>
+  <data name="RestoreBackup" xml:space="preserve">
+    <value>Restore this one</value>
+    <comment>Replaces the live database with the selected backup.</comment>
+  </data>
+  <data name="RestoreExplains" xml:space="preserve">
+    <value>This replaces everything with the copy from that moment. Anything entered since is gone, and nothing undoes it. Linewise has to be restarted afterwards.</value>
+    <comment>Said plainly before a restore, because it is the one destructive action here.</comment>
+  </data>
+  <data name="RestoredRestartNeeded" xml:space="preserve">
+    <value>Restored. Close Linewise and start it again before doing anything else.</value>
+    <comment>Shown after a restore. The open database context still points at the replaced file.</comment>
+  </data>
+  <data name="CouldNotRestore" xml:space="preserve">
+    <value>Could not restore. Nothing was replaced, and the log says why.</value>
+    <comment>The backup is checked before anything is overwritten, so a failure leaves the database alone.</comment>
+  </data>
+  <data name="NoBackupsYet" xml:space="preserve">
+    <value>No backups yet. One is taken every time Linewise starts.</value>
+    <comment>Shown when the backup folder is empty.</comment>
+  </data>
+  <data name="BackupTakenAt" xml:space="preserve">
+    <value>{0:ddd d MMM, HH:mm}</value>
+    <comment>0 = when the backup was taken, in local time.</comment>
+  </data>
+  <data name="BackupSize" xml:space="preserve">
+    <value>{0:N0} KB</value>
+    <comment>0 = size in kilobytes.</comment>
+  </data>
 </root>

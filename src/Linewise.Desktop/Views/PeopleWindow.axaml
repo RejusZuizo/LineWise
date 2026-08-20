@@ -111,10 +111,31 @@
             CornerRadius="6"
             Margin="0,0,12,0">
       <DockPanel LastChildFill="True">
-        <TextBox DockPanel.Dock="Top"
-                 Text="{Binding Search}"
-                 Watermark="{x:Static res:Strings.PeopleSearch}"
-                 Margin="10" />
+        <StackPanel DockPanel.Dock="Top" Margin="10" Spacing="8">
+          <TextBox Text="{Binding Search}"
+                   Watermark="{x:Static res:Strings.PeopleSearch}" />
+
+          <!-- People could only arrive through an import until now, so somebody hired on a
+               Tuesday had to wait for next week's sheet. -->
+          <DockPanel LastChildFill="True">
+            <Button DockPanel.Dock="Right"
+                    Content="{x:Static res:Strings.AddPerson}"
+                    Classes="primary"
+                    Margin="6,0,0,0"
+                    Command="{Binding AddPersonCommand}"
+                    IsDefault="True" />
+            <TextBox Text="{Binding NewPersonName}"
+                     Watermark="{x:Static res:Strings.NewPersonName}" />
+          </DockPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="12">
+            <CheckBox Content="{x:Static res:Strings.NewPersonTemporary}"
+                      IsChecked="{Binding NewPersonIsTemporary, Mode=TwoWay}" />
+          </StackPanel>
+
+          <CheckBox Content="{x:Static res:Strings.ShowFormerStaff}"
+                    IsChecked="{Binding ShowFormerStaff, Mode=TwoWay}" />
+        </StackPanel>
 
         <TextBlock DockPanel.Dock="Bottom"
                    Text="{Binding CapabilityBreakdown}"
@@ -157,6 +178,12 @@
                              Classes="caption"
                              IsVisible="{Binding IsTemporary}"
                              VerticalAlignment="Center" />
+                  <!-- The word, never a shade of grey on its own. -->
+                  <TextBlock Text="{x:Static res:Strings.PersonHasLeft}"
+                             Classes="caption"
+                             FontWeight="SemiBold"
+                             IsVisible="{Binding !IsActive}"
+                             VerticalAlignment="Center" />
                 </StackPanel>
                 <TextBlock Text="{Binding Summary}" Classes="caption" />
               </StackPanel>
@@ -173,11 +200,39 @@
             CornerRadius="6"
             IsVisible="{Binding HasSelection}">
       <DockPanel LastChildFill="True">
-        <TextBlock DockPanel.Dock="Top"
-                   Text="{Binding Selected.Name}"
-                   FontSize="15"
-                   FontWeight="SemiBold"
-                   Margin="14,12,14,8" />
+        <DockPanel DockPanel.Dock="Top" LastChildFill="True" Margin="14,12,14,8">
+          <!-- Never a delete. Historic rosters name people by identifier, so removing the
+               row would turn every week they worked into a sheet full of unknowns. -->
+          <Button DockPanel.Dock="Right"
+                  Classes="quiet"
+                  Content="{x:Static res:Strings.ReactivatePerson}"
+                  IsVisible="{Binding !Selected.IsActive}"
+                  Command="{Binding ToggleActiveCommand}" />
+
+          <Button DockPanel.Dock="Right"
+                  Classes="quiet"
+                  Content="{x:Static res:Strings.DeactivatePerson}"
+                  IsVisible="{Binding Selected.IsActive}">
+            <Button.Flyout>
+              <Flyout Placement="BottomEdgeAlignedRight">
+                <StackPanel MinWidth="260" MaxWidth="300" Spacing="8">
+                  <TextBlock Text="{x:Static res:Strings.DeactivateExplains}"
+                             Classes="caption"
+                             TextWrapping="Wrap" />
+                  <Button Content="{x:Static res:Strings.DeactivatePerson}"
+                          Classes="primary"
+                          HorizontalAlignment="Right"
+                          Command="{Binding ToggleActiveCommand}" />
+                </StackPanel>
+              </Flyout>
+            </Button.Flyout>
+          </Button>
+
+          <TextBlock Text="{Binding Selected.Name}"
+                     FontSize="15"
+                     FontWeight="SemiBold"
+                     VerticalAlignment="Center" />
+        </DockPanel>
 
         <ScrollViewer>
           <StackPanel Margin="14,0,14,14" Spacing="8">
