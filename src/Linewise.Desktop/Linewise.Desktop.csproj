@@ -5,12 +5,19 @@
     <TargetFramework>net8.0-windows</TargetFramework>
 
     <!--
-      Published self contained for win-x64. The factory PC is a machine nobody here
-      administers, and "install the .NET runtime first" is a support call rather than an
-      instruction. It costs about seventy megabytes in the installer, paid once.
+      RuntimeIdentifiers, plural, and deliberately not RuntimeIdentifier.
+
+      The plural form tells restore to produce a win-x64 target so that publishing for it
+      later needs no second restore. The singular form would additionally make every Release
+      build a win-x64 build, and then an ordinary `dotnet build -c Release` demands an asset
+      a plain `dotnet restore` never produced. That is NETSDK1047, it broke CI on both
+      platforms, and it still built here because this machine's obj folder was holding
+      assets from a publish run by hand ten minutes earlier.
+
+      The identifier goes on the publish command, where it belongs. Self contained too: the
+      factory PC is a machine nobody here administers, and "install the .NET runtime first"
+      is a support call rather than an instruction.
     -->
-    <RuntimeIdentifier Condition="'$(Configuration)' == 'Release'">win-x64</RuntimeIdentifier>
-    <SelfContained Condition="'$(Configuration)' == 'Release'">true</SelfContained>
 
     <!--
       Trimming is off. Avalonia resolves controls and this application resolves services

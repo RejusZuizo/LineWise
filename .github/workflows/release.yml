@@ -55,12 +55,17 @@ jobs:
       - name: Test
         run: dotnet test --no-restore -c Release
 
+      # --no-restore, so the whole workflow runs against the locked dependency graph rather
+      # than letting publish resolve its own. That only works because every project declares
+      # RuntimeIdentifiers, which puts the win-x64 target in the lock file; without it the
+      # publish restores again and quietly rewrites what the locked restore just checked.
       - name: Publish
         run: >
           dotnet publish src/Linewise.Desktop/Linewise.Desktop.csproj
           -c Release
           -r win-x64
           --self-contained
+          --no-restore
           -p:Version=${{ steps.version.outputs.version }}
           -o publish
 
