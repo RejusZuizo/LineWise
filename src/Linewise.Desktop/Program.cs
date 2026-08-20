@@ -4,6 +4,7 @@ using Linewise.Infrastructure;
 using Linewise.Infrastructure.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
+using Velopack;
 
 namespace Linewise.Desktop;
 
@@ -18,6 +19,19 @@ internal static class Program
     [STAThread]
     public static int Main(string[] args)
     {
+        // Before everything, including the logger.
+        //
+        // On an installed build this call is how the application handles being installed,
+        // updated and uninstalled: the installer runs the new executable with a hook
+        // argument, and this is what answers it and exits. Anything done before it — opening
+        // a log file, building a container, touching the database — happens during a hook
+        // that is not supposed to be running an application at all, and on an update that
+        // means writing to a folder that is about to be replaced.
+        //
+        // It does nothing at all when the application is run normally or from source, which
+        // is why it is safe to have it here on a build nobody has installed yet.
+        VelopackApp.Build().Run();
+
         Log.Logger = LinewiseLogging.Create();
 
         // Registered before anything can throw on a background thread, and before the

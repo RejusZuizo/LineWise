@@ -29,6 +29,14 @@
     <PackageVersion Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
   </ItemGroup>
 
+  <ItemGroup Label="Packaging">
+    <!--
+      Velopack rather than MSIX or WiX. MIT licensed, produces a real installer plus an
+      auto update feed, and does not need the Windows SDK on the build machine. ADR 0018.
+    -->
+    <PackageVersion Include="Velopack" Version="1.2.0" />
+  </ItemGroup>
+
   <ItemGroup Label="User interface">
     <!--
       Avalonia 11, not 12, and FluentAvalonia 2.4.0, not 2.5.1 or 3.x. Every FluentAvalonia

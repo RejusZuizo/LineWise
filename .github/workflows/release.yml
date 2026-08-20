@@ -1,0 +1,109 @@
+name: Release
+
+# Tag driven, and manual for a dry run. Nothing releases because somebody merged; a
+# release is a deliberate act and a tag is how it is declared.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build, without the leading v. For a dry run only.'
+        required: true
+        default: '0.0.0-dev'
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    name: Installer
+    # Windows, because this is the platform the product ships to and packaging is the one
+    # step where building elsewhere proves nothing at all.
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 8.0.x
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      # The version comes from the tag, so the installer, the About box and the release
+      # cannot disagree about what this build is.
+      - name: Work out the version
+        id: version
+        shell: pwsh
+        run: |
+          $version = if ($env:GITHUB_REF -like 'refs/tags/v*') {
+            $env:GITHUB_REF -replace '^refs/tags/v', ''
+          } else {
+            '${{ github.event.inputs.version }}'
+          }
+
+          "version=$version" | Out-File -Append $env:GITHUB_OUTPUT
+          "Building $version" | Out-File -Append $env:GITHUB_STEP_SUMMARY
+
+      - name: Restore
+        run: dotnet restore --locked-mode
+
+      # The suite runs again here rather than trusting that CI passed on the commit. A tag
+      # can be moved, and a release built from code nobody tested is the one thing this
+      # workflow must not produce.
+      - name: Test
+        run: dotnet test --no-restore -c Release
+
+      # --no-restore, so the whole workflow runs against the locked dependency graph rather
+      # than letting publish resolve its own. That only works because every project declares
+      # RuntimeIdentifiers, which puts the win-x64 target in the lock file; without it the
+      # publish restores again and quietly rewrites what the locked restore just checked.
+      - name: Publish
+        run: >
+          dotnet publish src/Linewise.Desktop/Linewise.Desktop.csproj
+          -c Release
+          -r win-x64
+          --self-contained
+          --no-restore
+          -p:Version=${{ steps.version.outputs.version }}
+          -o publish
+
+      - name: Install the packaging tool
+        run: dotnet tool restore
+
+      # Velopack produces the installer, the update feed and a portable zip in one pass.
+      # Unsigned: an OV certificate has to live on a hardware token or a cloud signing
+      # service, and there is not one yet. See docs/installing.md for what that means for
+      # the person double clicking this.
+      - name: Pack
+        run: >
+          dotnet vpk pack
+          --packId Linewise
+          --packVersion ${{ steps.version.outputs.version }}
+          --packDir publish
+          --mainExe Linewise.exe
+          --packTitle Linewise
+          --packAuthors "Rejus Zuzevicius"
+          --outputDir releases
+
+      - name: Keep the installer whatever happens next
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: linewise-${{ steps.version.outputs.version }}
+          path: releases/
+          retention-days: 30
+
+      # Only for a real tag. A dry run leaves the installer as an artifact and creates
+      # nothing anybody could mistake for a release.
+      - name: Attach to the release
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create ${{ github.ref_name }} `
+            --title "Linewise ${{ steps.version.outputs.version }}" `
+            --notes "See CHANGELOG.md. This installer is not code signed, so Windows will show a SmartScreen warning. docs/installing.md says what to click." `
+            --draft `
+            (Get-ChildItem releases/* | ForEach-Object { $_.FullName })

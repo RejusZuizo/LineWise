@@ -16,6 +16,23 @@
        version fails the build rather than silently entering a release. -->
   <PropertyGroup>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+
+    <!--
+      RuntimeIdentifiers, plural, for every project rather than only the one that is
+      published. Publishing the desktop application for win-x64 applies the identifier to
+      everything it references, so a lock file without that target is one the publish has to
+      rewrite — and an ordinary build then rewrites it back. The two fight, and a locked
+      restore on CI is what notices.
+
+      Plural, never singular. The singular form would make every Release build a win-x64
+      build, and then `dotnet build -c Release` demands an asset a plain restore never
+      produced. That is NETSDK1047. It broke CI on both platforms and still built here,
+      because this machine had assets left over from a publish run by hand.
+
+      This does not make the domain or the application layer Windows bound. It is a restore
+      target, not a target framework; both stay on plain net8.0 and stay portable.
+    -->
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
   </PropertyGroup>
 
   <PropertyGroup>
